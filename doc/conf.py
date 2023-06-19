@@ -5,9 +5,6 @@ import sys
 
 from sphinx.ext import apidoc
 
-sys.path.append(os.path.abspath("../.."))
-sys.path.append(os.path.abspath(".."))
-
 
 def run_apidoc(app):
     """Generate doc stubs using sphinx-apidoc."""
@@ -25,7 +22,7 @@ def run_apidoc(app):
         "--module-first",
         "--doc-project=API Reference",
         "--implicit-namespaces",
-        "--maxdepth=2",
+        "--maxdepth=4",
         "-t",
         template_dir,
         "-o",
@@ -58,13 +55,15 @@ author = "Amazon Web Services"
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    "sphinx.ext.autodoc",
+    'autoapi.extension',
     "sphinx.ext.intersphinx",
     #    "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx_rtd_theme",
 ]
+autoapi_type = 'python'
+autoapi_dirs = ['../src']
 
 source_suffix = ".rst"
 master_doc = "index"
@@ -78,7 +77,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # A string that determines how domain objects (e.g. functions, classes,
 # attributes, etc.) are displayed in their table of contents entry.
-toc_object_entries_show_parents = "hide"
+# toc_object_entries_show_parents = "hide"
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -96,7 +95,7 @@ html_theme_options = {
     # Toc options
     "collapse_navigation": True,
     "sticky_navigation": True,
-    "navigation_depth": 2,
+    "navigation_depth": 3,
     "includehidden": True,
     "titles_only": False,
 }

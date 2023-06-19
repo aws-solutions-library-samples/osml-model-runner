@@ -5,8 +5,7 @@ aws-osml-model-runner
 TODO
 
 .. toctree::
-   :maxdepth: 2
-   _apidoc/aws.osml.model_runner
+   :maxdepth: 4
 
 
 Indices and tables
