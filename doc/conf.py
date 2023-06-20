@@ -77,7 +77,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # A string that determines how domain objects (e.g. functions, classes,
 # attributes, etc.) are displayed in their table of contents entry.
-# toc_object_entries_show_parents = "hide"
+toc_object_entries_show_parents = "hide"
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -95,7 +95,7 @@ html_theme_options = {
     # Toc options
     "collapse_navigation": True,
     "sticky_navigation": True,
-    "navigation_depth": 3,
+    "navigation_depth": 4,
     "includehidden": True,
     "titles_only": False,
 }
