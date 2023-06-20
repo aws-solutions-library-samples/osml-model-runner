@@ -1,5 +1,5 @@
 
-aws-osml-model-runner
+aws.osml.model_runner
 =====================
 
 This package contains an application used to orchestrate the execution of ML models on large satellite images. The

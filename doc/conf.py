@@ -1,7 +1,6 @@
 import datetime
 import os
 import shutil
-import sys
 
 from sphinx.ext import apidoc
 
