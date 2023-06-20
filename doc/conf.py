@@ -54,15 +54,15 @@ author = "Amazon Web Services"
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    'autoapi.extension',
+    "autoapi.extension",
     "sphinx.ext.intersphinx",
     #    "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx_rtd_theme",
 ]
-autoapi_type = 'python'
-autoapi_dirs = ['../src']
+autoapi_type = "python"
+autoapi_dirs = ["../src"]
 
 source_suffix = ".rst"
 master_doc = "index"
