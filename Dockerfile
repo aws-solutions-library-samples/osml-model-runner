@@ -1,78 +1,72 @@
-# Set the base image to build from Internal Amazon Docker Image rather than DockerHub
-# If a lot of request were made, CodeBuild will failed due to...
+# set the base image to build from Internal Amazon Docker Image rather than DockerHub
+# if a lot of request were made, CodeBuild will failed due to...
 # "You have reached your pull rate limit. You may increase the limit by authenticating and upgrading"
 ARG BASE_CONTAINER=public.ecr.aws/amazonlinux/amazonlinux:latest
 
-# Swap BASE_CONTAINER to a container output while building cert-base if you need to override the pip mirror
+# swap BASE_CONTAINER to a container output while building cert-base if you need to override the pip mirror
 FROM ${BASE_CONTAINER} as model_runner
 
-# Only override if you're using a mirror with a cert pulled in using cert-base as a build parameter
+# only override if you're using a mirror with a cert pulled in using cert-base as a build parameter
 ARG BUILD_CERT=/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
 ARG PIP_INSTALL_LOCATION=https://pypi.org/simple/
 
-# Define required packages to install
-ARG PACKAGES="wget"
-
-# Give sudo permissions
+# give sudo permissions
 USER root
 
-# Configure, update, and refresh yum enviornment
-RUN yum update -y && yum clean all && yum makecache
+# set working directory to home
+WORKDIR /home/
 
-# Install all our dependancies
-RUN yum install -y $PACKAGES
+# configure, update, and refresh yum enviornment
+RUN yum update -y && yum clean all && yum makecache && yum install -y wget
 
-# Install miniconda
+# install miniconda
 ARG MINICONDA_VERSION=Miniconda3-latest-Linux-x86_64
 ARG MINICONDA_URL=https://repo.anaconda.com/miniconda/${MINICONDA_VERSION}.sh
 RUN wget -c ${MINICONDA_URL} \
     && chmod +x ${MINICONDA_VERSION}.sh \
-    && ./${MINICONDA_VERSION}.sh -b -f -p /usr/local
+    && ./${MINICONDA_VERSION}.sh -b -f -p /opt/conda \
+    && rm ${MINICONDA_VERSION}.sh \
+    && ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
 
-# Clean up installer file
-RUN rm ${MINICONDA_VERSION}.sh
+# add conda to the path so we can execute it by name
+ENV PATH=/opt/conda/bin:$PATH
 
-# Install GDAL and python venv to the user profile
-# This sets the python3 alias to be the miniconda managed python3.10 ENV
-ARG PYTHON_VERSION=3.10
-RUN conda install -c conda-forge  -q -y --prefix /usr/local python=${PYTHON_VERSION} gdal
+# target conda env for container
+ENV CONDA_TARGET_ENV=osml-models
 
-ARG INSTALL_DIR=/home/osml-model-runner
+# create /entry.sh which will be our new shell entry point
+# this performs actions to configure the environment
+# before starting a new shell (which inherits the env).
+# the exec is important! this allows signals to pass
+RUN     (echo '#!/bin/bash' \
+    &&   echo '__conda_setup="$(/opt/conda/bin/conda shell.bash hook 2> /dev/null)"' \
+    &&   echo 'eval "$__conda_setup"' \
+    &&   echo 'conda activate "${CONDA_TARGET_ENV:-base}"' \
+    &&   echo '>&2 echo "ENTRYPOINT: CONDA_DEFAULT_ENV=${CONDA_DEFAULT_ENV}"' \
+    &&   echo 'exec "$@"'\
+        ) >> /entry.sh && chmod +x /entry.sh
 
-# Copy all our model runner source code
-COPY . ${INSTALL_DIR}/
+# tell the docker build process to use this for RUN.
+# the default shell on Linux is ["/bin/sh", "-c"], and on Windows is ["cmd", "/S", "/C"]
+SHELL ["/entry.sh", "/bin/bash", "-c"]
 
-RUN chmod +x --recursive /home
-RUN chmod 777 --recursive /home
+# copy our application source
+COPY . .
 
-# Import the source directory to the generalized path
-# ENV PYTHONPATH="${PYTHONPATH}:${INSTALL_DIR}/src"
+# create the conda env
+RUN conda env create
 
-# Hop in the home directory
-WORKDIR ${INSTALL_DIR}
-
-# Install package module to the instance
+# install the application
 RUN python3 -m pip install .
 
-# Clean up any dangling conda resources
+# configure .bashrc to drop into a conda env and immediately activate our TARGET env
+RUN conda init && echo 'conda activate "${CONDA_TARGET_ENV:-base}"' >>  ~/.bashrc
+
+# clean up the install
 RUN conda clean -afy
 
-# Set the user to the ecs-provisioned user
-USER 1000
+# set the entry point script
+ENTRYPOINT ["/entry.sh"]
 
-# Set the entry point command to start model runner
+# set the entry point command to start model runner in the conda env
 CMD ["python3", "bin/oversightml-mr-entry-point.py"]
-
-FROM model_runner as unit-test
-
-# Hop in the home directory
-WORKDIR ${INSTALL_DIR}
-
-# Set root user for dep installs
-USER root
-
-# Import the source directory to the generalized path
-ENV PYTHONPATH="${PYTHONPATH}:${INSTALL_DIR}/src/"
-
-# Set the entry point command to run unit tests
-CMD ["python3", "-m", "pytest","--cov=aws.osml.model_runner", "test/"]
