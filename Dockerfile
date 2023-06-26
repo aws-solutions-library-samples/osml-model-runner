@@ -37,7 +37,7 @@ ENV CONDA_TARGET_ENV=osml-models
 # create /entry.sh which will be our new shell entry point
 # this performs actions to configure the environment
 # before starting a new shell (which inherits the env).
-# the exec is important! this allows signals to pass
+# the exec is important as this allows signals to pass
 RUN     (echo '#!/bin/bash' \
     &&   echo '__conda_setup="$(/opt/conda/bin/conda shell.bash hook 2> /dev/null)"' \
     &&   echo 'eval "$__conda_setup"' \
@@ -50,19 +50,19 @@ RUN     (echo '#!/bin/bash' \
 # the default shell on Linux is ["/bin/sh", "-c"], and on Windows is ["cmd", "/S", "/C"]
 SHELL ["/entry.sh", "/bin/bash", "-c"]
 
-# copy our application source
+# copy our lcoal application source into the container
 COPY . .
 
 # create the conda env
 RUN conda env create
 
-# install the application
-RUN python3 -m pip install .
-
 # configure .bashrc to drop into a conda env and immediately activate our TARGET env
 RUN conda init && echo 'conda activate "${CONDA_TARGET_ENV:-base}"' >>  ~/.bashrc
 
-# clean up the install
+# install the application from source
+RUN python3 -m pip install .
+
+# clean up the conda install
 RUN conda clean -afy
 
 # set the entry point script
