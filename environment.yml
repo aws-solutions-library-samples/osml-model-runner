@@ -1,8 +1,7 @@
-name: osml-model-runner
-
-dependencies:
-  - python=3.10
-  - gdal
-  - proj
+name: osml_model_runner
 channels:
   - conda-forge
+dependencies:
+  - conda-forge::python=3.10
+  - conda-forge::gdal
+  - conda-forge::proj

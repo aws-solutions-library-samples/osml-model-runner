@@ -32,12 +32,12 @@ RUN wget -c ${MINICONDA_URL} \
 ENV PATH=/opt/conda/bin:$PATH
 
 # target conda env for container
-ENV CONDA_TARGET_ENV=osml-models
+ENV CONDA_TARGET_ENV=osml_model_runner
 
 # create /entry.sh which will be our new shell entry point
 # this performs actions to configure the environment
 # before starting a new shell (which inherits the env).
-# the exec is important as this allows signals to pass
+# the exec is important as this allows signals to passpw
 RUN     (echo '#!/bin/bash' \
     &&   echo '__conda_setup="$(/opt/conda/bin/conda shell.bash hook 2> /dev/null)"' \
     &&   echo 'eval "$__conda_setup"' \
@@ -50,14 +50,17 @@ RUN     (echo '#!/bin/bash' \
 # the default shell on Linux is ["/bin/sh", "-c"], and on Windows is ["cmd", "/S", "/C"]
 SHELL ["/entry.sh", "/bin/bash", "-c"]
 
-# copy our lcoal application source into the container
-COPY . .
+# copy our conda env configuration
+COPY environment.yml .
 
 # create the conda env
 RUN conda env create
 
 # configure .bashrc to drop into a conda env and immediately activate our TARGET env
 RUN conda init && echo 'conda activate "${CONDA_TARGET_ENV:-base}"' >>  ~/.bashrc
+
+# copy our lcoal application source into the container
+COPY . .
 
 # install the application from source
 RUN python3 -m pip install .
@@ -69,4 +72,4 @@ RUN conda clean -afy
 ENTRYPOINT ["/entry.sh"]
 
 # set the entry point command to start model runner in the conda env
-CMD ["python3", "bin/oversightml-mr-entry-point.py"]
+CMD python3 bin/oversightml-mr-entry-point.py
