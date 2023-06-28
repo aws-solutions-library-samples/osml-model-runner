@@ -31,8 +31,13 @@ RUN wget -c ${MINICONDA_URL} \
 # add conda to the path so we can execute it by name
 ENV PATH=/opt/conda/bin:$PATH
 
-# target conda env for container
+# set all the ENV vars needed for build
 ENV CONDA_TARGET_ENV=osml_model_runner
+ENV CC="clang"
+ENV CXX="clang++"
+ENV ARCHFLAGS="-arch x86_64"
+ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/conda/lib/:/opt/conda/bin:/usr/include:/usr/local/"
+ENV PROJ_LIB=/opt/conda/share/proj
 
 # create /entry.sh which will be our new shell entry point
 # this performs actions to configure the environment

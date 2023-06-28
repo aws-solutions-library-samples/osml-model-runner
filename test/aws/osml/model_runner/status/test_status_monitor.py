@@ -54,7 +54,7 @@ class TestStatusMonitor(TestCase):
             "image_id": {"Type": "String", "Value": self.job_item.image_id},
             "processing_duration": {"Type": "String", "Value": str(self.job_item.processing_time)},
         }
-        expected_message = f"StatusMonitor update: {mock_status.value} {self.job_item.job_id}: {mock_message}"
+        expected_message = f"StatusMonitor update: {mock_status} {self.job_item.job_id}: {mock_message}"
         self.status_monitor.process_event(self.job_item, mock_status, mock_message)
 
         messages = self.sqs.receive_message(
