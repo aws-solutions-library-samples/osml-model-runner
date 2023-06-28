@@ -14,7 +14,7 @@ from osgeo import gdal
 from shapely.geometry.base import BaseGeometry
 
 from aws.osml.model_runner.common import Classification, ImageDimensions, get_image_classification
-from aws.osml.model_runner.photogrammetry import GeodeticWorldCoordinate, SensorModel
+from aws.osml.photogrammetry import GeodeticWorldCoordinate, SensorModel
 
 
 def features_to_image_shapes(sensor_model: SensorModel, features: List[Feature]) -> List[BaseGeometry]:

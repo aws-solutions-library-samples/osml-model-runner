@@ -345,10 +345,10 @@ class TestModelRunner(unittest.TestCase):
         mock_feature_table,
         mock_feature_detector,
     ):
+        from aws.osml.gdal.gdal_utils import load_gdal_dataset
         from aws.osml.model_runner.database.endpoint_statistics_table import EndpointStatisticsTable
         from aws.osml.model_runner.database.job_table import JobTable
         from aws.osml.model_runner.database.region_request_table import RegionRequestItem, RegionRequestTable
-        from aws.osml.model_runner.gdal.gdal_utils import load_gdal_dataset
 
         region_request_item = RegionRequestItem(
             image_id=TEST_IMAGE_ID, region_id="test-region-id", region_pixel_bounds="(0, 0)(50, 50)"
@@ -430,11 +430,11 @@ class TestModelRunner(unittest.TestCase):
 
         reload(aws.osml.model_runner.app_config)
         reload(aws.osml.model_runner.app)
+        from aws.osml.gdal.gdal_dem_tile_factory import GDALDigitalElevationModelTileFactory
         from aws.osml.model_runner.app import ModelRunner
         from aws.osml.model_runner.app_config import ServiceConfig
-        from aws.osml.model_runner.gdal.gdal_dem_tile_factory import GDALDigitalElevationModelTileFactory
-        from aws.osml.model_runner.photogrammetry.digital_elevation_model import DigitalElevationModel
-        from aws.osml.model_runner.photogrammetry.srtm_dem_tile_set import SRTMTileSet
+        from aws.osml.photogrammetry.digital_elevation_model import DigitalElevationModel
+        from aws.osml.photogrammetry.srtm_dem_tile_set import SRTMTileSet
 
         assert ServiceConfig.elevation_data_location == TEST_ELEVATION_DATA_LOCATION
 
@@ -477,11 +477,11 @@ class TestModelRunner(unittest.TestCase):
         mock_feature_table,
         mock_feature_detector,
     ):
+        from aws.osml.gdal.gdal_utils import load_gdal_dataset
         from aws.osml.model_runner.database.endpoint_statistics_table import EndpointStatisticsTable
         from aws.osml.model_runner.database.job_table import JobTable
         from aws.osml.model_runner.database.region_request_table import RegionRequestTable
         from aws.osml.model_runner.exceptions import SelfThrottledRegionException
-        from aws.osml.model_runner.gdal.gdal_utils import load_gdal_dataset
 
         # Load up our test image
         raster_dataset, sensor_model = load_gdal_dataset(self.region_request.image_url)
@@ -506,7 +506,7 @@ class TestModelRunner(unittest.TestCase):
 
     @staticmethod
     def get_dataset_and_camera():
-        from aws.osml.model_runner.gdal.gdal_utils import load_gdal_dataset
+        from aws.osml.gdal.gdal_utils import load_gdal_dataset
 
         ds, sensor_model = load_gdal_dataset("./test/data/GeogToWGS84GeoKey5.tif")
         return ds, sensor_model

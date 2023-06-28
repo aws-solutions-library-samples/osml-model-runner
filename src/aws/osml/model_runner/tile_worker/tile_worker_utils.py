@@ -11,6 +11,7 @@ from aws_embedded_metrics import MetricsLogger
 from aws_embedded_metrics.unit import Unit
 from osgeo import gdal
 
+from aws.osml.gdal import GDALConfigEnv, get_type_and_scales
 from aws.osml.model_runner.api import RegionRequest
 from aws.osml.model_runner.app_config import MetricLabels, ServiceConfig
 from aws.osml.model_runner.common import (
@@ -22,10 +23,9 @@ from aws.osml.model_runner.common import (
     get_credentials_for_assumed_role,
 )
 from aws.osml.model_runner.database import FeatureTable
-from aws.osml.model_runner.gdal import GDALConfigEnv, get_type_and_scales
 from aws.osml.model_runner.inference import SMDetector
-from aws.osml.model_runner.photogrammetry import ElevationModel, SensorModel
 from aws.osml.model_runner.tile_worker import FeatureRefinery, TileWorker
+from aws.osml.photogrammetry import ElevationModel, SensorModel
 
 from .exceptions import ProcessTilesException, SetupTileWorkersException
 

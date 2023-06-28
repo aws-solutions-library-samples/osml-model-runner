@@ -139,7 +139,7 @@ class TestFeatureUtils(unittest.TestCase):
 
     @staticmethod
     def build_gdal_sensor_model():
-        from aws.osml.model_runner.photogrammetry import GDALAffineSensorModel
+        from aws.osml.photogrammetry import GDALAffineSensorModel
 
         # Test coordinate calculations using geotransform matrix from sample SpaceNet RIO image
         transform = [
@@ -154,7 +154,7 @@ class TestFeatureUtils(unittest.TestCase):
 
     @staticmethod
     def get_dataset_and_camera():
-        from aws.osml.model_runner.gdal.gdal_utils import load_gdal_dataset
+        from aws.osml.gdal.gdal_utils import load_gdal_dataset
 
         ds, sensor_model = load_gdal_dataset("./test/data/GeogToWGS84GeoKey5.tif")
         return ds, sensor_model

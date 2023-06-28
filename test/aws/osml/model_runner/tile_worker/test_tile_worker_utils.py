@@ -124,7 +124,7 @@ class TestTileWorkerUtils(unittest.TestCase):
 
     @staticmethod
     def get_dataset_and_camera():
-        from aws.osml.model_runner.gdal.gdal_utils import load_gdal_dataset
+        from aws.osml.gdal.gdal_utils import load_gdal_dataset
 
         ds, sensor_model = load_gdal_dataset("./test/data/GeogToWGS84GeoKey5.tif")
         return ds, sensor_model

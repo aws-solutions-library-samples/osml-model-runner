@@ -8,7 +8,7 @@ import geojson
 import numpy as np
 from scipy.interpolate import interp2d
 
-from aws.osml.model_runner.photogrammetry import (
+from aws.osml.photogrammetry import (
     CompositeSensorModel,
     ElevationModel,
     GeodeticWorldCoordinate,

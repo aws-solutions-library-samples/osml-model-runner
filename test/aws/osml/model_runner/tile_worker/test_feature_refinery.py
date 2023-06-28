@@ -63,7 +63,7 @@ class TestFeatureRefinery(unittest.TestCase):
 
     @staticmethod
     def build_sensor_model():
-        from aws.osml.model_runner.gdal.sensor_model_factory import SensorModelFactory, SensorModelTypes
+        from aws.osml.gdal.sensor_model_factory import SensorModelFactory, SensorModelTypes
 
         with open("test/data/sample-metadata-ms-rpc00b.xml", "rb") as xml_file:
             xml_tres = ElementTree.parse(xml_file)

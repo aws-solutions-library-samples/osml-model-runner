@@ -20,6 +20,15 @@ from geojson import Feature
 from osgeo import gdal
 from osgeo.gdal import Dataset
 
+from aws.osml.gdal import (
+    GDALConfigEnv,
+    GDALDigitalElevationModelTileFactory,
+    get_image_extension,
+    load_gdal_dataset,
+    set_gdal_default_configuration,
+)
+from aws.osml.photogrammetry import DigitalElevationModel, ElevationModel, SensorModel, SRTMTileSet
+
 from .api import ImageRequest, InvalidImageRequestException, ModelInvokeMode, RegionRequest, SinkMode
 from .app_config import MetricLabels, ServiceConfig
 from .common import (
@@ -47,16 +56,7 @@ from .exceptions import (
     SelfThrottledRegionException,
     UnsupportedModelException,
 )
-from .gdal import (
-    GDALConfigEnv,
-    GDALDigitalElevationModelTileFactory,
-    get_image_extension,
-    load_gdal_dataset,
-    set_gdal_default_configuration,
-)
-from .gdal.gdal_utils import get_extents
 from .inference import FeatureSelector, calculate_processing_bounds, get_source_property
-from .photogrammetry import DigitalElevationModel, ElevationModel, SensorModel, SRTMTileSet
 from .queue import RequestQueue
 from .sink import SinkFactory
 from .status import StatusMonitor
@@ -311,8 +311,7 @@ class ModelRunner:
                 image_request_item.width = Decimal(raster_dataset.RasterXSize)
                 image_request_item.height = Decimal(raster_dataset.RasterYSize)
                 try:
-                    json.dumps(get_extents(raster_dataset))
-                    image_request_item.extents = json.dumps(get_extents(raster_dataset))
+                    image_request_item.extents = json.dumps(ModelRunner.get_extents(raster_dataset))
                 except Exception as e:
                     logger.warning(f"Could not get extents for image: {image_request_item.image_id}")
                     logger.exception(e)
@@ -912,3 +911,21 @@ class ModelRunner:
             }
         }
         return inference_metadata_property
+
+    @staticmethod
+    def get_extents(ds: gdal.Dataset) -> dict[str, Any]:
+        """
+        Returns a list of driver extensions
+
+        :param ds: the gdal dateaset
+
+        :return: List[number] = the extents of the image
+        """
+        geo_transform = ds.GetGeoTransform()
+        minx = geo_transform[0]
+        maxy = geo_transform[3]
+        maxx = minx + geo_transform[1] * ds.RasterXSize
+        miny = maxy + geo_transform[5] * ds.RasterYSize
+
+        extents = {"north": maxy, "south": miny, "east": maxx, "west": minx}
+        return extents
