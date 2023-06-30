@@ -56,7 +56,7 @@ RUN     (echo '#!/bin/bash' \
 SHELL ["/entry.sh", "/bin/bash", "-c"]
 
 # copy our conda env configuration
-COPY environment.yml .
+COPY osml-model-runner/environment.yml .
 
 # create the conda env
 RUN conda env create
@@ -65,10 +65,16 @@ RUN conda env create
 RUN conda init && echo 'conda activate "${CONDA_TARGET_ENV:-base}"' >>  ~/.bashrc
 
 # copy our lcoal application source into the container
-COPY . .
+ADD osml-model-runner osml-model-runner
 
-# install the application from source
-RUN python3 -m pip install .
+# copy our lcoal application source into the container
+ADD osml-imagery-toolkit osml-imagery-toolkit
+
+# install the imagery toolkit library from source
+RUN python3 -m pip install osml-imagery-toolkit/
+
+# install the model runner application from source
+RUN python3 -m pip install osml-model-runner/
 
 # clean up the conda install
 RUN conda clean -afy
@@ -77,4 +83,4 @@ RUN conda clean -afy
 ENTRYPOINT ["/entry.sh"]
 
 # set the entry point command to start model runner in the conda env
-CMD python3 bin/oversightml-mr-entry-point.py
+CMD python3 osml-model-runner/bin/oversightml-mr-entry-point.py

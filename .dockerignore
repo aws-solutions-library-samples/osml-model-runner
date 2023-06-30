@@ -6,7 +6,13 @@
 *.tox
 *.idea
 *venv
-
+*model-runner-test
+*accounts
+*osml-models
+*osml-cdk-constructs
+*guidance-for-overhead-imagery-inference-on-aws
+*osml-cesium-globe
+*osml-documentation
 __pycache__/
 *.py[cod]
 *$py.class
