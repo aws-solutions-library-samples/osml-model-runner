@@ -41,6 +41,12 @@ ENV ARCHFLAGS="-arch x86_64"
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/conda/lib/:/opt/conda/bin:/usr/include:/usr/local/"
 ENV PROJ_LIB=/opt/conda/share/proj
 
+# copy our conda env configuration
+COPY osml-model-runner/environment.yml .
+
+# create the conda env
+RUN conda env create
+
 # create /entry.sh which will be our new shell entry point
 # this performs actions to configure the environment
 # before starting a new shell (which inherits the env).
@@ -56,12 +62,6 @@ RUN     (echo '#!/bin/bash' \
 # tell the docker build process to use this for RUN.
 # the default shell on Linux is ["/bin/sh", "-c"], and on Windows is ["cmd", "/S", "/C"]
 SHELL ["/entry.sh", "/bin/bash", "-c"]
-
-# copy our conda env configuration
-COPY osml-model-runner/environment.yml .
-
-# create the conda env
-RUN conda env create
 
 # configure .bashrc to drop into a conda env and immediately activate our TARGET env
 RUN conda init && echo 'conda activate "${CONDA_TARGET_ENV:-base}"' >>  ~/.bashrc
