@@ -1,10 +1,29 @@
-# OversightML - ModelRunner
+# OSML Model Runner
 
 This package contains an application used to orchestrate the execution of ML models on large satellite images. The
 application monitors an input queue for processing requests, decomposes the image into a set of smaller regions and
 tiles, invokes an ML model endpoint with each tile, and finally aggregates all the results into a single output. The
 application itself has been containerized and is designed to run on a distributed cluster of machines collaborating
 across instances to process images as quickly as possible.
+
+### Table of Contents
+* [Getting Started](#getting-started)
+  * [Key Design Concepts](#key-design-concepts)
+    * [Image Tiling](#image-tiling)
+    * [Lazy IO & Encoding Formats with Internal Tiles](#lazy-io--encoding-formats-with-internal-tiles)
+    * [Tile Overlap and Merging Results](#tile-overlap-and-merging-results)
+  * [Package Layout](#package-layout)
+  * [Prerequisites](prerequisites)
+  * [Development Environment](#development-environment)
+  * [Running ModelRunner](#running-modelrunner)
+  * [Infrastructure](#infrastructure)
+    * [S3](#s3)
+* [Support & Feedback](#support--feedback)
+* [Security](#security)
+* [License](#license)
+
+
+## Getting Started
 
 This application currently offers one build options:
 
@@ -13,10 +32,9 @@ This application currently offers one build options:
 * Python=3.10
 * Miniconda=Miniconda3-latest-Linux-x86_64
 
+### Key Design Concepts
 
-## Key Design Concepts
-
-### Image Tiling
+#### Image Tiling
 
 The images to be processed by this application are expected to range anywhere from 500MB to 500GB in size. The upper
 bound is consistently growing as sensors become increasingly capable of collecting larger swaths of high resolution
@@ -27,14 +45,14 @@ tiling phase is to break each region up into individual chunks that will be sent
 containers are configured to process images that are between 512 and 2048 pixels in size so the full processing of a
 large 200,000 x 200,000 satellite image can result in >10,000 requests.
 
-### Lazy IO & Encoding Formats with Internal Tiles
+#### Lazy IO & Encoding Formats with Internal Tiles
 
 The images themselves are assumed to reside in S3 and are assumed to be compressed and encoded in such a way as to
 facilitate piecewise access to tiles without downloading the entire image. The GDAL library, a frequently used open
 source implementation of GIS data tools, has the ability to read images directly from S3 making use of partial range
 reads to only download the part of the overall image necessary to process the region.
 
-### Tile Overlap and Merging Results
+#### Tile Overlap and Merging Results
 
 Many of the ML algorithms we expect to run will involve object detection or feature extraction. It is possible that
 features of interest would fall on the tile boundaries and therefore be missed by the ML models because they are only
@@ -44,14 +62,22 @@ overlapping the previous by the specified amount. Then the results from each til
 Non-Maximal Suppression algorithm used to eliminate duplicates in cases where an object in an overlap region was picked
 up by multiple model runs.
 
-## Package Layout
+### Package Layout
 
 * **/src**: This is the Python implementation of this application.
 * **/test**: Unit tests have been implemented using [pytest](https://docs.pytest.org).
 * **/bin**: The entry point for the containerized application.
 * **/scripts**: Utility scripts that are not part of the main application frequently used in development / testing.
 
-## Development Environment
+### Prerequisites
+
+First, ensure you have installed the following tools locally
+
+- [docker](https://nodejs.org/en)
+- [tox](https://tox.wiki/en/latest/installation.html)
+- [osml cdk](https://github.com/aws-solutions-library-samples/osml-cdk-constructs) deployed into your aws account
+
+### Development Environment
 
 To run the container in a build/test mode and work inside it.
 
@@ -59,42 +85,8 @@ To run the container in a build/test mode and work inside it.
 docker run -it -v `pwd`/:/home/ --entrypoint /bin/bash .
 ```
 
-To build the unit test container from root dir and run it:
-```shell
-docker build . -t model-runner-unit-test:latest
-docker run model-runner-unit-test:latest
-```
+### Running ModelRunner
 
-## Linting/Formatting
-
-This package uses [pre-commit](https://github.com/pre-commit/pre-commit-hooks) to enforce formatting, linting, and 
-general best practices. See the ``.pre-commit-config.yml`` file for configuration and run the following to enable it:
-```
-pip install pre-commit
-pre-commit install
-```
-
-Then run:
-
-```
-pre-commit run --all-files
-```
-
-## Testing
-Tests are packaged and executed in Docker.
-```
-docker build . -t model-runner-unit-test:latest
-docker run model-runner-unit-test:latest
-```
-
-## Infrastructure
-
-### S3
-When configuring S3 buckets for images and results, be sure to follow [S3 Security Best Practices](https://docs.aws.amazon.com/AmazonS3/latest/userguide/security-best-practices.html).
-
-## Running ModelRunner
-
-### Input
 To start a job, place an ImageRequest on the ImageRequestQueue.
 
 Sample ImageRequest:
@@ -116,11 +108,21 @@ Sample ImageRequest:
 }
 ```
 
+### Infrastructure
+
+#### S3
+When configuring S3 buckets for images and results, be sure to follow [S3 Security Best Practices](https://docs.aws.amazon.com/AmazonS3/latest/userguide/security-best-practices.html).
+
+## Support & Feedback
+
+To post feedback, submit feature ideas, or report bugs, please use the [Issues](https://github.com/aws-solutions-library-samples/osml-models/issues) section of this GitHub repo.
+
+If you are interested in contributing to OversightML Model Runner, see the [CONTRIBUTING](CONTRIBUTING.md) guide.
+
 ## Security
 
 See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
 
 ## License
 
-This library is licensed under the MIT-0 License. See the LICENSE file.
-
+MIT No Attribution Licensed. See [LICENSE](LICENSE).
