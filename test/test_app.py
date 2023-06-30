@@ -9,6 +9,7 @@ import mock
 from botocore.exceptions import ClientError
 from mock import Mock
 from moto import mock_dynamodb, mock_ec2, mock_kinesis, mock_s3, mock_sagemaker, mock_sns, mock_sqs
+from osgeo import gdal
 
 TEST_MOCK_PUT_EXCEPTION = Mock(side_effect=ClientError({"Error": {"Code": 500, "Message": "ClientError"}}, "put_item"))
 TEST_MOCK_UPDATE_EXCEPTION = Mock(side_effect=ClientError({"Error": {"Code": 500, "Message": "ClientError"}}, "update_item"))
@@ -99,6 +100,10 @@ class TestModelRunner(unittest.TestCase):
         from aws.osml.model_runner.database.job_table import JobTable
         from aws.osml.model_runner.database.region_request_table import RegionRequestTable
         from aws.osml.model_runner.status.sns_helper import SNSHelper
+
+        # GDAL 4.0 will begin using exceptions as the default; at this point the software is written to assume
+        # no exceptions so we call this explicitly until the software can be updated to match.
+        gdal.DontUseExceptions()
 
         # Create custom properties to be passed into the image request
         self.test_custom_feature_properties = {

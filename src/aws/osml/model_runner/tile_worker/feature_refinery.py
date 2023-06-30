@@ -6,7 +6,7 @@ from typing import List, Optional, Tuple
 
 import geojson
 import numpy as np
-from scipy.interpolate import interp2d
+from scipy.interpolate import RectBivariateSpline
 
 from aws.osml.photogrammetry import (
     CompositeSensorModel,
@@ -61,8 +61,8 @@ class LocationGridInterpolator:
         longitude_values.shape = xgrid.shape
         latitude_values.shape = xgrid.shape
 
-        self.longitude_interpolator = interp2d(xs, ys, longitude_values, kind="linear")
-        self.latitude_interpolator = interp2d(xs, ys, latitude_values, kind="linear")
+        self.longitude_interpolator = RectBivariateSpline(xs, ys, longitude_values, kx=1, ky=1)
+        self.latitude_interpolator = RectBivariateSpline(xs, ys, latitude_values, kx=1, ky=1)
         self.elevation_model = elevation_model
 
     def __call__(self, *args, **kwargs):
@@ -75,8 +75,8 @@ class LocationGridInterpolator:
         """
         image_coord = args[0]
         world_coord = [
-            self.longitude_interpolator(image_coord[0], image_coord[1])[0],
-            self.latitude_interpolator(image_coord[0], image_coord[1])[0],
+            self.longitude_interpolator(image_coord[0], image_coord[1])[0][0],
+            self.latitude_interpolator(image_coord[0], image_coord[1])[0][0],
             0.0,
         ]
         world_coordinate = GeodeticWorldCoordinate(world_coord)
