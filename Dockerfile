@@ -1,3 +1,5 @@
+# Note this container is meant to be built in a parent directory that contains the osml-imagery-toolkit package
+
 # set the base image to build from Internal Amazon Docker Image rather than DockerHub
 # if a lot of request were made, CodeBuild will failed due to...
 # "You have reached your pull rate limit. You may increase the limit by authenticating and upgrading"
@@ -80,7 +82,7 @@ RUN python3 -m pip install osml-model-runner/
 RUN conda clean -afy
 
 # set the entry point script
-ENTRYPOINT ["/entry.sh"]
+ENTRYPOINT ["/bin/bash", "-c", "/entry.sh"]
 
 # set the entry point command to start model runner in the conda env
 CMD python3 osml-model-runner/bin/oversightml-mr-entry-point.py
