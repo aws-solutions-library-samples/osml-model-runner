@@ -18,6 +18,7 @@ across instances to process images as quickly as possible.
   * [Running ModelRunner](#running-modelrunner)
   * [Infrastructure](#infrastructure)
     * [S3](#s3)
+  * [Documentation](#documentation)
 * [Support & Feedback](#support--feedback)
 * [Security](#security)
 * [License](#license)
@@ -113,9 +114,18 @@ Sample ImageRequest:
 #### S3
 When configuring S3 buckets for images and results, be sure to follow [S3 Security Best Practices](https://docs.aws.amazon.com/AmazonS3/latest/userguide/security-best-practices.html).
 
+### Documentation
+
+You can find documentation for this library in the `./doc` directory. Sphinx is used to construct a searchable HTML
+version of the API documents.
+
+```shell
+tox -e docs
+```
+
 ## Support & Feedback
 
-To post feedback, submit feature ideas, or report bugs, please use the [Issues](https://github.com/aws-solutions-library-samples/osml-models/issues) section of this GitHub repo.
+To post feedback, submit feature ideas, or report bugs, please use the [Issues](https://github.com/aws-solutions-library-samples/osml-model-runner/issues) section of this GitHub repo.
 
 If you are interested in contributing to OversightML Model Runner, see the [CONTRIBUTING](CONTRIBUTING.md) guide.
 
