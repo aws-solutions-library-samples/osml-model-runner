@@ -82,7 +82,5 @@ RUN python3 -m pip install osml-model-runner/
 RUN conda clean -afy
 
 # set the entry point script
-ENTRYPOINT ["/bin/bash", "-c", "/entry.sh"]
+ENTRYPOINT ["/entry.sh", "/bin/bash", "-c", "python3 osml-model-runner/bin/oversightml-mr-entry-point.py"]
 
-# set the entry point command to start model runner in the conda env
-CMD python3 osml-model-runner/bin/oversightml-mr-entry-point.py
