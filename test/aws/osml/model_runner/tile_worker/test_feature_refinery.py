@@ -1,9 +1,9 @@
 #  Copyright 2023 Amazon.com, Inc. or its affiliates.
 
 import unittest
-import xml.etree.ElementTree as ElementTree
 from secrets import token_hex
 
+import defusedxml as ElementTree
 import geojson
 
 

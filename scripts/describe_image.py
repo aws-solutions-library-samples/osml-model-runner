@@ -2,8 +2,8 @@
 
 import re
 import sys
-from xml.etree import ElementTree
 
+from defusedxml import ElementTree
 from osgeo import gdal
 
 SUBDATASET_NAME_PATTERN = re.compile("SUBDATASET_(\d+)_NAME")
