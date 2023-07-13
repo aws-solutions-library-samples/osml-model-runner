@@ -3,7 +3,7 @@
 import unittest
 from secrets import token_hex
 
-import defusedxml as ElementTree
+from defusedxml import ElementTree
 import geojson
 
 
