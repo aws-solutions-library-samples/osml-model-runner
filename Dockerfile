@@ -16,10 +16,10 @@ ARG PIP_INSTALL_LOCATION=https://pypi.org/simple/
 USER root
 
 # set working directory to home
-WORKDIR /home/
+WORKDIR /home
 
 # configure, update, and refresh yum enviornment
-RUN yum update -y && yum clean all && yum makecache && yum install -y wget
+RUN yum update -y && yum clean all && yum makecache && yum install -y wget shadow-utils
 
 # install miniconda
 ARG MINICONDA_VERSION=Miniconda3-latest-Linux-x86_64
@@ -80,6 +80,11 @@ RUN python3 -m pip install osml-model-runner/
 
 # clean up the conda install
 RUN conda clean -afy
+
+# set up a user to run the container as and assume it
+RUN adduser modelrunner
+RUN chown -R modelrunner:modelrunner ./
+USER modelrunner
 
 # set the entry point script
 ENTRYPOINT ["/entry.sh", "/bin/bash", "-c", "python3 osml-model-runner/bin/oversightml-mr-entry-point.py"]
