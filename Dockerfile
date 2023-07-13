@@ -41,8 +41,8 @@ ENV ARCHFLAGS="-arch x86_64"
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/conda/lib/:/opt/conda/bin:/usr/include:/usr/local/"
 ENV PROJ_LIB=/opt/conda/share/proj
 
-# copy our conda env configuration
-COPY osml-model-runner/environment.yml .
+# copy our conda env configuration for Python 3.10
+COPY osml-model-runner/environment-py310.yml environment.yml
 
 # create the conda env
 RUN conda env create
