@@ -4,3 +4,5 @@ channels:
 dependencies:
   - conda-forge::gdal=3.7.0
   - conda-forge::proj=9.2.1
+  # Uncomment if you want to add python to this ENV
+  #  - conda-forge::python
