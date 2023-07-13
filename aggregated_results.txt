@@ -32,7 +32,7 @@ No vulnerabilities found
 >>>>>> Begin Syft output >>>>>>
 
 [0;90m[0000][0m [0;33m WARN[0m no explicit name and version provided for directory source, deriving artifact ID from the given path (which is not ideal)
-NAME  VERSION  TYPE   
+NAME  VERSION  TYPE
 lxml  4.9.1    python
 
 <<<<<< End Syft output <<<<<<
@@ -46,23 +46,23 @@ Using configs only from local files (like --config=xyz.yml) does not enable metr
 
 More information: https://semgrep.dev/docs/metrics
 
-               
-               
+
+
 ┌─────────────┐
 │ Scan Status │
 └─────────────┘
   Scanning 127 files tracked by git with 1077 Code rules:
-                                                                                
-  Language      Rules   Files          Origin      Rules                        
- ─────────────────────────────        ───────────────────                       
-  <multilang>      76     261          Community    1077                        
-  python          244      60                                                   
-  yaml             27       2                                                   
-  dockerfile        4       1                                                   
-  html              1       1                                                   
-                                                                                
-                
-                
+
+  Language      Rules   Files          Origin      Rules
+ ─────────────────────────────        ───────────────────
+  <multilang>      76     261          Community    1077
+  python          244      60
+  yaml             27       2
+  dockerfile        4       1
+  html              1       1
+
+
+
 ┌──────────────┐
 │ Scan Summary │
 └──────────────┘
@@ -72,43 +72,43 @@ Some files were skipped or only partially analyzed.
   For a full list of skipped files, run semgrep with the --verbose flag.
 
 Ran 1077 rules on 87 files: 3 findings.
-                   
-                   
+
+
 ┌─────────────────┐
 │ 3 Code Findings │
 └─────────────────┘
-               
-    Dockerfile 
-       generic.dockerfile.security.last-user-is-root.last-user-is-root          
-          The last user in the container is 'root'. This is a security hazard   
-  because if an attacker                                                        
+
+    Dockerfile
+       generic.dockerfile.security.last-user-is-root.last-user-is-root
+          The last user in the container is 'root'. This is a security hazard
+  because if an attacker
           gains control of the container they will have root access. Switch back
-  to another user after                                                         
-          running commands as 'root'.                                           
-          Details: https://sg.run/N461                                          
-                                                                                
+  to another user after
+          running commands as 'root'.
+          Details: https://sg.run/N461
+
            16┆ USER root
-                              
-    scripts/describe_image.py 
-       python.lang.security.use-defused-xml.use-defused-xml                     
-          The Python documentation recommends using `defusedxml` instead of     
-  `xml` because the native                                                      
-          Python `xml` library is vulnerable to XML External Entity (XXE)       
-  attacks. These attacks can                                                    
-          leak confidential data and "XML bombs" can cause denial of service.   
-          Details: https://sg.run/kX47                                          
-                                                                                
+
+    scripts/describe_image.py
+       python.lang.security.use-defused-xml.use-defused-xml
+          The Python documentation recommends using `defusedxml` instead of
+  `xml` because the native
+          Python `xml` library is vulnerable to XML External Entity (XXE)
+  attacks. These attacks can
+          leak confidential data and "XML bombs" can cause denial of service.
+          Details: https://sg.run/kX47
+
             5┆ from xml.etree import ElementTree
-                               
-    scripts/summarize_image.py 
-       python.lang.security.use-defused-xml.use-defused-xml                     
-          The Python documentation recommends using `defusedxml` instead of     
-  `xml` because the native                                                      
-          Python `xml` library is vulnerable to XML External Entity (XXE)       
-  attacks. These attacks can                                                    
-          leak confidential data and "XML bombs" can cause denial of service.   
-          Details: https://sg.run/kX47                                          
-                                                                                
+
+    scripts/summarize_image.py
+       python.lang.security.use-defused-xml.use-defused-xml
+          The Python documentation recommends using `defusedxml` instead of
+  `xml` because the native
+          Python `xml` library is vulnerable to XML External Entity (XXE)
+  attacks. These attacks can
+          leak confidential data and "XML bombs" can cause denial of service.
+          Details: https://sg.run/kX47
+
             8┆ from xml.etree import ElementTree
 
 
@@ -191,13 +191,13 @@ starting to investigate ...
 found 1 files to scan.  Starting checkov scans ...
 >>>>>> begin checkov result for Dockerfile >>>>>>
 
-       _               _              
+       _               _
    ___| |__   ___  ___| | _______   __
   / __| '_ \ / _ \/ __| |/ / _ \ \ / /
- | (__| | | |  __/ (__|   < (_) \ V / 
-  \___|_| |_|\___|\___|_|\_\___/ \_/  
-                                      
-By bridgecrew.io | version: 2.3.324 
+ | (__| | | |  __/ (__|   < (_) \ V /
+  \___|_| |_|\___|\___|_|\_\___/ \_/
+
+By bridgecrew.io | version: 2.3.324
 
 dockerfile scan results:
 
@@ -827,5 +827,3 @@ found 0 files to scan.  Skipping cfn_nag scans.
 #############################################
 End of  /Users/drduhe/Desktop/github/osml-model-runner/yaml_report_result.txt
 #############################################
-
-
