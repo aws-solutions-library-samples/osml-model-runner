@@ -1,12 +1,4 @@
-# Note this container is meant to be built in a parent directory that contains the osml-imagery-toolkit package
-
-# set the base image to build from Internal Amazon Docker Image rather than DockerHub
-# if a lot of request were made, CodeBuild will failed due to...
-# "You have reached your pull rate limit. You may increase the limit by authenticating and upgrading"
-ARG BASE_CONTAINER=public.ecr.aws/amazonlinux/amazonlinux:latest
-
-# swap BASE_CONTAINER to a container output while building cert-base if you need to override the pip mirror
-FROM ${BASE_CONTAINER} as model_runner
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023 as model_runner
 
 # only override if you're using a mirror with a cert pulled in using cert-base as a build parameter
 ARG BUILD_CERT=/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
@@ -67,10 +59,10 @@ SHELL ["/entry.sh", "/bin/bash", "-c"]
 RUN conda init && echo 'conda activate "${CONDA_TARGET_ENV:-base}"' >>  ~/.bashrc
 
 # copy our lcoal application source into the container
-ADD osml-model-runner osml-model-runner
+COPY osml-model-runner osml-model-runner
 
 # copy our lcoal application source into the container
-ADD osml-imagery-toolkit osml-imagery-toolkit
+COPY osml-imagery-toolkit osml-imagery-toolkit
 
 # install the imagery toolkit library from source
 RUN python3 -m pip install osml-imagery-toolkit/
@@ -80,6 +72,12 @@ RUN python3 -m pip install osml-model-runner/
 
 # clean up the conda install
 RUN conda clean -afy
+
+# make sure we expose our ports
+EXPOSE 8080
+
+# set up a health check at that port
+HEALTHCHECK NONE
 
 # set up a user to run the container as and assume it
 RUN adduser modelrunner
