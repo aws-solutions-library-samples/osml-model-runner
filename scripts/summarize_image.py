@@ -5,9 +5,9 @@ import re
 import sys
 from typing import Iterator, TextIO
 from urllib.parse import urlparse
-from xml.etree import ElementTree
 
 import boto3
+from defusedxml import ElementTree
 from osgeo import gdal
 
 SUBDATASET_NAME_PATTERN = re.compile("SUBDATASET_(\d+)_NAME")
