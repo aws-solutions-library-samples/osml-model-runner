@@ -73,9 +73,6 @@ RUN python3 -m pip install osml-model-runner/
 # clean up the conda install
 RUN conda clean -afy
 
-# make sure we expose our ports
-EXPOSE 8080
-
 # set up a health check at that port
 HEALTHCHECK NONE
 
