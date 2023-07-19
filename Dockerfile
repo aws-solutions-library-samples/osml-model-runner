@@ -59,7 +59,7 @@ SHELL ["/entry.sh", "/bin/bash", "-c"]
 RUN conda init && echo 'conda activate "${CONDA_TARGET_ENV:-base}"' >>  ~/.bashrc
 
 # copy our lcoal application source into the container
-COPY osml-model-runner osml-model-runner
+COPY . osml-model-runner
 
 # install the model runner application from source
 RUN python3 -m pip install osml-model-runner/
