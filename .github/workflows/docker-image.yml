@@ -1,4 +1,4 @@
-name: Model Runner Docker Image CI
+name: Docker Image Build
 
 on:
   push:

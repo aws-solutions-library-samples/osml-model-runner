@@ -3,8 +3,8 @@
 import unittest
 from secrets import token_hex
 
-from defusedxml import ElementTree
 import geojson
+from defusedxml import ElementTree
 
 
 class TestFeatureRefinery(unittest.TestCase):
