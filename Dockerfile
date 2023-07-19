@@ -34,7 +34,7 @@ ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/conda/lib/:/opt/conda/bin:/usr/incl
 ENV PROJ_LIB=/opt/conda/share/proj
 
 # copy our conda env configuration for Python 3.10
-COPY osml-model-runner/environment-py310.yml environment.yml
+COPY environment-py310.yml environment.yml
 
 # create the conda env
 RUN conda env create
@@ -60,12 +60,6 @@ RUN conda init && echo 'conda activate "${CONDA_TARGET_ENV:-base}"' >>  ~/.bashr
 
 # copy our lcoal application source into the container
 COPY osml-model-runner osml-model-runner
-
-# copy our lcoal application source into the container
-COPY osml-imagery-toolkit osml-imagery-toolkit
-
-# install the imagery toolkit library from source
-RUN python3 -m pip install osml-imagery-toolkit/
 
 # install the model runner application from source
 RUN python3 -m pip install osml-model-runner/
