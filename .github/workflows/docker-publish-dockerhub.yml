@@ -1,0 +1,27 @@
+name: Publish To Docker Hub
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build Spring Boot
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Publish Docker Image to Dockerhub
+        id: buildAndPushImage
+        uses: MaximilianoBz/dockerhub-buildpush@v1.0
+        with:
+          registry_url: 'docker.io'
+          repository_name: 'osml-model-runner'
+          user_name: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+          image_version: 'latest'
+          docker_file: '.'
+      - name: Get pre step result output image_pull_url
+        run: echo "The time was ${{ steps.buildAndPushImage.outputs.image_pull_url }}"
