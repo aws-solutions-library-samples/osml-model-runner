@@ -1,6 +1,6 @@
 name: Publish GitHub Container
 
-# Configures this workflow to run every time a change is pushed to the branch called `release`.
+# Configures this workflow to run every time a change is pushed to the branch called `main`.
 on:
   push:
     branches: ['main']
