@@ -62,7 +62,7 @@ RUN conda init && echo 'conda activate "${CONDA_TARGET_ENV:-base}"' >>  ~/.bashr
 COPY . osml-model-runner
 
 # install the model runner application from source
-RUN python3 -m pip install osml-model-runner/
+RUN python3 -m pip install osml-model-runner/.
 
 # clean up the conda install
 RUN conda clean -afy
