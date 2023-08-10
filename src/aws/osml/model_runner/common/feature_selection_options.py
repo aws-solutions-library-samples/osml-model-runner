@@ -16,10 +16,10 @@ class FeatureSelectionOptions:
     :property sigma: float = value - only applies to Soft NMS
     """
 
-    algorithm: FeatureSelectionAlgorithm = FeatureSelectionAlgorithm.NMS
-    iou_threshold: float = 0.75
-    skip_box_threshold: float = 0.0001
-    sigma: float = 0.1
+    algorithm: FeatureSelectionAlgorithm
+    iou_threshold: float
+    skip_box_threshold: float
+    sigma: float
 
 
 def feature_selection_options_factory(properties_list: List) -> Dict:

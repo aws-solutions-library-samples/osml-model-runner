@@ -13,3 +13,6 @@ class FeatureSelectionAlgorithm(str, AutoStringEnum):
     NONE = auto()
     NMS = auto()
     SOFT_NMS = auto()  # gaussian Soft-NMS (as opposed to linear)
+
+
+VALID_FEATURE_SELECTION_ALGORITHMS = [item.value for item in FeatureSelectionAlgorithm]
