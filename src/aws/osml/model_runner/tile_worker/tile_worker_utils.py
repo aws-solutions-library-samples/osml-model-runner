@@ -85,6 +85,7 @@ def process_tiles(
     tile_workers: List[TileWorker],
     raster_dataset: gdal.Dataset,
     metrics: MetricsLogger = None,
+    sensor_model: Optional[SensorModel] = None,
 ) -> int:
     """
     Loads a GDAL dataset into memory and processes it with a pool of tile workers.
@@ -94,6 +95,7 @@ def process_tiles(
     :param tile_workers: List[Tileworker] = the list of tile workers
     :param raster_dataset: gdal.Dataset = the raster dataset containing the region
     :param metrics: MetricsLogger = the metrics logger to use to report metrics.
+    :param sensor_model: Optional[SensorModel] = the sensor model for this raster dataset
 
     :return: int = number of tiles processed
     """
@@ -114,6 +116,7 @@ def process_tiles(
                 raster_dataset=raster_dataset,
                 tile_format=region_request.tile_format,
                 tile_compression=region_request.tile_compression,
+                sensor_model=sensor_model,
             )
 
             # Calculate a set of ML engine sized regions that we need to process for this image
