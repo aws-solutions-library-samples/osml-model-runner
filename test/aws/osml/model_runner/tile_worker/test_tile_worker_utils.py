@@ -68,47 +68,6 @@ class TestTileWorkerUtils(unittest.TestCase):
         assert 256 == self.next_greater_power_of_two(255)
         assert 512 == self.next_greater_power_of_two(400)
 
-    # Test data here could be improved. We're reusing a nitf file for everything and just
-    # testing a single raster scale
-    def test_create_gdal_translate_kwargs(self):
-        from aws.osml.model_runner.common.typing import ImageCompression, ImageFormats
-        from aws.osml.model_runner.tile_worker.tile_worker_utils import create_gdal_translate_kwargs
-
-        ds, sensor_model = self.get_dataset_and_camera()
-
-        format_compression_combinations = [
-            (ImageFormats.NITF, ImageCompression.NONE, "IC=NC"),
-            (ImageFormats.NITF, ImageCompression.JPEG, "IC=C3"),
-            (ImageFormats.NITF, ImageCompression.J2K, "IC=C8"),
-            (ImageFormats.NITF, "FAKE", ""),
-            (ImageFormats.NITF, None, "IC=C8"),
-            (ImageFormats.JPEG, ImageCompression.NONE, None),
-            (ImageFormats.JPEG, ImageCompression.JPEG, None),
-            (ImageFormats.JPEG, ImageCompression.J2K, None),
-            (ImageFormats.JPEG, "FAKE", None),
-            (ImageFormats.JPEG, None, None),
-            (ImageFormats.PNG, ImageCompression.NONE, None),
-            (ImageFormats.PNG, ImageCompression.JPEG, None),
-            (ImageFormats.PNG, ImageCompression.J2K, None),
-            (ImageFormats.PNG, "FAKE", None),
-            (ImageFormats.PNG, None, None),
-            (ImageFormats.GTIFF, ImageCompression.NONE, None),
-            (ImageFormats.GTIFF, ImageCompression.JPEG, None),
-            (ImageFormats.GTIFF, ImageCompression.J2K, None),
-            (ImageFormats.GTIFF, ImageCompression.LZW, None),
-            (ImageFormats.GTIFF, "FAKE", None),
-            (ImageFormats.GTIFF, None, None),
-        ]
-
-        for image_format, image_compression, expected_options in format_compression_combinations:
-            gdal_translate_kwargs = create_gdal_translate_kwargs(image_format, image_compression, ds)
-
-            assert gdal_translate_kwargs["format"] == image_format
-            assert gdal_translate_kwargs["scaleParams"] == [[0, 255, 0, 255]]
-            assert gdal_translate_kwargs["outputType"] == 1
-            if expected_options:
-                assert gdal_translate_kwargs["creationOptions"] == expected_options
-
     def test_sizeof_fmt(self):
         from aws.osml.model_runner.tile_worker.tile_worker_utils import sizeof_fmt
 

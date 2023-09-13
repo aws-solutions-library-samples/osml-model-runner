@@ -5,23 +5,17 @@ import tempfile
 from pathlib import Path
 from queue import Queue
 from secrets import token_hex
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from aws_embedded_metrics import MetricsLogger
 from aws_embedded_metrics.unit import Unit
 from osgeo import gdal
 
-from aws.osml.gdal import GDALConfigEnv, get_type_and_scales
+from aws.osml.gdal import GDALConfigEnv
+from aws.osml.image_processing.gdal_tile_factory import GDALTileFactory
 from aws.osml.model_runner.api import RegionRequest
 from aws.osml.model_runner.app_config import MetricLabels, ServiceConfig
-from aws.osml.model_runner.common import (
-    ImageCompression,
-    ImageDimensions,
-    ImageFormats,
-    ImageRegion,
-    Timer,
-    get_credentials_for_assumed_role,
-)
+from aws.osml.model_runner.common import ImageDimensions, ImageRegion, Timer, get_credentials_for_assumed_role
 from aws.osml.model_runner.database import FeatureTable
 from aws.osml.model_runner.inference import SMDetector
 from aws.osml.model_runner.tile_worker import FeatureRefinery, TileWorker
@@ -91,6 +85,7 @@ def process_tiles(
     tile_workers: List[TileWorker],
     raster_dataset: gdal.Dataset,
     metrics: MetricsLogger = None,
+    sensor_model: Optional[SensorModel] = None,
 ) -> int:
     """
     Loads a GDAL dataset into memory and processes it with a pool of tile workers.
@@ -100,6 +95,7 @@ def process_tiles(
     :param tile_workers: List[Tileworker] = the list of tile workers
     :param raster_dataset: gdal.Dataset = the raster dataset containing the region
     :param metrics: MetricsLogger = the metrics logger to use to report metrics.
+    :param sensor_model: Optional[SensorModel] = the sensor model for this raster dataset
 
     :return: int = number of tiles processed
     """
@@ -116,8 +112,11 @@ def process_tiles(
             # Use the request and metadata from the raster dataset to create a set of keyword
             # arguments for the gdal.Translate() function. This will configure that function to
             # create image tiles using the format, compression, etc. needed by the CV container.
-            gdal_translate_kwargs = create_gdal_translate_kwargs(
-                region_request.tile_format, region_request.tile_compression, raster_dataset
+            gdal_tile_factory = GDALTileFactory(
+                raster_dataset=raster_dataset,
+                tile_format=region_request.tile_format,
+                tile_compression=region_request.tile_compression,
+                sensor_model=sensor_model,
             )
 
             # Calculate a set of ML engine sized regions that we need to process for this image
@@ -146,9 +145,6 @@ def process_tiles(
                     tmp_image_path = Path(tmp, region_image_filename)
 
                     # Use GDAL to create an encoded tile of the image region
-                    # From GDAL documentation:
-                    #   srcWin --- subwindow in pixels to extract:
-                    #               [left_x, top_y, width, height]
                     absolute_tile_path = tmp_image_path.absolute()
                     with Timer(
                         task_str="Creating image tile: {}".format(absolute_tile_path),
@@ -156,18 +152,12 @@ def process_tiles(
                         logger=logger,
                         metrics_logger=metrics,
                     ):
-                        # Use GDAL to transform the source image
-                        gdal.Translate(
-                            str(absolute_tile_path),
-                            raster_dataset,
-                            srcWin=[
-                                tile_bounds[0][1],
-                                tile_bounds[0][0],
-                                tile_bounds[1][0],
-                                tile_bounds[1][1],
-                            ],
-                            **gdal_translate_kwargs,
+                        encoded_tile_data = gdal_tile_factory.create_encoded_tile(
+                            [tile_bounds[0][0], tile_bounds[0][1], tile_bounds[1][0], tile_bounds[1][1]]
                         )
+
+                        with open(absolute_tile_path, "wb") as binary_file:
+                            binary_file.write(encoded_tile_data)
 
                     # GDAL doesn't always generate errors, so we need to make sure the NITF
                     # encoded region was actually created.
@@ -266,76 +256,6 @@ def generate_crops(region: ImageRegion, chip_size: ImageDimensions, overlap: Ima
                 crops.append(((ul_y, ul_x), (w, h)))
 
     return crops
-
-
-def create_gdal_translate_kwargs(
-    image_format: ImageFormats, image_compression: ImageCompression, raster_dataset: gdal.Dataset
-) -> Dict[str, Any]:
-    """
-    This function creates a set of keyword arguments suitable for passing to the gdal.Translate
-    function. The values for these options are derived from the region processing request and
-    the raster dataset itself.
-
-    See: https://gdal.org/python/osgeo.gdal-module.html#Translate
-    See: https://gdal.org/python/osgeo.gdal-module.html#TranslateOptions
-
-    :param image_format: ImageFormats = the format of the input image
-    :param image_compression: ImageCompression = the compression used on the input image
-    :param raster_dataset: gdal.Dataset = the raster dataset to translate
-
-    :return: Dict[str, any] = the dictionary of translate keyword arguments
-    """
-    # Figure out what type of image this is and calculate a scale that does not force any range
-    # remapping
-    # TODO: Consider adding an option to have this driver perform the DRA. That option would change
-    #       the scale_params output by this calculation
-    output_type, scale_params = get_type_and_scales(raster_dataset)
-
-    gdal_translate_kwargs = {
-        "scaleParams": scale_params,
-        "outputType": output_type,
-        "format": image_format,
-    }
-
-    creation_options = ""
-    if image_format == ImageFormats.NITF:
-        # Creation options specific to the NITF raster driver.
-        # See: https://gdal.org/drivers/raster/nitf.html
-        if image_compression is None:
-            # Default NITF tiles to JPEG2000 compression if not specified
-            creation_options += "IC=C8"
-        elif image_compression == ImageCompression.J2K:
-            creation_options += "IC=C8"
-        elif image_compression == ImageCompression.JPEG:
-            creation_options += "IC=C3"
-        elif image_compression == ImageCompression.NONE:
-            creation_options += "IC=NC"
-        else:
-            logging.warning("Invalid compress specified for NITF image defaulting to JPEG2000!")
-            creation_options += "IC=C8"
-
-    if image_format == ImageFormats.GTIFF:
-        # Creation options specific to the GeoTIFF raster driver.
-        # See: https://gdal.org/drivers/raster/nitf.html
-        if image_compression is None:
-            # Default GeoTiff tiles to LZQ compression if not specified
-            creation_options += "COMPRESS=LZW"
-        elif image_compression == ImageCompression.LZW:
-            creation_options += "COMPRESS=LZW"
-        elif image_compression == ImageCompression.JPEG:
-            creation_options += "COMPRESS=JPEG"
-        elif image_compression == ImageCompression.NONE:
-            creation_options += "COMPRESS=NONE"
-        else:
-            logging.warning("Invalid compress specified for GTIFF image defaulting to LZW!")
-            creation_options += "COMPRESS=LZW"
-
-    # TODO: Expand this to offer support for compression using other file formats
-
-    if creation_options != "":
-        gdal_translate_kwargs["creationOptions"] = creation_options
-
-    return gdal_translate_kwargs
 
 
 def ceildiv(a: int, b: int) -> int:

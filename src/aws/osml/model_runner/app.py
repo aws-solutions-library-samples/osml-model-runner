@@ -505,11 +505,7 @@ class ModelRunner:
 
                 # Process all our tiles
                 total_tile_count = process_tiles(
-                    region_request,
-                    tile_queue,
-                    tile_workers,
-                    raster_dataset,
-                    metrics,
+                    region_request, tile_queue, tile_workers, raster_dataset, metrics, sensor_model
                 )
 
                 # Update table w/ total tile counts
