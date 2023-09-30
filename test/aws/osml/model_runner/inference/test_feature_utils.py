@@ -97,7 +97,7 @@ class TestFeatureUtils(unittest.TestCase):
 
         processing_bounds = calculate_processing_bounds(ds, roi, sensor_model)
 
-        assert processing_bounds == ((0, 0), (101, 101))
+        assert processing_bounds == ((101, 101), (0, 0))
 
     def test_calculate_processing_bounds_intersect(self):
         from aws.osml.model_runner.inference.feature_utils import calculate_processing_bounds
@@ -114,7 +114,7 @@ class TestFeatureUtils(unittest.TestCase):
         processing_bounds = calculate_processing_bounds(ds, roi, sensor_model)
 
         # Processing bounds is in ((r, c), (w, h))
-        assert processing_bounds == ((0, 0), (50, 50))
+        assert processing_bounds == ((50, 50), (0, 0))
 
     def test_calculate_processing_bounds_chip(self):
         from aws.osml.model_runner.inference.feature_utils import calculate_processing_bounds
@@ -135,7 +135,7 @@ class TestFeatureUtils(unittest.TestCase):
         processing_bounds = calculate_processing_bounds(ds, roi, sensor_model)
 
         # Processing bounds is in ((r, c), (w, h))
-        assert processing_bounds == ((15, 10), (60, 75))
+        assert processing_bounds == ((60, 75), (15, 10))
 
     @staticmethod
     def build_gdal_sensor_model():
