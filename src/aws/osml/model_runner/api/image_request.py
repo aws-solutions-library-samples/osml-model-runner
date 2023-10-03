@@ -10,6 +10,11 @@ from shapely.geometry.base import BaseGeometry
 
 from aws.osml.model_runner.app_config import BotoConfig
 from aws.osml.model_runner.common import (
+<<<<<<< Updated upstream
+=======
+    VALID_FEATURE_SELECTION_ALGORITHMS,
+    FeatureSelectionAlgorithm,
+>>>>>>> Stashed changes
     FeatureSelectionOptions,
     ImageCompression,
     ImageDimensions,
@@ -57,7 +62,16 @@ class ImageRequest(object):
         self.model_invocation_role: str = ""
         self.feature_properties: List[dict] = []
         self.roi: Optional[BaseGeometry] = None
+<<<<<<< Updated upstream
         self.feature_selection_options: FeatureSelectionOptions = FeatureSelectionOptions()
+=======
+        self.feature_selection_options: FeatureSelectionOptions = FeatureSelectionOptions(
+            algorithm=ServiceConfig.feature_selection_algorithm,
+            iou_threshold=ServiceConfig.feature_selection_iou_threshold,
+            skip_box_threshold=ServiceConfig.feature_selection_skip_box_threshold,
+            sigma=ServiceConfig.feature_selection_sigma,
+        )
+>>>>>>> Stashed changes
 
         for dictionary in initial_data:
             for key in dictionary:
@@ -122,6 +136,21 @@ class ImageRequest(object):
             ]
         if image_request.get("featureProperties"):
             properties["feature_properties"] = image_request["featureProperties"]
+<<<<<<< Updated upstream
+=======
+        if "featureSelectionOptions" in image_request:
+            fs_options = image_request["featureSelectionOptions"]
+            algorithm_str = fs_options.get("algorithm", ServiceConfig.feature_selection_algorithm)
+            if algorithm_str not in VALID_FEATURE_SELECTION_ALGORITHMS:
+                algorithm_str = ServiceConfig.feature_selection_algorithm
+            algorithm = getattr(FeatureSelectionAlgorithm, algorithm_str)
+            iou_threshold = fs_options.get("iouThreshold", ServiceConfig.feature_selection_iou_threshold)
+            skip_box_threshold = fs_options.get("skipBoxThreshold", ServiceConfig.feature_selection_skip_box_threshold)
+            sigma = fs_options.get("sigma", ServiceConfig.feature_selection_sigma)
+            properties["feature_selection_options"] = FeatureSelectionOptions(
+                algorithm=algorithm, iou_threshold=iou_threshold, skip_box_threshold=skip_box_threshold, sigma=sigma
+            )
+>>>>>>> Stashed changes
 
         return ImageRequest(properties)
 
