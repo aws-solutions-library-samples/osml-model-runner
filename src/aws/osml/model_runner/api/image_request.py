@@ -10,9 +10,9 @@ from shapely.geometry.base import BaseGeometry
 
 from aws.osml.model_runner.app_config import BotoConfig, ServiceConfig
 from aws.osml.model_runner.common import (
-    FeatureSelectionOptions,
-    FeatureSelectionAlgorithm,
     VALID_FEATURE_SELECTION_ALGORITHMS,
+    FeatureSelectionAlgorithm,
+    FeatureSelectionOptions,
     ImageCompression,
     ImageDimensions,
     ImageFormats,
@@ -63,7 +63,7 @@ class ImageRequest(object):
             algorithm=ServiceConfig.feature_selection_algorithm,
             iou_threshold=ServiceConfig.feature_selection_iou_threshold,
             skip_box_threshold=ServiceConfig.feature_selection_skip_box_threshold,
-            sigma=ServiceConfig.feature_selection_sigma
+            sigma=ServiceConfig.feature_selection_sigma,
         )
 
         for dictionary in initial_data:
@@ -138,11 +138,10 @@ class ImageRequest(object):
             iou_threshold = fs_options.get("iouThreshold", ServiceConfig.feature_selection_iou_threshold)
             skip_box_threshold = fs_options.get("skipBoxThreshold", ServiceConfig.feature_selection_skip_box_threshold)
             sigma = fs_options.get("sigma", ServiceConfig.feature_selection_sigma)
-            properties["feature_selection_options"] = FeatureSelectionOptions(algorithm=algorithm,
-                                                                              iou_threshold=iou_threshold,
-                                                                              skip_box_threshold=skip_box_threshold,
-                                                                              sigma=sigma
-                                                                              )
+            properties["feature_selection_options"] = FeatureSelectionOptions(
+                algorithm=algorithm, iou_threshold=iou_threshold, skip_box_threshold=skip_box_threshold, sigma=sigma
+            )
+
         return ImageRequest(properties)
 
     def is_valid(self) -> bool:

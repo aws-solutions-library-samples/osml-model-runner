@@ -8,7 +8,7 @@ from .auto_string_enum import AutoStringEnum
 from .credentials_utils import get_credentials_for_assumed_role
 from .endpoint_utils import EndpointUtils
 from .exceptions import InvalidAssumedRoleException, InvalidClassificationException
-from .feature_selection_algorithm import FeatureSelectionAlgorithm, VALID_FEATURE_SELECTION_ALGORITHMS
+from .feature_selection_algorithm import VALID_FEATURE_SELECTION_ALGORITHMS, FeatureSelectionAlgorithm
 from .feature_selection_options import FeatureSelectionOptions, feature_selection_options_factory
 from .metrics_utils import build_embedded_metrics_config
 from .security_classification import (
