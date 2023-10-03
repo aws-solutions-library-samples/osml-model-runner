@@ -153,7 +153,7 @@ def process_tiles(
                         metrics_logger=metrics,
                     ):
                         encoded_tile_data = gdal_tile_factory.create_encoded_tile(
-                            [tile_bounds[0][0], tile_bounds[0][1], tile_bounds[1][0], tile_bounds[1][1]]
+                            [tile_bounds[0][1], tile_bounds[0][0], tile_bounds[1][0], tile_bounds[1][1]]
                         )
 
                         with open(absolute_tile_path, "wb") as binary_file:
