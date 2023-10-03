@@ -1,9 +1,11 @@
 #  Copyright 2023 Amazon.com, Inc. or its affiliates.
 
 import unittest
+from math import degrees
 from typing import List
 
 import geojson
+import numpy as np
 import pytest
 import shapely
 
@@ -101,16 +103,22 @@ class TestFeatureUtils(unittest.TestCase):
 
     def test_calculate_processing_bounds_intersect(self):
         from aws.osml.model_runner.inference.feature_utils import calculate_processing_bounds
+        from aws.osml.photogrammetry import ImageCoordinate
 
         ds, sensor_model = self.get_dataset_and_camera()
 
-        roi = shapely.wkt.loads("POLYGON ((8 52, 9.001043490711101 52.0013898967889, 9 54, 8 54, 8 52))")
+        chip_ul = sensor_model.image_to_world(ImageCoordinate([-10, -10]))
+        chip_lr = sensor_model.image_to_world(ImageCoordinate([50, 50]))
+        min_vals = np.minimum(chip_ul.coordinate, chip_lr.coordinate)
+        max_vals = np.maximum(chip_ul.coordinate, chip_lr.coordinate)
+        polygon_coords = []
+        polygon_coords.append([degrees(min_vals[0]), degrees(min_vals[1])])
+        polygon_coords.append([degrees(min_vals[0]), degrees(max_vals[1])])
+        polygon_coords.append([degrees(max_vals[0]), degrees(max_vals[1])])
+        polygon_coords.append([degrees(max_vals[0]), degrees(min_vals[1])])
+        polygon_coords.append([degrees(min_vals[0]), degrees(min_vals[1])])
+        roi = shapely.geometry.Polygon(polygon_coords)
 
-        # Manually verify the lon/lat coordinates of the image positions used in this test with these
-        # print statements
-        # print(sensor_model.image_to_world((0, 0)))
-        # print(sensor_model.image_to_world((50, 50)))
-        # print(sensor_model.image_to_world((101, 101)))
         processing_bounds = calculate_processing_bounds(ds, roi, sensor_model)
 
         # Processing bounds is in ((r, c), (w, h))
@@ -118,20 +126,22 @@ class TestFeatureUtils(unittest.TestCase):
 
     def test_calculate_processing_bounds_chip(self):
         from aws.osml.model_runner.inference.feature_utils import calculate_processing_bounds
+        from aws.osml.photogrammetry import ImageCoordinate
 
         ds, sensor_model = self.get_dataset_and_camera()
-        roi = shapely.wkt.loads(
-            "POLYGON (("
-            "8.999932379599102 52.0023621190119, 8.999932379599102 52.0002787856769, "
-            "9.001599046267101 52.0002787856769, 9.001599046267101 52.0023621190119, "
-            "8.999932379599102 52.0023621190119"
-            "))"
-        )
 
-        # Manually verify the lon/lat coordinates of the image positions used in this test with these
-        # print statements
-        # print(sensor_model.image_to_world((10, 15)))
-        # print(sensor_model.image_to_world((70, 90)))
+        chip_ul = sensor_model.image_to_world(ImageCoordinate([10, 15]))
+        chip_lr = sensor_model.image_to_world(ImageCoordinate([70, 90]))
+        min_vals = np.minimum(chip_ul.coordinate, chip_lr.coordinate)
+        max_vals = np.maximum(chip_ul.coordinate, chip_lr.coordinate)
+        polygon_coords = []
+        polygon_coords.append([degrees(min_vals[0]), degrees(min_vals[1])])
+        polygon_coords.append([degrees(min_vals[0]), degrees(max_vals[1])])
+        polygon_coords.append([degrees(max_vals[0]), degrees(max_vals[1])])
+        polygon_coords.append([degrees(max_vals[0]), degrees(min_vals[1])])
+        polygon_coords.append([degrees(min_vals[0]), degrees(min_vals[1])])
+        roi = shapely.geometry.Polygon(polygon_coords)
+
         processing_bounds = calculate_processing_bounds(ds, roi, sensor_model)
 
         # Processing bounds is in ((r, c), (w, h))
