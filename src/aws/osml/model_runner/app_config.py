@@ -58,15 +58,12 @@ class ServiceConfig:
     throttling_vcpu_scale_factor: str = os.getenv("THROTTLING_SCALE_FACTOR", "10")
     # Time in seconds to set region request visibility timeout when a request is self throttled
     throttling_retry_timeout: str = os.getenv("THROTTLING_RETRY_TIMEOUT", "10")
-<<<<<<< Updated upstream
-=======
 
     # feature selection default values
     feature_selection_algorithm: str = os.getenv("DEFAULT_FEATURE_SELECTION_ALGORITHM", "NMS")
     feature_selection_iou_threshold: float = os.getenv("DEFAULT_FEATURE_SELECTION_IOU_THRESHOLD", 0.75)
     feature_selection_skip_box_threshold: float = os.getenv("DEFAULT_FEATURE_SELECTION_SKIP_BOX_THRESHOLD", 0.0001)
     feature_selection_sigma: float = os.getenv("DEFAULT_FEATURE_SELECTION_SIGMA", 0.1)
->>>>>>> Stashed changes
 
     # constant configuration
     kinesis_max_record_size: str = "1048576"
