@@ -49,7 +49,7 @@ class TestSMDetector(unittest.TestCase):
             "SessionToken": "FAKE-SESSION-TOKEN",
             "Expiration": datetime.datetime.now(),
         }
-        with mock.patch("aws.osml.model_runner.inference.sm_endpoint_detector.boto3") as mock_boto3:
+        with mock.patch("aws.osml.model_runner.inference.sm_detector.boto3") as mock_boto3:
             mock_boto3.client.return_value = sm_client
             SMDetector("test-endpoint", aws_credentials)
             mock_boto3.client.assert_called_once_with(
@@ -128,7 +128,14 @@ class TestSMDetector(unittest.TestCase):
 
     def test_sm_name_generation(self):
         from aws.osml.model_runner.api.inference import ModelInvokeMode
-        from aws.osml.model_runner.inference import SMDetector
+        from aws.osml.model_runner.inference import HTTPDetector, SMDetector
 
-        feature_detector = SMDetector("test-endpoint")
-        assert feature_detector.mode == ModelInvokeMode.SM_ENDPOINT
+        sm_name = "sm-test"
+        sm_detector = SMDetector(endpoint=sm_name)
+        assert sm_detector.mode == ModelInvokeMode.SM_ENDPOINT
+        assert sm_detector.endpoint == sm_name
+
+        http_name = "http-test"
+        http_detector = HTTPDetector(endpoint=http_name)
+        assert http_detector.mode == ModelInvokeMode.HTTP_ENDPOINT
+        assert http_detector.endpoint == http_name
