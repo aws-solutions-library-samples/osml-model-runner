@@ -5,6 +5,8 @@
 # flake8: noqa
 
 from .detector import Detector
+from .endpoint_factory import FeatureDetectorFactory
 from .feature_selection import FeatureSelector
 from .feature_utils import calculate_processing_bounds, get_source_property
-from .sm_endpoint_detector import SMDetector
+from .http_detector import HTTPDetector
+from .sm_detector import SMDetector
