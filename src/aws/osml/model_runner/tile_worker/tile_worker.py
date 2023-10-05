@@ -12,7 +12,7 @@ from aws_embedded_metrics.unit import Unit
 
 from aws.osml.model_runner.app_config import MetricLabels
 from aws.osml.model_runner.database import FeatureTable
-from aws.osml.model_runner.inference import SMDetector
+from aws.osml.model_runner.inference import Detector
 from aws.osml.model_runner.tile_worker import FeatureRefinery
 
 
@@ -20,7 +20,7 @@ class TileWorker(Thread):
     def __init__(
         self,
         in_queue: Queue,
-        feature_detector: SMDetector,
+        feature_detector: Detector,
         feature_refinery: Optional[FeatureRefinery],
         feature_table: FeatureTable,
         metrics: MetricsLogger,
@@ -40,15 +40,10 @@ class TileWorker(Thread):
 
             if image_info is None:
                 logging.info("All images processed. Stopping tile worker.")
-                logging.info(
-                    "Feature Detector Stats: {} requests with {} errors".format(
-                        self.feature_detector.request_count, self.feature_detector.error_count
-                    )
-                )
                 break
 
             try:
-                logging.info("Invoking SM Endpoint")
+                logging.info("Invoking Feature Detector Endpoint")
                 with open(image_info["image_path"], mode="rb") as payload:
                     feature_collection = self.feature_detector.find_features(payload)
 

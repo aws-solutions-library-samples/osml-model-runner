@@ -17,10 +17,10 @@ from aws.osml.model_runner.api import RegionRequest
 from aws.osml.model_runner.app_config import MetricLabels, ServiceConfig
 from aws.osml.model_runner.common import ImageDimensions, ImageRegion, Timer, get_credentials_for_assumed_role
 from aws.osml.model_runner.database import FeatureTable
-from aws.osml.model_runner.inference import SMDetector
 from aws.osml.model_runner.tile_worker import FeatureRefinery, TileWorker
 from aws.osml.photogrammetry import ElevationModel, SensorModel
 
+from ..inference.endpoint_factory import FeatureDetectorFactory
 from .exceptions import ProcessTilesException, SetupTileWorkersException
 
 logger = logging.getLogger(__name__)
@@ -61,7 +61,11 @@ def setup_tile_workers(
 
             # Ignoring mypy error - if model_name was None the call to validate the region
             # request at the start of this function would have failed
-            feature_detector = SMDetector(region_request.model_name, model_invocation_credentials)  # type: ignore[arg-type]
+            feature_detector = FeatureDetectorFactory(
+                endpoint=region_request.model_name,
+                endpoint_mode=region_request.model_invoke_mode,
+                assumed_credentials=model_invocation_credentials,
+            ).build()
 
             feature_refinery = None
             if sensor_model is not None:
