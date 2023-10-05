@@ -268,9 +268,7 @@ class ModelRunner:
                 self.endpoint_statistics_table.upsert_endpoint(image_request.model_name, max_regions)
 
             # Update the image status to started and include relevant image meta-data
-            logger.info(
-                "Starting processing of {}".format(image_request.image_url)
-            )
+            logger.info("Starting processing of {}".format(image_request.image_url))
             image_request_item = JobItem(
                 image_id=image_request.image_id,
                 job_id=image_request.job_id,
