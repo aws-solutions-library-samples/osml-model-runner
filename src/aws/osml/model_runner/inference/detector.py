@@ -15,8 +15,15 @@ class Detector(abc.ABC):
     The mechanism by which detected features are sent to their destination.
     """
 
-    def __init__(self) -> str:
-        return f"{self.mode.value}"
+    def __init__(self, endpoint: str) -> None:
+        """
+        Endpoint Detector base class.
+
+        :param endpoint: str = the endpoint that will be invoked
+        """
+        self.endpoint = endpoint
+        self.request_count = 0
+        self.error_count = 0
 
     @property
     @abc.abstractmethod

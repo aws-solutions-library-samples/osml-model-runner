@@ -339,7 +339,7 @@ class TestModelRunner(unittest.TestCase):
     # Remember that with multiple patch decorators the order of the mocks in the parameter list is
     # reversed (i.e. the first mock parameter is the last decorator defined). Also note that the
     # pytest fixtures must come at the end.
-    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.SMDetector", autospec=True)
+    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.FeatureDetectorFactory", autospec=True)
     @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.FeatureTable", autospec=True)
     @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.TileWorker", autospec=True)
     @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.Queue", autospec=True)
@@ -471,7 +471,7 @@ class TestModelRunner(unittest.TestCase):
         elevation_model = ModelRunner.create_elevation_model()
         assert not elevation_model
 
-    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.SMDetector", autospec=True)
+    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.FeatureDetectorFactory", autospec=True)
     @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.FeatureTable", autospec=True)
     @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.TileWorker", autospec=True)
     @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.Queue", autospec=True)

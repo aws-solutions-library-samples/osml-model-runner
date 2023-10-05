@@ -11,6 +11,14 @@ from secrets import token_hex
 from typing import Any, Dict, List, Optional, Tuple
 
 import shapely.geometry.base
+from aws.osml.gdal import (
+    GDALConfigEnv,
+    GDALDigitalElevationModelTileFactory,
+    get_image_extension,
+    load_gdal_dataset,
+    set_gdal_default_configuration,
+)
+from aws.osml.photogrammetry import DigitalElevationModel, ElevationModel, SensorModel, SRTMTileSet
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_embedded_metrics.metric_scope import metric_scope
 from aws_embedded_metrics.unit import Unit
@@ -20,16 +28,8 @@ from geojson import Feature
 from osgeo import gdal
 from osgeo.gdal import Dataset
 
-from aws.osml.gdal import (
-    GDALConfigEnv,
-    GDALDigitalElevationModelTileFactory,
-    get_image_extension,
-    load_gdal_dataset,
-    set_gdal_default_configuration,
-)
-from aws.osml.photogrammetry import DigitalElevationModel, ElevationModel, SensorModel, SRTMTileSet
-
-from .api import ImageRequest, InvalidImageRequestException, ModelInvokeMode, RegionRequest, SinkMode
+from .api import ImageRequest, InvalidImageRequestException, RegionRequest, SinkMode, \
+    VALID_MODEL_HOSTING_OPTIONS
 from .app_config import MetricLabels, ServiceConfig
 from .common import (
     EndpointUtils,
@@ -732,22 +732,12 @@ class ModelRunner:
 
         :return: None
         """
-        # TODO: The long term goal is to support AWS provided models hosted by this service as well
-        #       as customer provided models where we're managing the endpoints internally. For an
-        #       initial release we can limit processing to customer managed SageMaker Model
-        #       Endpoints hence this check. The other type options should not be advertised in the
-        #       API but we are including the name/type structure in the API to allow expansion
-        #       through a non-breaking API change.
-        if (
-            not image_request.model_invoke_mode
-            or image_request.model_invoke_mode is ModelInvokeMode.NONE
-            or image_request.model_invoke_mode.casefold() != "SM_ENDPOINT".casefold()
-        ):
-            error = "Application only supports SageMaker Model Endpoints"
+        if not image_request.model_invoke_mode or image_request.model_invoke_mode not in VALID_MODEL_HOSTING_OPTIONS:
+            error = f"Application only supports ${VALID_MODEL_HOSTING_OPTIONS} Endpoints"
             self.status_monitor.process_event(
                 image_request,
                 ImageRequestStatus.FAILED,
-                "Application only supports SageMaker Model Endpoints",
+                error,
             )
             if isinstance(metrics, MetricsLogger):
                 metrics.put_metric(MetricLabels.UNSUPPORTED_MODEL_HOST, 1, str(Unit.COUNT.value))
