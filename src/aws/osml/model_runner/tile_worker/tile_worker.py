@@ -40,6 +40,11 @@ class TileWorker(Thread):
 
             if image_info is None:
                 logging.info("All images processed. Stopping tile worker.")
+                logging.info(
+                    "Feature Detector Stats: {} requests with {} errors".format(
+                        self.feature_detector.request_count, self.feature_detector.error_count
+                    )
+                )
                 break
 
             try:
