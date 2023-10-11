@@ -11,14 +11,6 @@ from secrets import token_hex
 from typing import Any, Dict, List, Optional, Tuple
 
 import shapely.geometry.base
-from aws.osml.gdal import (
-    GDALConfigEnv,
-    GDALDigitalElevationModelTileFactory,
-    get_image_extension,
-    load_gdal_dataset,
-    set_gdal_default_configuration,
-)
-from aws.osml.photogrammetry import DigitalElevationModel, ElevationModel, SensorModel, SRTMTileSet
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_embedded_metrics.metric_scope import metric_scope
 from aws_embedded_metrics.unit import Unit
@@ -28,8 +20,16 @@ from geojson import Feature
 from osgeo import gdal
 from osgeo.gdal import Dataset
 
-from .api import ImageRequest, InvalidImageRequestException, RegionRequest, SinkMode, \
-    VALID_MODEL_HOSTING_OPTIONS
+from aws.osml.gdal import (
+    GDALConfigEnv,
+    GDALDigitalElevationModelTileFactory,
+    get_image_extension,
+    load_gdal_dataset,
+    set_gdal_default_configuration,
+)
+from aws.osml.photogrammetry import DigitalElevationModel, ElevationModel, SensorModel, SRTMTileSet
+
+from .api import VALID_MODEL_HOSTING_OPTIONS, ImageRequest, InvalidImageRequestException, RegionRequest, SinkMode
 from .app_config import MetricLabels, ServiceConfig
 from .common import (
     EndpointUtils,
