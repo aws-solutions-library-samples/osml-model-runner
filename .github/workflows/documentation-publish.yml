@@ -1,7 +1,11 @@
-name: Docs
-on: [push, pull_request, workflow_dispatch]
+name: Generate and Publish Documentation for OSML Model Runner
+
+on:
+  workflow_call:
+
 permissions:
     contents: write
+
 jobs:
   docs:
     runs-on: ubuntu-latest
