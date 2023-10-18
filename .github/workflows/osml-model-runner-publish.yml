@@ -15,11 +15,11 @@ jobs:
     needs: [Build_Validate_Tox, Build_Docker_Container]
     uses: ./.github/workflows/python-publish.yml
     secrets: inherit
-  Publish_Docker_Github:
+  Publish_Docker_Dockerhub:
     needs: [Build_Validate_Tox, Build_Docker_Container]
     uses: ./.github/workflows/docker-publish-dockerhub.yml
     secrets: inherit
-  Publish_Docker_Dockerhub:
+  Publish_Docker_Github:
     needs: [Build_Validate_Tox, Build_Docker_Container]
     uses: ./.github/workflows/docker-publish-github.yml
     secrets: inherit
