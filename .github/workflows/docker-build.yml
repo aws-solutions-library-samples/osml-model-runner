@@ -7,9 +7,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         lfs: 'true'
-        ssh-key: ${{ secrets.git_ssh_key }}
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag osml-model-runner:$(date +%s)
