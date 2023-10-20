@@ -1,0 +1,18 @@
+name: Notify Guidance Overhead Imagery Repo
+
+on:
+  workflow_call:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Short Sha
+      uses: benjlevesque/short-sha@v2.2
+    - name: Invoke Guidance OSML Submodule Workflow
+      uses: benc-uk/workflow-dispatch@v1.2.2
+      with:
+        repo: aws-solutions-library-samples/guidance-for-overhead-imagery-inference-on-aws
+        workflow: osml_update_submodules.yml
+        token: ${{ secrets.GUIDANCE_OSML_SUBMODULES_ACTION_10_24 }}
+        inputs: '{ "DISPATCH_REPO_NAME" : "${{ github.event.repository.name }}", "DISPATCH_REPO_SHA": "${{ env.SHA }}" }'
