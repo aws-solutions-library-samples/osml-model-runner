@@ -27,3 +27,7 @@ jobs:
     needs: [Publish_Python, Publish_Docker_Github, Publish_Docker_Dockerhub]
     uses: ./.github/workflows/documentation-publish.yml
     secrets: inherit
+  Notify_Guidance_Repo:
+    needs: [Publish_Python, Publish_Docker_Github, Publish_Docker_Dockerhub]
+    uses: ./.github/workflows/notify-guidance-repo.yml
+    secrets: inherit
