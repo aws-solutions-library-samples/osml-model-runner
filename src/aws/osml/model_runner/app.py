@@ -35,6 +35,7 @@ from .common import (
     EndpointUtils,
     FeatureSelectionAlgorithm,
     FeatureSelectionOptions,
+    GeojsonDetectionField,
     ImageDimensions,
     ImageRegion,
     ImageRequestStatus,
@@ -859,8 +860,8 @@ class ModelRunner:
                 # Remove unneeded feature properties if they are present
                 if feature.get("properties", {}).get("inferenceTime"):
                     del feature["properties"]["inferenceTime"]
-                if feature.get("properties", {}).get("bounds_imcoords"):
-                    del feature["properties"]["bounds_imcoords"]
+                if feature.get("properties", {}).get(GeojsonDetectionField.BOUNDS):
+                    del feature["properties"][GeojsonDetectionField.BOUNDS]
                 if feature.get("properties", {}).get("detection_score"):
                     del feature["properties"]["detection_score"]
                 if feature.get("properties", {}).get("feature_types"):
