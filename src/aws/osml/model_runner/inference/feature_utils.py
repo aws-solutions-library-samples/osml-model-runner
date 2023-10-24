@@ -89,7 +89,7 @@ def convert_nested_coordinate_lists(coordinates_or_lists: List, conversion_funct
         return output_list
 
 
-def create_mock_feature_collection(payload: BufferedReader) -> FeatureCollection:
+def create_mock_feature_collection(payload: BufferedReader, geom=False) -> FeatureCollection:
     """
     This function allows us to emulate what we would expect a model to return to MR, a geojson formatted
     FeatureCollection. This allows us to bypass using a real model if the NOOP_MODEL_NAME is given as the
@@ -97,7 +97,7 @@ def create_mock_feature_collection(payload: BufferedReader) -> FeatureCollection
     detection points in our pipeline.
 
     :param payload: BufferedReader = object that holds the data that will be  sent to the feature generator
-
+    :param geom: Bool = whether or not to return the geom_imcoords field in the geojson
     :return: FeatureCollection = feature collection containing the center point of a tile given as a detection point
     """
     logging.debug("Creating a fake feature collection to use for testing ModelRunner!")
@@ -122,6 +122,13 @@ def create_mock_feature_collection(payload: BufferedReader) -> FeatureCollection
         center_xy[1] + fixed_object_size_xy[1],
     ]
 
+    fixed_object_polygon = [
+        (center_xy[0] - fixed_object_size_xy[0], center_xy[1] - fixed_object_size_xy[1]),
+        (center_xy[0] - fixed_object_size_xy[0], center_xy[1] + fixed_object_size_xy[1]),
+        (center_xy[0] + fixed_object_size_xy[0], center_xy[1] + fixed_object_size_xy[1]),
+        (center_xy[0] + fixed_object_size_xy[0], center_xy[1] - fixed_object_size_xy[1]),
+    ]
+
     # Convert that bbox detection into a sample GeoJSON formatted detection. Note that the world coordinates
     # are not normally provided by the model container, so they're defaulted to 0,0 here since GeoJSON features
     # require a geometry.
@@ -133,7 +140,6 @@ def create_mock_feature_collection(payload: BufferedReader) -> FeatureCollection
                 "geometry": {"coordinates": [0.0, 0.0], "type": "Point"},
                 "id": token_hex(16),
                 "properties": {
-                    "bounds_imcoords": fixed_object_bbox,
                     "detection_score": 1.0,
                     "feature_types": {"sample_object": 1.0},
                     "image_id": token_hex(16),
@@ -141,7 +147,10 @@ def create_mock_feature_collection(payload: BufferedReader) -> FeatureCollection
             }
         ],
     }
-
+    if geom is True:
+        json_results["features"][0]["properties"]["geom_imcoords"] = fixed_object_polygon
+    else:
+        json_results["features"][0]["properties"]["bounds_imcoords"] = fixed_object_bbox
     return loads(dumps(json_results))
 
 

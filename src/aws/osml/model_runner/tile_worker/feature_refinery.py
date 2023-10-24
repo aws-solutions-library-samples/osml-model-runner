@@ -7,7 +7,9 @@ from typing import List, Optional, Tuple
 import geojson
 import numpy as np
 from scipy.interpolate import RectBivariateSpline
+from shapely.geometry import Polygon
 
+from aws.osml.model_runner.common import GeojsonDetectionField
 from aws.osml.photogrammetry import (
     CompositeSensorModel,
     ElevationModel,
@@ -142,17 +144,22 @@ class FeatureRefinery:
             if isinstance(self.sensor_model, CompositeSensorModel):
                 initial_sensor_model = self.sensor_model.approximate_sensor_model
 
-            bbox = feature["properties"]["bounds_imcoords"]
-            center_xy = [
-                (bbox[0] + bbox[2]) / 2.0,
-                (bbox[1] + bbox[3]) / 2.0,
-            ]
+            if GeojsonDetectionField.GEOM in feature["properties"]:
+                mask = Polygon(feature["properties"][GeojsonDetectionField.GEOM])
+                center_xy = (mask.centroid.x, mask.centroid.y)
+                image_coords = mask.exterior.coords
+            elif GeojsonDetectionField.BOUNDS in feature["properties"]:
+                bbox = feature["properties"][GeojsonDetectionField.BOUNDS]
+                center_xy = [
+                    (bbox[0] + bbox[2]) / 2.0,
+                    (bbox[1] + bbox[3]) / 2.0,
+                ]
+                # Calculate image coordinates and update feature
+                image_coords = self.imcoords_bbox_to_polygon(bbox)
+
             approximate_center_location = initial_sensor_model.image_to_world(
                 ImageCoordinate(center_xy), elevation_model=self.elevation_model
             )
-
-            # Calculate image coordinates and update feature
-            image_coords = self.imcoords_bbox_to_polygon(bbox)
 
             # Calculate the geodetic coordinates of the bounding box
             polygon_image_coords = [
@@ -219,16 +226,16 @@ class FeatureRefinery:
         # benefit by creating the same resolution of approximation grid over the smaller area.
         feature_bounds = functools.reduce(
             lambda prev, f: [
-                min(f["properties"]["bounds_imcoords"][0], prev[0]),
-                min(f["properties"]["bounds_imcoords"][1], prev[1]),
-                max(f["properties"]["bounds_imcoords"][2], prev[2]),
-                max(f["properties"]["bounds_imcoords"][3], prev[3]),
+                min(f["properties"][GeojsonDetectionField.BOUNDS][0], prev[0]),
+                min(f["properties"][GeojsonDetectionField.BOUNDS][1], prev[1]),
+                max(f["properties"][GeojsonDetectionField.BOUNDS][2], prev[2]),
+                max(f["properties"][GeojsonDetectionField.BOUNDS][3], prev[3]),
             ],
             features,
             [math.inf, math.inf, -math.inf, -math.inf],
         )
 
-        # Use the feature boundary to set up an approximation grid for the region
+        # Use the feature boundary to set up an approximation grid for the region"bounds_imcoords"
         grid_area_ulx = feature_bounds[0]
         grid_area_uly = feature_bounds[1]
         grid_area_width = feature_bounds[2] - feature_bounds[0]
@@ -246,11 +253,19 @@ class FeatureRefinery:
         for feature in features:
             # Calculate the center of the detection and convert it to a geodetic coordinate using the
             # approximation grid.
-            bbox = feature["properties"]["bounds_imcoords"]
-            center_xy = [
-                bbox[0] + (bbox[2] - bbox[0]) / 2,
-                bbox[1] + (bbox[3] - bbox[1]) / 2,
-            ]
+            if GeojsonDetectionField.GEOM in feature["properties"]:
+                mask = Polygon(feature["properties"][GeojsonDetectionField.GEOM])
+                center_xy = (mask.centroid.x, mask.centroid.y)
+                image_coords = mask.exterior.coords
+            elif GeojsonDetectionField.BOUNDS in feature["properties"]:
+                bbox = feature["properties"][GeojsonDetectionField.BOUNDS]
+                center_xy = [
+                    (bbox[0] + bbox[2]) / 2.0,
+                    (bbox[1] + bbox[3]) / 2.0,
+                ]
+                # Calculate image coordinates and update feature
+                image_coords = self.imcoords_bbox_to_polygon(bbox)
+
             center_location = tile_interpolation_grid(center_xy)
 
             # Calculate the geodetic coordinates of the bounding box using the approximation grid. This also
@@ -259,12 +274,7 @@ class FeatureRefinery:
             # box as required by some visualization tools.
             polygon_coords = [
                 FeatureRefinery.radians_coordinate_to_degrees(tile_interpolation_grid(image_coord))
-                for image_coord in [
-                    [bbox[0], bbox[1]],
-                    [bbox[0], bbox[3]],
-                    [bbox[2], bbox[3]],
-                    [bbox[2], bbox[1]],
-                ]
+                for image_coord in image_coords
             ]
             polygon_coords.append(polygon_coords[0])
 
@@ -330,13 +340,18 @@ class FeatureRefinery:
                 }
             )
 
-        # Grab the input coordinate boundaries from the model output
-        bbox = feature["properties"]["bounds_imcoords"]
+        if GeojsonDetectionField.GEOM in feature["properties"]:
+            pixel_coordinates = feature["properties"][GeojsonDetectionField.GEOM]
+
+        elif GeojsonDetectionField.BOUNDS in feature["properties"]:
+            # Grab the input coordinate boundaries from the model output
+            bbox = feature["properties"][GeojsonDetectionField.BOUNDS]
+            pixel_coordinates = FeatureRefinery.imcoords_bbox_to_polygon(bbox)
 
         # Create detection property for feature output
         feature["properties"]["detection"] = {
             "type": "Polygon",
-            "pixelCoordinates": FeatureRefinery.imcoords_bbox_to_polygon(bbox),
+            "pixelCoordinates": pixel_coordinates,
             "ontology": ontology,
         }
 

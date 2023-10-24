@@ -63,7 +63,8 @@ class ServiceConfig:
     # constant configuration
     kinesis_max_record_size: str = "1048576"
     ddb_max_item_size: str = "200000"
-    noop_model_name: str = "NOOP_MODEL_NAME"
+    noop_bounds_model_name: str = "NOOP_BOUNDS_MODEL_NAME"
+    noop_geom_model_name: str = "NOOP_GEOM_MODEL_NAME"
 
 
 @dataclass

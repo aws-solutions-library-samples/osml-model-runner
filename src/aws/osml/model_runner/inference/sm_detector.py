@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 class SMDetector(Detector):
     def __init__(self, endpoint: str, assumed_credentials: Dict[str, str] = None) -> None:
         """
-        A sagemaker model endpoint invoking object, intended to query sagemaker endpoints.
+        Sagemaker model endpoint invoking object, intended to query sagemaker endpoints.
 
         :param endpoint: str = the name of the sagemaker endpoint that will be invoked
         :param assumed_credentials: Dict[str, str] = Optional credentials to invoke the sagemaker model
@@ -87,9 +87,11 @@ class SMDetector(Detector):
                 metrics_logger=metrics,
             ):
                 # If we are not running against a real model
-                if self.endpoint == ServiceConfig.noop_model_name:
+                if self.endpoint == ServiceConfig.noop_bounds_model_name:
                     # We are expecting the body of the message to contain a geojson FeatureCollection
                     return create_mock_feature_collection(payload)
+                elif self.endpoint == ServiceConfig.noop_geom_model_name:
+                    return create_mock_feature_collection(payload, geom=True)
                 else:
                     # Use the sagemaker model endpoint to invoke the model and return detection points
                     # as a geojson FeatureCollection

@@ -6,7 +6,7 @@ from typing import List, Tuple
 from ensemble_boxes import nms, soft_nms
 from geojson import Feature
 
-from aws.osml.model_runner.common import FeatureSelectionAlgorithm, FeatureSelectionOptions
+from aws.osml.model_runner.common import FeatureSelectionAlgorithm, FeatureSelectionOptions, GeojsonDetectionField
 from aws.osml.model_runner.inference.exceptions import FeatureSelectionException
 
 
@@ -67,7 +67,7 @@ class FeatureSelector:
         self.labels_map = dict()
         for feature in feature_list:
             # imcoords: [x1, y1, x2, y2]
-            bounds_imcoords = feature.get("properties", {}).get("bounds_imcoords")
+            bounds_imcoords = feature.get("properties", {}).get(GeojsonDetectionField.BOUNDS)
             category, score = self._get_category_and_score_from_feature(feature)
             boxes.append(bounds_imcoords)
             categories.append(category)
