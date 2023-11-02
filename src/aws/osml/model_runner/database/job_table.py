@@ -109,7 +109,7 @@ class JobTable(DDBHelper):
         except Exception as err:
             raise StartImageException("Failed to start image processing!") from err
 
-    def complete_region_request(self, image_id: str, error: bool = False) -> JobItem:
+    def complete_region_request(self, image_id: str, error: bool) -> JobItem:
         """
         Update the image job to reflect that a region has succeeded or failed.
 
