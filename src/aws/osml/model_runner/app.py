@@ -924,6 +924,6 @@ class ModelRunner:
         region_status = RegionRequestStatus.SUCCESS
         if total_tile_count == tile_error_count:
             region_status = RegionRequestStatus.FAILED
-        if tile_error_count > 0 and tile_error_count > total_tile_count:
+        if 0 < tile_error_count < total_tile_count:
             region_status = RegionRequestStatus.PARTIAL
         return region_status
