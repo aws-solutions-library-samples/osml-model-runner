@@ -79,7 +79,7 @@ def setup_tile_workers(
 
         return tile_queue, tile_workers
     except Exception as err:
-        logger.exception("Failed to setup tile workers!: {}", err)
+        logger.exception("Failed to setup tile workers!: {}".format(err))
         raise SetupTileWorkersException("Failed to setup tile workers!") from err
 
 
@@ -101,7 +101,7 @@ def process_tiles(
     :param metrics: MetricsLogger = the metrics logger to use to report metrics.
     :param sensor_model: Optional[SensorModel] = the sensor model for this raster dataset
 
-    :return: int = number of tiles processed
+    :return: Tuple[int, int] = number of tiles processed, number of tiles with an error
     """
     try:
         # This will update the GDAL configuration options to use the security credentials for

@@ -609,6 +609,30 @@ class TestModelRunner(unittest.TestCase):
         elevation_model = ModelRunner.create_elevation_model()
         assert not elevation_model
 
+    def test_calculate_region_status_success(self):
+        from aws.osml.model_runner.common import RegionRequestStatus
+
+        total_count = 10
+        error_count = 0
+        status = self.model_runner.calculate_region_status(total_count, error_count)
+        assert status == RegionRequestStatus.SUCCESS
+
+    def test_calculate_region_status_partial(self):
+        from aws.osml.model_runner.common import RegionRequestStatus
+
+        total_count = 10
+        error_count = 5
+        status = self.model_runner.calculate_region_status(total_count, error_count)
+        assert status == RegionRequestStatus.PARTIAL
+
+    def test_calculate_region_status_failure(self):
+        from aws.osml.model_runner.common import RegionRequestStatus
+
+        total_count = 10
+        error_count = 10
+        status = self.model_runner.calculate_region_status(total_count, error_count)
+        assert status == RegionRequestStatus.FAILED
+
     @staticmethod
     def get_dataset_and_camera():
         from aws.osml.gdal.gdal_utils import load_gdal_dataset
