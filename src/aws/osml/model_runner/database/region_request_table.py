@@ -4,29 +4,16 @@ import logging
 import time
 from dataclasses import dataclass
 from decimal import Decimal
-from enum import auto
 from typing import Optional
 
 from dacite import from_dict
 
-from aws.osml.model_runner.common import AutoStringEnum
+from aws.osml.model_runner.common import RegionRequestStatus
 
 from .ddb_helper import DDBHelper, DDBItem, DDBKey
 from .exceptions import CompleteRegionException, GetRegionRequestItemException, StartRegionException, UpdateRegionException
 
 logger = logging.getLogger(__name__)
-
-
-class RegionRequestStatus(str, AutoStringEnum):
-    """
-    Enumeration defining status for region
-    """
-
-    STARTING = auto()
-    PARTIAL = auto()
-    IN_PROGRESS = auto()
-    SUCCESS = auto()
-    FAILED = auto()
 
 
 @dataclass
@@ -106,23 +93,18 @@ class RegionRequestTable(DDBHelper):
         except Exception as err:
             raise StartRegionException("Failed to add region request to the table!") from err
 
-    def complete_region_request(self, region_request_item: RegionRequestItem, error=False):
+    def complete_region_request(self, region_request_item: RegionRequestItem, region_status: RegionRequestStatus):
         """
         Update the region job to reflect that a region has succeeded or failed.
 
         :param region_request_item: RegionRequestItem = the unique identifier for the region we want to update
-        :param error: bool = if there was an error processing the region, is true else false
+        :param region_status: RegionRequestStatus = Status of region at completion (FAILURE, PARTIAL, SUCCESS, etc.)
 
         :return: RegionRequestItem = Updated region request item
         """
         try:
             region_request_item.last_updated_time = Decimal(time.time() * 1000)
-
-            if error:
-                region_request_item.region_status = RegionRequestStatus.FAILED
-            else:
-                region_request_item.region_status = RegionRequestStatus.SUCCESS
-
+            region_request_item.region_status = region_status
             region_request_item.end_time = Decimal(time.time() * 1000)
 
             return from_dict(

@@ -28,4 +28,5 @@ from .typing import (
     ImageFormats,
     ImageRegion,
     ImageRequestStatus,
+    RegionRequestStatus,
 )

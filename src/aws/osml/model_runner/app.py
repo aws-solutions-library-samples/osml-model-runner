@@ -39,6 +39,7 @@ from .common import (
     ImageDimensions,
     ImageRegion,
     ImageRequestStatus,
+    RegionRequestStatus,
     Timer,
     build_embedded_metrics_config,
     feature_selection_options_factory,
@@ -482,14 +483,13 @@ class ModelRunner:
             if in_progress >= max_regions:
                 if isinstance(metrics, MetricsLogger):
                     metrics.put_metric(MetricLabels.REGIONS_SELF_THROTTLED, 1, str(Unit.COUNT.value))
-                logger.info(f"Throttling region request. (Max: {max_regions} In-progress: {in_progress}")
+                logger.info("Throttling region request. (Max: {} In-progress: {}".format(max_regions, in_progress))
                 raise SelfThrottledRegionException
 
-        try:
-            if ServiceConfig.self_throttling:
-                # Increment the endpoint region counter
-                self.endpoint_statistics_table.increment_region_count(region_request.model_name)
+            # Increment the endpoint region counter
+            self.endpoint_statistics_table.increment_region_count(region_request.model_name)
 
+        try:
             with Timer(
                 task_str="Processing region {} {}".format(region_request.image_url, region_request.region_bounds),
                 metric_name=MetricLabels.REGION_LATENCY,
@@ -497,15 +497,10 @@ class ModelRunner:
                 metrics_logger=metrics,
             ):
                 # Set up our threaded tile worker pool
-                tile_queue, tile_workers = setup_tile_workers(
-                    region_request,
-                    sensor_model,
-                    self.elevation_model,
-                    metrics,
-                )
+                tile_queue, tile_workers = setup_tile_workers(region_request, sensor_model, self.elevation_model, metrics)
 
                 # Process all our tiles
-                total_tile_count = process_tiles(
+                total_tile_count, tile_error_count = process_tiles(
                     region_request, tile_queue, tile_workers, raster_dataset, metrics, sensor_model
                 )
 
@@ -514,31 +509,31 @@ class ModelRunner:
                 region_request_item = self.region_request_table.update_region_request(region_request_item)
 
             # Update the image request to complete this region
-            image_request_item = self.job_table.complete_region_request(region_request.image_id)
+            image_request_item = self.job_table.complete_region_request(region_request.image_id, bool(tile_error_count))
 
             # Update region request table if that region succeeded
-            region_request_item = self.region_request_table.complete_region_request(region_request_item)
+            region_request_item = self.region_request_table.complete_region_request(
+                region_request_item, self.calculate_region_status(total_tile_count, tile_error_count)
+            )
 
-            if ServiceConfig.self_throttling:
-                # Decrement the endpoint region counter
-                self.endpoint_statistics_table.decrement_region_count(region_request.model_name)
             # Write CloudWatch Metrics to the Logs
             if isinstance(metrics, MetricsLogger):
                 metrics.put_metric(MetricLabels.REGIONS_PROCESSED, 1, str(Unit.COUNT.value))
                 metrics.put_metric(MetricLabels.TILES_PROCESSED, total_tile_count, str(Unit.COUNT.value))
+
             # Return the updated item
             return image_request_item
-        except Exception as err:
-            logger.error("Failed to process image region: {}", err)
 
+        except Exception as err:
+            logger.error("Failed to process image region: {}".format(err))
             # update the table to take in that exception
             region_request_item.message = "Failed to process image region: {0}".format(err)
-
-            if ServiceConfig.self_throttling:
-                # Decrement the endpoint region counter
-                self.endpoint_statistics_table.decrement_region_count(region_request.model_name)
-
             return self.fail_region_request(region_request_item, metrics)
+
+        finally:
+            # Decrement the endpoint region counter
+            if ServiceConfig.self_throttling:
+                self.endpoint_statistics_table.decrement_region_count(region_request.model_name)
 
     @staticmethod
     def load_image_request(
@@ -716,8 +711,9 @@ class ModelRunner:
             metrics.put_metric(MetricLabels.PROCESSING_FAILURE, 1, str(Unit.COUNT.value))
             metrics.put_metric(MetricLabels.REGION_PROCESSING_ERROR, 1, str(Unit.COUNT.value))
         try:
-            region_request_item = self.region_request_table.complete_region_request(region_request_item, error=True)
-
+            region_request_item = self.region_request_table.complete_region_request(
+                region_request_item, RegionRequestStatus.FAILED
+            )
             return self.job_table.complete_region_request(region_request_item.image_id, error=True)
         except Exception as status_error:
             logger.error("Unable to update region status in job table")
@@ -916,3 +912,18 @@ class ModelRunner:
 
         extents = {"north": maxy, "south": miny, "east": maxx, "west": minx}
         return extents
+
+    @staticmethod
+    def calculate_region_status(total_tile_count: int, tile_error_count: int) -> RegionRequestStatus:
+        """
+        Calculate the processing status of a region upon completion
+        :param total_tile_count: number of tiles that were processed
+        :param tile_error_count: number of tiles with errors
+        :return: RegionRequestStatus
+        """
+        region_status = RegionRequestStatus.SUCCESS
+        if total_tile_count == tile_error_count:
+            region_status = RegionRequestStatus.FAILED
+        if tile_error_count > 0 and tile_error_count > total_tile_count:
+            region_status = RegionRequestStatus.PARTIAL
+        return region_status
