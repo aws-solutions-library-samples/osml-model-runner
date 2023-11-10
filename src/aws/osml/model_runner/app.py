@@ -29,12 +29,13 @@ from aws.osml.gdal import (
 )
 from aws.osml.photogrammetry import DigitalElevationModel, ElevationModel, SensorModel, SRTMTileSet
 
-from .api import ImageRequest, InvalidImageRequestException, ModelInvokeMode, RegionRequest, SinkMode
+from .api import VALID_MODEL_HOSTING_OPTIONS, ImageRequest, InvalidImageRequestException, RegionRequest, SinkMode
 from .app_config import MetricLabels, ServiceConfig
 from .common import (
     EndpointUtils,
     FeatureSelectionAlgorithm,
     FeatureSelectionOptions,
+    GeojsonDetectionField,
     ImageDimensions,
     ImageRegion,
     ImageRequestStatus,
@@ -732,22 +733,12 @@ class ModelRunner:
 
         :return: None
         """
-        # TODO: The long term goal is to support AWS provided models hosted by this service as well
-        #       as customer provided models where we're managing the endpoints internally. For an
-        #       initial release we can limit processing to customer managed SageMaker Model
-        #       Endpoints hence this check. The other type options should not be advertised in the
-        #       API but we are including the name/type structure in the API to allow expansion
-        #       through a non-breaking API change.
-        if (
-            not image_request.model_invoke_mode
-            or image_request.model_invoke_mode is ModelInvokeMode.NONE
-            or image_request.model_invoke_mode.casefold() != "SM_ENDPOINT".casefold()
-        ):
-            error = "Application only supports SageMaker Model Endpoints"
+        if not image_request.model_invoke_mode or image_request.model_invoke_mode not in VALID_MODEL_HOSTING_OPTIONS:
+            error = f"Application only supports ${VALID_MODEL_HOSTING_OPTIONS} Endpoints"
             self.status_monitor.process_event(
                 image_request,
                 ImageRequestStatus.FAILED,
-                "Application only supports SageMaker Model Endpoints",
+                error,
             )
             if isinstance(metrics, MetricsLogger):
                 metrics.put_metric(MetricLabels.UNSUPPORTED_MODEL_HOST, 1, str(Unit.COUNT.value))
@@ -869,8 +860,8 @@ class ModelRunner:
                 # Remove unneeded feature properties if they are present
                 if feature.get("properties", {}).get("inferenceTime"):
                     del feature["properties"]["inferenceTime"]
-                if feature.get("properties", {}).get("bounds_imcoords"):
-                    del feature["properties"]["bounds_imcoords"]
+                if feature.get("properties", {}).get(GeojsonDetectionField.BOUNDS):
+                    del feature["properties"][GeojsonDetectionField.BOUNDS]
                 if feature.get("properties", {}).get("detection_score"):
                     del feature["properties"]["detection_score"]
                 if feature.get("properties", {}).get("feature_types"):

@@ -1,0 +1,13 @@
+name: "OSML Model Runner Build Workflow"
+
+on:
+  pull_request:
+    branches: ["main", "dev"]
+
+jobs:
+  Build_Validate_Tox:
+    uses: ./.github/workflows/python-tox.yml
+    secrets: inherit
+  Build_Docker_Container:
+    uses: ./.github/workflows/docker-build.yml
+    secrets: inherit

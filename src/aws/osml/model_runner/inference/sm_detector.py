@@ -1,9 +1,11 @@
 #  Copyright 2023 Amazon.com, Inc. or its affiliates.
 
+#  Copyright 2023 Amazon.com, Inc. or its affiliates.
+
 import logging
 from io import BufferedReader
 from json import JSONDecodeError
-from typing import Dict
+from typing import Dict, Optional
 
 import boto3
 import geojson
@@ -18,22 +20,22 @@ from aws.osml.model_runner.app_config import BotoConfig, MetricLabels, ServiceCo
 from aws.osml.model_runner.common import Timer
 
 from .detector import Detector
+from .endpoint_builder import FeatureEndpointBuilder
 from .feature_utils import create_mock_feature_collection
 
 logger = logging.getLogger(__name__)
 
 
 class SMDetector(Detector):
-    def __init__(self, model_name: str, assumed_credentials: Dict[str, str] = None) -> None:
+    def __init__(self, endpoint: str, assumed_credentials: Dict[str, str] = None) -> None:
         """
-        A sagemaker model endpoint invoking object, intended to query sagemaker endpoints.
+        Sagemaker model endpoint invoking object, intended to query sagemaker endpoints.
 
-        :param model_name: str = the name of the sagemaker endpoint that will be invoked
+        :param endpoint: str = the name of the sagemaker endpoint that will be invoked
         :param assumed_credentials: Dict[str, str] = Optional credentials to invoke the sagemaker model
 
         :return: None
         """
-        super().__init__()
         if assumed_credentials is not None:
             # Here we will be invoking the SageMaker endpoints using an IAM role other than the
             # one for this process. Use those credentials when creating the Boto3 SageMaker client.
@@ -47,13 +49,11 @@ class SMDetector(Detector):
                 aws_session_token=assumed_credentials.get("SessionToken"),
             )
         else:
-            # If no invocation role is provided the assumption is that the default role for this
+            # If no invocation role is provided, the assumption is that the default role for this
             # container will be sufficient to invoke the SageMaker endpoints. This will typically
             # be the case for AWS managed models running in the same account as the model runner.
             self.sm_client = boto3.client("sagemaker-runtime", config=BotoConfig.sagemaker)
-        self.model_name = model_name
-        self.request_count = 0
-        self.error_count = 0
+        super().__init__(endpoint=endpoint)
 
     @property
     def mode(self) -> ModelInvokeMode:
@@ -65,15 +65,15 @@ class SMDetector(Detector):
         Query the established endpoint mode to find features based on a payload
 
         :param payload: BufferedReader = the BufferedReader object that holds the
-                                    data that will be  sent to the feature generator
+                                    data that will be sent to the feature generator
         :param metrics: MetricsLogger = the metrics logger object to capture the log data on the system
 
         :return: FeatureCollection = a feature collection containing the center point of a tile
         """
-        logger.info("Invoking Model: {}".format(self.model_name))
+        logger.info("Invoking Model: {}".format(self.endpoint))
         if isinstance(metrics, MetricsLogger):
             metrics.set_dimensions()
-            metrics.put_dimensions({"ModelName": self.model_name})
+            metrics.put_dimensions({"ModelName": self.endpoint})
 
         try:
             self.request_count += 1
@@ -87,13 +87,15 @@ class SMDetector(Detector):
                 metrics_logger=metrics,
             ):
                 # If we are not running against a real model
-                if self.model_name == ServiceConfig.noop_model_name:
+                if self.endpoint == ServiceConfig.noop_bounds_model_name:
                     # We are expecting the body of the message to contain a geojson FeatureCollection
                     return create_mock_feature_collection(payload)
+                elif self.endpoint == ServiceConfig.noop_geom_model_name:
+                    return create_mock_feature_collection(payload, geom=True)
                 else:
                     # Use the sagemaker model endpoint to invoke the model and return detection points
                     # as a geojson FeatureCollection
-                    model_response = self.sm_client.invoke_endpoint(EndpointName=self.model_name, Body=payload)
+                    model_response = self.sm_client.invoke_endpoint(EndpointName=self.endpoint, Body=payload)
                     retry_count = model_response.get("ResponseMetadata", {}).get("RetryAttempts", 0)
                     if isinstance(metrics, MetricsLogger):
                         metrics.put_metric(MetricLabels.ENDPOINT_RETRY_COUNT, retry_count, str(Unit.COUNT.value))
@@ -124,3 +126,23 @@ class SMDetector(Detector):
 
         # Return an empty feature collection if the process errored out
         return FeatureCollection([])
+
+
+class SMDetectorBuilder(FeatureEndpointBuilder):
+    def __init__(self, endpoint: str, assumed_credentials: Dict[str, str] = None):
+        """
+        :param endpoint: The URL to the SageMaker endpoint
+        :param assumed_credentials: The credentials to use with the SageMaker endpoint
+        """
+        super().__init__()
+        self.endpoint = endpoint
+        self.assumed_credentials = assumed_credentials
+
+    def build(self) -> Optional[Detector]:
+        """
+        :return: a SageMaker detector based on the parameters defined during initialization
+        """
+        return SMDetector(
+            endpoint=self.endpoint,
+            assumed_credentials=self.assumed_credentials,
+        )

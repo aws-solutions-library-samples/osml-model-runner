@@ -1,13 +1,9 @@
 #  Copyright 2023 Amazon.com, Inc. or its affiliates.
 
-from enum import auto
+from enum import Enum, auto
 from typing import Tuple
 
 from aws.osml.model_runner.common import AutoStringEnum
-
-# TODO: Define a Point type so there is no confusion over the meaning of BBox.
-#       (i.e. a two corner box would be (Point, Point) while a UL width height box
-#       would be (Point, w, h)
 
 # Pixel coordinate (row, column)
 ImageCoord = Tuple[int, int]
@@ -51,6 +47,14 @@ class ImageRequestStatus(str, AutoStringEnum):
     FAILED = auto()
 
 
-# These sets are constructed to facilitate easy checking of string values against the enumerations
+class GeojsonDetectionField(str, Enum):
+    """
+    Enumeration defining the model geojson field to index depending on the shape
+    """
+
+    BOUNDS = "bounds_imcoords"
+    GEOM = "geom_imcoords"
+
+
 VALID_IMAGE_COMPRESSION = [item.value for item in ImageCompression]
 VALID_IMAGE_FORMATS = [item.value for item in ImageFormats]

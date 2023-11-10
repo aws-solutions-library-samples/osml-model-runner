@@ -19,7 +19,7 @@ TEST_IMAGE_ID = "test-image-id"
 TEST_IMAGE_EXTENSION = "NITF"
 TEST_JOB_ID = "test-job-id"
 TEST_ELEVATION_DATA_LOCATION = "s3://TEST-BUCKET/ELEVATION-DATA-LOCATION"
-TEST_MODEL_ENDPOINT = "NOOP_MODEL_NAME"
+TEST_MODEL_ENDPOINT = "NOOP_BOUNDS_MODEL_NAME"
 TEST_MODEL_NAME = "FakeCVModel"
 TEST_RESULTS_BUCKET = "test-results-bucket"
 TEST_IMAGE_FILE = "./test/data/small.ntf"
@@ -250,7 +250,7 @@ class TestModelRunner(unittest.TestCase):
         # Set up our status monitor for the queue
         self.image_status_sns = SNSHelper(self.mock_topic_arn)
 
-        # Create a fake model
+        # Create a fake bounds model
         self.sm = boto3.client("sagemaker", config=BotoConfig.default)
         self.sm.create_model(
             ModelName=TEST_MODEL_NAME,
@@ -263,6 +263,8 @@ class TestModelRunner(unittest.TestCase):
         self.sm.create_endpoint_config(EndpointConfigName=config_name, ProductionVariants=production_variants)
         # Create a fake endpoint
         self.sm.create_endpoint(EndpointName=TEST_MODEL_ENDPOINT, EndpointConfigName=config_name)
+        # Create a fake geom model endpoint
+        self.sm.create_endpoint(EndpointName="NOOP_GEOM_MODEL_NAME", EndpointConfigName=config_name)
 
         # Build our model runner and plug in fake resources
         self.model_runner = ModelRunner()
@@ -294,7 +296,7 @@ class TestModelRunner(unittest.TestCase):
     def test_aws_osml_model_runner_importable(self):
         import aws.osml.model_runner  # noqa: F401
 
-    def test_process_image_request(self):
+    def test_process_bounds_image_request(self):
         from aws.osml.model_runner.database.region_request_table import RegionRequestTable
 
         self.model_runner.region_request_table = Mock(RegionRequestTable, autospec=True)
@@ -336,10 +338,70 @@ class TestModelRunner(unittest.TestCase):
         # floor((10 * 1 * 48) / 1) = 480
         assert 480 == self.model_runner.endpoint_utils.calculate_max_regions(endpoint_name=TEST_MODEL_ENDPOINT)
 
+    def test_process_geom_image_request(self):
+        from aws.osml.model_runner.api.image_request import ImageRequest
+        from aws.osml.model_runner.database.region_request_table import RegionRequestTable
+
+        self.model_runner.region_request_table = Mock(RegionRequestTable, autospec=True)
+        self.image_request = ImageRequest.from_external_message(
+            {
+                "jobArn": f"arn:aws:oversightml:{os.environ['AWS_DEFAULT_REGION']}:{TEST_ACCOUNT_ID}:job/{TEST_IMAGE_ID}",
+                "jobName": TEST_IMAGE_ID,
+                "jobId": TEST_IMAGE_ID,
+                "imageUrls": [TEST_IMAGE_FILE],
+                "outputs": [
+                    {"type": "S3", "bucket": TEST_RESULTS_BUCKET, "prefix": f"{TEST_IMAGE_ID}/"},
+                    {"type": "Kinesis", "stream": TEST_RESULTS_STREAM, "batchSize": 1000},
+                ],
+                "featureProperties": [self.test_custom_feature_properties],
+                "imageProcessor": {"name": "NOOP_GEOM_MODEL_NAME", "type": "SM_ENDPOINT"},
+                "imageProcessorTileSize": 2048,
+                "imageProcessorTileOverlap": 50,
+                "imageProcessorTileFormat": "NITF",
+                "imageProcessorTileCompression": "JPEG",
+            }
+        )
+        self.model_runner.process_image_request(self.image_request)
+
+        # Check to make sure the job was marked as complete
+        image_request_item = self.job_table.get_image_request(self.image_request.image_id)
+        assert image_request_item.region_success == 1
+
+        # Check that we created the right amount of features
+        features = self.feature_table.get_features(self.image_request.image_id)
+        assert len(features) == 1
+
+        # Check to make sure the feature was assigned a real geo coordinate
+        assert features[0]["geometry"]["type"] == "Polygon"
+
+        # Grab the feature results from virtual S3 bucket
+        results_key = self.s3.list_objects(Bucket=TEST_RESULTS_BUCKET)["Contents"][0]["Key"]
+
+        results_contents = self.s3.get_object(
+            Bucket=TEST_RESULTS_BUCKET,
+            Key=results_key,
+        )["Body"].read()
+
+        # Load them into memory as geojson
+        results_features = geojson.loads(results_contents.decode("utf-8"))["features"]
+        assert len(results_features) > 0
+
+        # Check that the provided custom feature property was added
+        assert results_features[0]["properties"]["modelMetadata"] == self.test_custom_feature_properties.get("modelMetadata")
+
+        # Check we got the correct source data for the small.ntf file
+        assert results_features[0]["properties"]["source"] == self.test_feature_source_property
+
+        # Check that we calculated the max in progress regions
+        # Test instance type is set to m5.12xl with 48 vcpus. Default
+        # scale factor is set to 10 and workers per cpu is 1 so:
+        # floor((10 * 1 * 48) / 1) = 480
+        assert 480 == self.model_runner.endpoint_utils.calculate_max_regions(endpoint_name=TEST_MODEL_ENDPOINT)
+
     # Remember that with multiple patch decorators the order of the mocks in the parameter list is
     # reversed (i.e. the first mock parameter is the last decorator defined). Also note that the
     # pytest fixtures must come at the end.
-    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.SMDetector", autospec=True)
+    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.FeatureDetectorFactory", autospec=True)
     @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.FeatureTable", autospec=True)
     @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.TileWorker", autospec=True)
     @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.Queue", autospec=True)
@@ -471,7 +533,7 @@ class TestModelRunner(unittest.TestCase):
         elevation_model = ModelRunner.create_elevation_model()
         assert not elevation_model
 
-    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.SMDetector", autospec=True)
+    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.FeatureDetectorFactory", autospec=True)
     @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.FeatureTable", autospec=True)
     @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.TileWorker", autospec=True)
     @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.Queue", autospec=True)
