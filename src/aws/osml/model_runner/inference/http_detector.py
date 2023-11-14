@@ -125,7 +125,9 @@ class HTTPDetector(Detector):
                 metrics_logger=metrics,
             ):
                 # If we are not running against a real model
-                if self.endpoint == ServiceConfig.noop_model_name:
+                if self.endpoint == ServiceConfig.noop_geom_model_name:
+                    return create_mock_feature_collection(payload, geom=True)
+                elif self.endpoint == ServiceConfig.noop_bounds_model_name:
                     return create_mock_feature_collection(payload)
                 else:
                     response = self.http_pool.request(
