@@ -90,12 +90,13 @@ class TileWorker(Thread):
                         # Create a geometry for each feature in the result. The geographic coordinates of these
                         # features are computed using the sensor model provided in the image metadata
                         self.feature_refinery.refine_features_for_tile(features)
-                        logging.info(f"Created Geographic Coordinates for {len(features)} features")
+                        logging.info("Created Geographic Coordinates for {} features".format(len(features)))
 
                     self.feature_table.add_features(features)
             except Exception as e:
                 logging.error("Failed to process region tile!")
                 logging.exception(e)
+                self.feature_detector.error_count += 1  # borrow the feature detector error count to tally other errors
                 if self.metrics:
                     self.metrics.put_metric(MetricLabels.TILE_PROCESSING_ERROR, 1, str(Unit.COUNT.value))
                     self.metrics.put_metric(MetricLabels.TILE_CREATION_FAILURE, 1, str(Unit.COUNT.value))

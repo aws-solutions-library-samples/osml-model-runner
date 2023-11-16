@@ -14,8 +14,6 @@ import shapely.geometry.base
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_embedded_metrics.metric_scope import metric_scope
 from aws_embedded_metrics.unit import Unit
-from dacite import Config as dacite_Config
-from dacite import from_dict
 from geojson import Feature
 from osgeo import gdal
 from osgeo.gdal import Dataset
@@ -33,8 +31,7 @@ from .api import VALID_MODEL_HOSTING_OPTIONS, ImageRequest, InvalidImageRequestE
 from .app_config import MetricLabels, ServiceConfig
 from .common import (
     EndpointUtils,
-    FeatureSelectionAlgorithm,
-    FeatureSelectionOptions,
+    FeatureDistillationDeserializer,
     GeojsonDetectionField,
     ImageDimensions,
     ImageRegion,
@@ -42,8 +39,8 @@ from .common import (
     RegionRequestStatus,
     Timer,
     build_embedded_metrics_config,
-    feature_selection_options_factory,
     get_credentials_for_assumed_role,
+    mr_post_processing_options_factory,
 )
 from .database import EndpointStatisticsTable, FeatureTable, JobItem, JobTable, RegionRequestItem, RegionRequestTable
 from .exceptions import (
@@ -283,10 +280,12 @@ class ModelRunner:
                 image_url=image_request.image_url,
                 image_read_role=image_request.image_read_role,
                 feature_properties=dumps(image_request.feature_properties),
-                feature_selection_options=dumps(
-                    asdict(image_request.feature_selection_options, dict_factory=feature_selection_options_factory)
-                ),
             )
+            feature_distillation_option_list = image_request.get_feature_distillation_option()
+            if feature_distillation_option_list:
+                image_request_item.feature_distillation_option = dumps(
+                    asdict(feature_distillation_option_list[0], dict_factory=mr_post_processing_options_factory)
+                )
 
             # Start the image processing
             self.job_table.start_image_request(image_request_item)
@@ -784,12 +783,9 @@ class ModelRunner:
             logger=logger,
             metrics_logger=metrics,
         ):
-            feature_selection_options = from_dict(
-                data_class=FeatureSelectionOptions,
-                data=json.loads(image_request_item.feature_selection_options),
-                config=dacite_Config(cast=[FeatureSelectionAlgorithm]),
-            )
-            feature_selector = FeatureSelector(feature_selection_options)
+            feature_distillation_option_dict = json.loads(image_request_item.feature_distillation_option)
+            feature_distillation_option = FeatureDistillationDeserializer().deserialize(feature_distillation_option_dict)
+            feature_selector = FeatureSelector(feature_distillation_option)
             return feature_selector.select_features(features)
 
     @staticmethod
@@ -890,7 +886,7 @@ class ModelRunner:
                 "filePath": image_request_item.image_url,
                 "receiveTime": receive_time,
                 "inferenceTime": inference_time,
-                "tileOverlapFeatureSelection": image_request_item.feature_selection_options,
+                "tileOverlapFeatureSelection": image_request_item.feature_distillation_option,
             }
         }
         return inference_metadata_property

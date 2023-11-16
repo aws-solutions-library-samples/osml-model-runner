@@ -5,5 +5,5 @@
 # flake8: noqa
 
 
-class FeatureSelectionException(Exception):
+class FeatureDistillationException(Exception):
     pass

@@ -3,11 +3,15 @@
 from collections import OrderedDict
 from typing import List, Tuple
 
-from ensemble_boxes import nms, soft_nms
+from ensemble_boxes import nms, non_maximum_weighted, soft_nms, weighted_boxes_fusion
 from geojson import Feature
 
-from aws.osml.model_runner.common import FeatureSelectionAlgorithm, FeatureSelectionOptions, GeojsonDetectionField
-from aws.osml.model_runner.inference.exceptions import FeatureSelectionException
+from aws.osml.model_runner.common import (
+    FeatureDistillationAlgorithm,
+    FeatureDistillationAlgorithmType,
+    GeojsonDetectionField,
+)
+from aws.osml.model_runner.inference.exceptions import FeatureDistillationException
 
 
 class FeatureSelector:
@@ -18,12 +22,11 @@ class FeatureSelector:
     is instantiated.
     """
 
-    def __init__(self, options: FeatureSelectionOptions = None) -> None:
+    def __init__(self, options: FeatureDistillationAlgorithm = None) -> None:
         """
-        :param options: FeatureSelectionOptions = options to use to set the algorithm, threshods, and parameters.
-                                                    if not provided the default FeatureSelectionOptions is used
+        :param options: FeatureSelectionOptions = options to use to set the algorithm, thresholds, and parameters.
         """
-        self.options = options if options else FeatureSelectionOptions()
+        self.options = options
 
     def select_features(self, feature_list: List[Feature]) -> List[Feature]:
         """
@@ -32,8 +35,10 @@ class FeatureSelector:
         """
         if feature_list is None or not feature_list:
             return []
+        if not self.options:
+            return feature_list
         boxes_list, scores_list, labels_list = self._get_lists_from_features(feature_list)
-        if self.options.algorithm == FeatureSelectionAlgorithm.SOFT_NMS:
+        if self.options.algorithm_type == FeatureDistillationAlgorithmType.SOFT_NMS:
             boxes, scores, labels = soft_nms(
                 [boxes_list],
                 [scores_list],
@@ -43,14 +48,30 @@ class FeatureSelector:
                 sigma=self.options.sigma,
                 thresh=self.options.skip_box_threshold,
             )
-        elif self.options.algorithm == FeatureSelectionAlgorithm.NONE:
-            return feature_list
-        elif self.options.algorithm == FeatureSelectionAlgorithm.NMS:
+        elif self.options.algorithm_type == FeatureDistillationAlgorithmType.NMS:
             boxes, scores, labels = nms(
                 [boxes_list], [scores_list], [labels_list], weights=None, iou_thr=self.options.iou_threshold
             )
+        elif self.options.algorithm_type == FeatureDistillationAlgorithmType.NMW:
+            boxes, scores, labels = non_maximum_weighted(
+                [boxes_list],
+                [scores_list],
+                [labels_list],
+                weights=None,
+                iou_thr=self.options.iou_threshold,
+                skip_box_thr=self.options.skip_box_threshold,
+            )
+        elif self.options.algorithm_type == FeatureDistillationAlgorithmType.WBF:
+            boxes, scores, labels = weighted_boxes_fusion(
+                [boxes_list],
+                [scores_list],
+                [labels_list],
+                weights=None,
+                iou_thr=self.options.iou_threshold,
+                skip_box_thr=self.options.skip_box_threshold,
+            )
         else:
-            raise FeatureSelectionException("Invalid selection algorithm")
+            raise FeatureDistillationException(f"Invalid feature distillation algorithm: {self.options.algorithm_type}")
         return self._get_features_from_lists(boxes, scores, labels)
 
     def _get_lists_from_features(self, feature_list: List[Feature]) -> Tuple[List, List, List]:
@@ -129,7 +150,7 @@ class FeatureSelector:
             feature_hash_id = hash(str(box) + category)
             feature = self.feature_id_map.get(feature_hash_id)
             if feature:
-                if self.options.algorithm == FeatureSelectionAlgorithm.SOFT_NMS and score != feature.get(
+                if self.options.algorithm_type == FeatureDistillationAlgorithmType.SOFT_NMS and score != feature.get(
                     "properties", {}
                 ).get("detection_score"):
                     feature["properties"]["adjusted_feature_types"] = {category: score}
