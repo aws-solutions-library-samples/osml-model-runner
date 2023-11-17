@@ -42,7 +42,8 @@ class FeatureDistillationAlgorithmType(str, MRPostProcessingAlgorithmType):
     Enum for defining different feature distillation algorithms used in post-processing.
     Each member represents a specific algorithm for entity selection or fusion.
     NMS: Non-maximum Suppression
-    SOFT_NMS: Variant of NMS (https://arxiv.org/abs/1704.04503). This implementation is gaussian Soft-NMS, as opposed to linear.
+    SOFT_NMS: Variant of NMS (https://arxiv.org/abs/1704.04503). This implementation is gaussian Soft-NMS,
+                as opposed to linear.
     NMW: Non-maximum weighted
     WBF: Weighted boxes fusion
     """
@@ -79,6 +80,7 @@ class FeatureDistillationAlgorithm(MRPostProcessingAlgorithm):
     :property iou_threshold: float = intersection over union threshold
                                     - if greater than this value boxes are considered the same
     """
+
     algorithm_type: FeatureDistillationAlgorithmType
     iou_threshold: float
 
