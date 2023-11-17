@@ -41,10 +41,14 @@ class FeatureDistillationAlgorithmType(str, MRPostProcessingAlgorithmType):
     """
     Enum for defining different feature distillation algorithms used in post-processing.
     Each member represents a specific algorithm for entity selection or fusion.
+    NMS: Non-maximum Suppression
+    SOFT_NMS: Variant of NMS (https://arxiv.org/abs/1704.04503). This implementation is gaussian Soft-NMS, as opposed to linear.
+    NMW: Non-maximum weighted
+    WBF: Weighted boxes fusion
     """
 
     NMS = auto()
-    SOFT_NMS = auto()  # gaussian Soft-NMS (as opposed to linear)
+    SOFT_NMS = auto()
     NMW = auto()
     WBF = auto()
 
@@ -69,6 +73,12 @@ class MRPostProcessingAlgorithm(ABC):
 
 @dataclass(frozen=True)
 class FeatureDistillationAlgorithm(MRPostProcessingAlgorithm):
+    """
+    Generic FeatureDistillationAlgorithm class that is designed to be extended for each specific algorithm.
+    :property algorithm_type: FeatureSelectionAlgorithmType = algorithm to use to combine object detections
+    :property iou_threshold: float = intersection over union threshold
+                                    - if greater than this value boxes are considered the same
+    """
     algorithm_type: FeatureDistillationAlgorithmType
     iou_threshold: float
 
@@ -76,9 +86,9 @@ class FeatureDistillationAlgorithm(MRPostProcessingAlgorithm):
 @dataclass(frozen=True)
 class FeatureDistillationNMS(FeatureDistillationAlgorithm):
     """
+    :property algorithm_type: FeatureSelectionAlgorithmType = algorithm to use to combine object detections
     :property iou_threshold: float = intersection over union threshold
                                     - if greater than this value boxes are considered the same
-    :property algorithm: FeatureSelectionAlgorithmType = algorithm to use to combine object detections
     """
 
     algorithm_type: FeatureDistillationAlgorithmType = field(default=FeatureDistillationAlgorithmType.NMS)
@@ -88,9 +98,9 @@ class FeatureDistillationNMS(FeatureDistillationAlgorithm):
 @dataclass(frozen=True)
 class FeatureDistillationSoftNMS(FeatureDistillationAlgorithm):
     """
+    :property algorithm_type: FeatureSelectionAlgorithmType = algorithm to use to combine object detections
     :property iou_threshold: float = intersection over union threshold
                                     - if greater than this value boxes are considered the same
-    :property algorithm: FeatureSelectionAlgorithmType = algorithm to use to combine object detections
     :property skip_box_threshold: float = boxes with a confidence below this threshold value are skipped
     :property sigma: float = value - only applies to Soft NMS
     """
@@ -104,9 +114,9 @@ class FeatureDistillationSoftNMS(FeatureDistillationAlgorithm):
 @dataclass(frozen=True)
 class FeatureDistillationNMW(FeatureDistillationAlgorithm):
     """
+    :property algorithm_type: FeatureSelectionAlgorithmType = algorithm to use to combine object detections
     :property iou_threshold: float = intersection over union threshold
                                     - if greater than this value boxes are considered the same
-    :property algorithm: FeatureSelectionAlgorithmType = algorithm to use to combine object detections
     :property skip_box_threshold: float = boxes with a confidence below this threshold value are skipped
     """
 
@@ -118,9 +128,9 @@ class FeatureDistillationNMW(FeatureDistillationAlgorithm):
 @dataclass(frozen=True)
 class FeatureDistillationWBF(FeatureDistillationAlgorithm):
     """
+    :property algorithm_type: FeatureSelectionAlgorithmType = algorithm to use to combine object detections
     :property iou_threshold: float = intersection over union threshold
                                     - if greater than this value boxes are considered the same
-    :property algorithm: FeatureSelectionAlgorithmType = algorithm to use to combine object detections
     :property skip_box_threshold: float = boxes with a confidence below this threshold value are skipped
     """
 
