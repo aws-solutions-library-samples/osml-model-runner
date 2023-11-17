@@ -1,6 +1,7 @@
 #  Copyright 2023 Amazon.com, Inc. or its affiliates.
 
 import logging
+from json import dumps, loads
 from typing import Any, Dict, List, Optional
 
 import boto3
@@ -130,8 +131,14 @@ class ImageRequest(object):
             ]
         if image_request.get("featureProperties"):
             properties["feature_properties"] = image_request["featureProperties"]
-        if image_request.get("post_processing"):
-            properties["post_processing"] = deserialize_post_processing_list(image_request.get("post_processing"))
+        if image_request.get("postProcessing"):
+            image_request["postProcessing"] = loads(
+                dumps(image_request["postProcessing"])
+                .replace("algorithmType", "algorithm_type")
+                .replace("iouThreshold", "iou_threshold")
+                .replace("skipBoxThreshold", "skip_box_threshold")
+            )
+            properties["post_processing"] = deserialize_post_processing_list(image_request.get("postProcessing"))
 
         return ImageRequest(properties)
 
@@ -143,12 +150,16 @@ class ImageRequest(object):
                  False otherwise
         """
         if not shared_properties_are_valid(self):
+            logger.error("Invalid shared properties in ImageRequest")
             return False
 
         if not self.job_arn or not self.job_id or not self.outputs:
+            logger.error("Missing job arn, job id, or outputs properties in ImageRequest")
             return False
 
-        if len(self.get_feature_distillation_option()) > 1:
+        num_feature_detection_options = len(self.get_feature_distillation_option())
+        if num_feature_detection_options > 1:
+            logger.error("{} feature distillation options in ImageRequest".format(num_feature_detection_options))
             return False
 
         return True

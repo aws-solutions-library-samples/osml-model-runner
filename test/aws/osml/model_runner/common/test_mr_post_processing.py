@@ -50,50 +50,6 @@ class TestMRPostProcessing(TestCase):
         assert isinstance(new_feature_selection_option, FeatureDistillationSoftNMS)
         assert isinstance(new_feature_selection_option.algorithm_type, FeatureDistillationAlgorithmType)
 
-    def test_feature_distillation_deserializer_nmw(self):
-        from aws.osml.model_runner.common import (
-            FeatureDistillationAlgorithmType,
-            FeatureDistillationDeserializer,
-            FeatureDistillationNMW,
-            mr_post_processing_options_factory,
-        )
-
-        feature_selection_option = FeatureDistillationNMW()
-
-        feature_selection_options_json = dumps(
-            asdict(feature_selection_option, dict_factory=mr_post_processing_options_factory)
-        )
-        expected_json = '{"algorithm_type": "NMW", "iou_threshold": 0.75, "skip_box_threshold": 0.0001}'
-        assert feature_selection_options_json == expected_json
-
-        deserializer = FeatureDistillationDeserializer()
-        new_feature_selection_option = deserializer.deserialize(loads(feature_selection_options_json))
-
-        assert isinstance(new_feature_selection_option, FeatureDistillationNMW)
-        assert isinstance(new_feature_selection_option.algorithm_type, FeatureDistillationAlgorithmType)
-
-    def test_feature_distillation_deserializer_wbf(self):
-        from aws.osml.model_runner.common import (
-            FeatureDistillationAlgorithmType,
-            FeatureDistillationDeserializer,
-            FeatureDistillationWBF,
-            mr_post_processing_options_factory,
-        )
-
-        feature_selection_option = FeatureDistillationWBF()
-
-        feature_selection_options_json = dumps(
-            asdict(feature_selection_option, dict_factory=mr_post_processing_options_factory)
-        )
-        expected_json = '{"algorithm_type": "WBF", "iou_threshold": 0.75, "skip_box_threshold": 0.0001}'
-        assert feature_selection_options_json == expected_json
-
-        deserializer = FeatureDistillationDeserializer()
-        new_feature_selection_option = deserializer.deserialize(loads(feature_selection_options_json))
-
-        assert isinstance(new_feature_selection_option, FeatureDistillationWBF)
-        assert isinstance(new_feature_selection_option.algorithm_type, FeatureDistillationAlgorithmType)
-
     def test_feature_distillation_deserializer_missing_algorithm_type(self):
         from aws.osml.model_runner.common import FeatureDistillationDeserializer
 
@@ -143,7 +99,7 @@ class TestMRPostProcessing(TestCase):
             {"step": "FEATURE_DISTILLATION", "algorithm": {"algorithm_type": "NMS", "iou_threshold": 0.75}},
             {
                 "step": "FEATURE_DISTILLATION",
-                "algorithm": {"algorithm_type": "WBF", "iou_threshold": 0.75, "skip_box_threshold": 0.0001},
+                "algorithm": {"algorithm_type": "SOFT_NMS", "iou_threshold": 0.75, "skip_box_threshold": 0.0001},
             },
         ]
         deserialized_list = deserialize_post_processing_list(test_list)

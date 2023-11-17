@@ -50,8 +50,6 @@ class FeatureDistillationAlgorithmType(str, MRPostProcessingAlgorithmType):
 
     NMS = auto()
     SOFT_NMS = auto()
-    NMW = auto()
-    WBF = auto()
 
 
 class MRPostprocessingStep(str, AutoStringEnum):
@@ -114,34 +112,6 @@ class FeatureDistillationSoftNMS(FeatureDistillationAlgorithm):
 
 
 @dataclass(frozen=True)
-class FeatureDistillationNMW(FeatureDistillationAlgorithm):
-    """
-    :property algorithm_type: FeatureSelectionAlgorithmType = algorithm to use to combine object detections
-    :property iou_threshold: float = intersection over union threshold
-                                    - if greater than this value boxes are considered the same
-    :property skip_box_threshold: float = boxes with a confidence below this threshold value are skipped
-    """
-
-    algorithm_type: FeatureDistillationAlgorithmType = field(default=FeatureDistillationAlgorithmType.NMW)
-    iou_threshold: float = field(default=0.75)
-    skip_box_threshold: float = field(default=0.0001)
-
-
-@dataclass(frozen=True)
-class FeatureDistillationWBF(FeatureDistillationAlgorithm):
-    """
-    :property algorithm_type: FeatureSelectionAlgorithmType = algorithm to use to combine object detections
-    :property iou_threshold: float = intersection over union threshold
-                                    - if greater than this value boxes are considered the same
-    :property skip_box_threshold: float = boxes with a confidence below this threshold value are skipped
-    """
-
-    algorithm_type: FeatureDistillationAlgorithmType = field(default=FeatureDistillationAlgorithmType.WBF)
-    iou_threshold: float = field(default=0.75)
-    skip_box_threshold: float = field(default=0.0001)
-
-
-@dataclass(frozen=True)
 class MRPostProcessing:
     """
     Represents an operation for MR post-processing.
@@ -179,10 +149,6 @@ class FeatureDistillationDeserializer(PostProcessingDeserializer):
                 return FeatureDistillationNMS(**post_processing_algorithm)
             elif post_processing_algorithm["algorithm_type"] == FeatureDistillationAlgorithmType.SOFT_NMS:
                 return FeatureDistillationSoftNMS(**post_processing_algorithm)
-            elif post_processing_algorithm["algorithm_type"] == FeatureDistillationAlgorithmType.NMW:
-                return FeatureDistillationNMW(**post_processing_algorithm)
-            elif post_processing_algorithm["algorithm_type"] == FeatureDistillationAlgorithmType.WBF:
-                return FeatureDistillationWBF(**post_processing_algorithm)
 
         raise ValueError(
             f"Failed to deserialize. {post_processing_algorithm} is not a valid feature distillation algorithm object."
