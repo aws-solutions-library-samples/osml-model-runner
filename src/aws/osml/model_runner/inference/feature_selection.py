@@ -3,7 +3,7 @@
 from collections import OrderedDict
 from typing import List, Tuple
 
-from ensemble_boxes import nms, non_maximum_weighted, soft_nms, weighted_boxes_fusion
+from ensemble_boxes import nms, soft_nms
 from geojson import Feature
 
 from aws.osml.model_runner.common import (
@@ -51,24 +51,6 @@ class FeatureSelector:
         elif self.options.algorithm_type == FeatureDistillationAlgorithmType.NMS:
             boxes, scores, labels = nms(
                 [boxes_list], [scores_list], [labels_list], weights=None, iou_thr=self.options.iou_threshold
-            )
-        elif self.options.algorithm_type == FeatureDistillationAlgorithmType.NMW:
-            boxes, scores, labels = non_maximum_weighted(
-                [boxes_list],
-                [scores_list],
-                [labels_list],
-                weights=None,
-                iou_thr=self.options.iou_threshold,
-                skip_box_thr=self.options.skip_box_threshold,
-            )
-        elif self.options.algorithm_type == FeatureDistillationAlgorithmType.WBF:
-            boxes, scores, labels = weighted_boxes_fusion(
-                [boxes_list],
-                [scores_list],
-                [labels_list],
-                weights=None,
-                iou_thr=self.options.iou_threshold,
-                skip_box_thr=self.options.skip_box_threshold,
             )
         else:
             raise FeatureDistillationException(f"Invalid feature distillation algorithm: {self.options.algorithm_type}")
