@@ -158,6 +158,19 @@ class TestFeatureUtils(unittest.TestCase):
         # Processing bounds is in ((r, c), (w, h))
         assert processing_bounds == ((15, 10), (60, 75))
 
+    def test_get_source_property_not_available(self):
+        from aws.osml.model_runner.inference.feature_utils import get_source_property
+
+        ds, sensor_model = self.get_dataset_and_camera()
+        source_property = get_source_property("UNSUPPORTED", ds)
+        assert source_property is None
+
+    def test_get_source_property_exception(self):
+        from aws.osml.model_runner.inference.feature_utils import get_source_property
+
+        source_property = get_source_property("NITF", dataset=None)
+        assert source_property is None
+
     @staticmethod
     def build_gdal_sensor_model():
         from aws.osml.photogrammetry import GDALAffineSensorModel

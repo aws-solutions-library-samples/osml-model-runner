@@ -297,6 +297,18 @@ class TestModelRunner(unittest.TestCase):
     def test_aws_osml_model_runner_importable(self):
         import aws.osml.model_runner  # noqa: F401
 
+    def test_run(self):
+        self.model_runner.monitor_work_queues = Mock()
+
+        self.model_runner.run()
+
+        self.model_runner.monitor_work_queues.assert_called_once()
+
+    def test_stop(self):
+        self.model_runner.running = True
+        self.model_runner.stop()
+        assert self.model_runner.running is False
+
     def test_process_bounds_image_request(self):
         from aws.osml.model_runner.database.region_request_table import RegionRequestTable
 

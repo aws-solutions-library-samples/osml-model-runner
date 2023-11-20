@@ -8,34 +8,31 @@ from geojson import Feature, Point
 
 class TestFeatureSelection(TestCase):
     def test_feature_selection_empty_list(self):
-        from aws.osml.model_runner.common import FeatureSelectionAlgorithm, FeatureSelectionOptions
+        from aws.osml.model_runner.common import FeatureDistillationNMS
         from aws.osml.model_runner.inference import FeatureSelector
 
-        feature_selection_options = FeatureSelectionOptions()
-        feature_selection_options.algorithm = FeatureSelectionAlgorithm.NMS
-        feature_selector = FeatureSelector(options=feature_selection_options)
+        feature_selection_option = FeatureDistillationNMS()
+        feature_selector = FeatureSelector(options=feature_selection_option)
 
         features = feature_selector.select_features([])
         assert len(features) == 0
 
     def test_feature_selection_none_list(self):
-        from aws.osml.model_runner.common import FeatureSelectionAlgorithm, FeatureSelectionOptions
+        from aws.osml.model_runner.common import FeatureDistillationNMS
         from aws.osml.model_runner.inference import FeatureSelector
 
-        feature_selection_options = FeatureSelectionOptions()
-        feature_selection_options.algorithm = FeatureSelectionAlgorithm.NMS
-        feature_selector = FeatureSelector(options=feature_selection_options)
+        feature_selection_option = FeatureDistillationNMS()
+        feature_selector = FeatureSelector(options=feature_selection_option)
 
         features = feature_selector.select_features(None)
         assert len(features) == 0
 
     def test_feature_selection_nms_no_overlap(self):
-        from aws.osml.model_runner.common import FeatureSelectionAlgorithm, FeatureSelectionOptions
+        from aws.osml.model_runner.common import FeatureDistillationNMS
         from aws.osml.model_runner.inference import FeatureSelector
 
-        feature_selection_options = FeatureSelectionOptions()
-        feature_selection_options.algorithm = FeatureSelectionAlgorithm.NMS
-        feature_selector = FeatureSelector(options=feature_selection_options)
+        feature_selection_option = FeatureDistillationNMS()
+        feature_selector = FeatureSelector(options=feature_selection_option)
 
         with open("./test/data/detections.geojson", "r") as geojson_file:
             sample_features = geojson.load(geojson_file)["features"]
@@ -45,12 +42,11 @@ class TestFeatureSelection(TestCase):
         assert len(sample_features) == len(processed_features)
 
     def test_feature_selection_nms_overlaps(self):
-        from aws.osml.model_runner.common import FeatureSelectionAlgorithm, FeatureSelectionOptions
+        from aws.osml.model_runner.common import FeatureDistillationNMS
         from aws.osml.model_runner.inference import FeatureSelector
 
-        feature_selection_options = FeatureSelectionOptions()
-        feature_selection_options.algorithm = FeatureSelectionAlgorithm.NMS
-        feature_selector = FeatureSelector(options=feature_selection_options)
+        feature_selection_option = FeatureDistillationNMS()
+        feature_selector = FeatureSelector(options=feature_selection_option)
 
         # The actual geojson isn't used by nms. The only thing we care about for determining
         # duplicates is the bounds_imcoords property so these shapes are all just simple
@@ -77,12 +73,9 @@ class TestFeatureSelection(TestCase):
         assert len(processed_features) == 2
 
     def test_feature_selection_no_selection(self):
-        from aws.osml.model_runner.common import FeatureSelectionAlgorithm, FeatureSelectionOptions
         from aws.osml.model_runner.inference import FeatureSelector
 
-        feature_selection_options = FeatureSelectionOptions()
-        feature_selection_options.algorithm = FeatureSelectionAlgorithm.NONE
-        feature_selector = FeatureSelector(options=feature_selection_options)
+        feature_selector = FeatureSelector()
 
         # feature_a and feature_b have IoU ~0.80
         original_features = [
@@ -106,18 +99,15 @@ class TestFeatureSelection(TestCase):
         assert processed_features == original_features
 
     def test_feature_selection_unknown_algorithm(self):
-        from enum import Enum
-
-        from aws.osml.model_runner.common import FeatureSelectionOptions
+        from aws.osml.model_runner.common import FeatureDistillationNMS, MRPostProcessingAlgorithmType
         from aws.osml.model_runner.inference import FeatureSelector
-        from aws.osml.model_runner.inference.exceptions import FeatureSelectionException
+        from aws.osml.model_runner.inference.exceptions import FeatureDistillationException
 
-        class FakeFeatureSelectionAlgorithm(str, Enum):
+        class FakeFeatureSelectionAlgorithm(MRPostProcessingAlgorithmType):
             MAGIC = "MAGIC"
 
-        feature_selection_options = FeatureSelectionOptions()
-        feature_selection_options.algorithm = FakeFeatureSelectionAlgorithm.MAGIC
-        feature_selector = FeatureSelector(options=feature_selection_options)
+        feature_selection_option = FeatureDistillationNMS(algorithm_type=FakeFeatureSelectionAlgorithm.MAGIC)
+        feature_selector = FeatureSelector(options=feature_selection_option)
 
         # feature_a and feature_b have IoU ~0.80
         original_features = [
@@ -137,21 +127,17 @@ class TestFeatureSelection(TestCase):
                 properties={"bounds_imcoords": [250, 250, 300, 275]},
             ),
         ]
-        with self.assertRaises(FeatureSelectionException):
+        with self.assertRaises(FeatureDistillationException):
             feature_selector.select_features(original_features)
 
     def test_feature_selection_nms_overlaps_custom_threshold(self):
-        from aws.osml.model_runner.common import FeatureSelectionAlgorithm, FeatureSelectionOptions
+        from aws.osml.model_runner.common import FeatureDistillationNMS
         from aws.osml.model_runner.inference import FeatureSelector
 
-        feature_selection_options_1 = FeatureSelectionOptions()
-        feature_selection_options_1.algorithm = FeatureSelectionAlgorithm.NMS
-        feature_selection_options_1.iou_threshold = 0.4
-        feature_selector_1 = FeatureSelector(options=feature_selection_options_1)
-        feature_selection_options_2 = FeatureSelectionOptions()
-        feature_selection_options_2.algorithm = FeatureSelectionAlgorithm.NMS
-        feature_selection_options_2.iou_threshold = 0.7
-        feature_selector_2 = FeatureSelector(options=feature_selection_options_2)
+        feature_selection_option_1 = FeatureDistillationNMS(iou_threshold=0.4)
+        feature_selector_1 = FeatureSelector(options=feature_selection_option_1)
+        feature_selection_option_2 = FeatureDistillationNMS(iou_threshold=0.7)
+        feature_selector_2 = FeatureSelector(options=feature_selection_option_2)
 
         # These features have an IoU of ~0.47
         original_features = [
@@ -170,11 +156,10 @@ class TestFeatureSelection(TestCase):
         assert len(feature_selector_2.select_features(original_features)) == 2
 
     def test_feature_selection_nms_overlaps_multiple_categories(self):
-        from aws.osml.model_runner.common import FeatureSelectionAlgorithm, FeatureSelectionOptions
+        from aws.osml.model_runner.common import FeatureDistillationNMS
         from aws.osml.model_runner.inference import FeatureSelector
 
-        feature_selection_options = FeatureSelectionOptions()
-        feature_selection_options.algorithm = FeatureSelectionAlgorithm.NMS
+        feature_selection_options = FeatureDistillationNMS()
         feature_selector = FeatureSelector(options=feature_selection_options)
 
         # feature_a and feature_b have IoU ~0.80 but different labels
@@ -208,12 +193,11 @@ class TestFeatureSelection(TestCase):
         assert len(processed_features) == 3
 
     def test_feature_selection_soft_nms_overlaps(self):
-        from aws.osml.model_runner.common import FeatureSelectionAlgorithm, FeatureSelectionOptions
+        from aws.osml.model_runner.common import FeatureDistillationSoftNMS
         from aws.osml.model_runner.inference import FeatureSelector
 
-        feature_selection_options = FeatureSelectionOptions()
-        feature_selection_options.algorithm = FeatureSelectionAlgorithm.SOFT_NMS
-        feature_selector = FeatureSelector(options=feature_selection_options)
+        feature_selection_option = FeatureDistillationSoftNMS()
+        feature_selector = FeatureSelector(options=feature_selection_option)
 
         # feature_a and feature_b have IoU ~0.80
         original_features = [
