@@ -28,10 +28,6 @@ class ABCEnumMeta(ABCMeta, EnumMeta):
             )
         return super().__call__(*args, **kw)
 
-    # @staticmethod
-    # def _generate_next_value_(name, start, count, last_values) -> str:
-    #     return name
-
 
 class MRPostProcessingAlgorithmType(AutoStringEnum, metaclass=ABCEnumMeta):
     pass
