@@ -63,7 +63,7 @@ class EndpointStatisticsTable(DDBHelper):
 
         :return: None
         """
-        logger.debug(f"Setting max region count for endpoint {endpoint} to {max_regions}")
+        logger.debug("Setting max region count for endpoint {} to {}".format(endpoint, max_regions))
         try:
             self.put_ddb_item(
                 EndpointStatisticsItem(endpoint=endpoint, max_regions=Decimal(max_regions)),
@@ -87,7 +87,7 @@ class EndpointStatisticsTable(DDBHelper):
 
         :return: None
         """
-        logger.debug(f"Incremented in-progress region count for endpoint: '{endpoint}'")
+        logger.debug("Incremented in-progress region count for endpoint: '{}'".format(endpoint))
         self.update_ddb_item(
             EndpointStatisticsItem(endpoint=endpoint),
             "SET regions_in_progress = regions_in_progress + :change",
@@ -102,7 +102,7 @@ class EndpointStatisticsTable(DDBHelper):
 
         :return: None
         """
-        logger.debug(f"Decremented in-progress region count for endpoint: '{endpoint}'")
+        logger.debug("Decremented in-progress region count for endpoint: '{}'".format(endpoint))
         self.update_ddb_item(
             EndpointStatisticsItem(endpoint=endpoint),
             "SET regions_in_progress = regions_in_progress - :change",

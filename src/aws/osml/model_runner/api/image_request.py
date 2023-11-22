@@ -197,14 +197,14 @@ class ImageRequest(object):
         ]
 
     @staticmethod
-    def validate_image_path(image_url: str, assumed_role: str) -> bool:
+    def validate_image_path(image_url: str, assumed_role: str) -> None:
         """
-        Validate if an image exists in S3 bucket
+        Validate if an image exists in S3 bucket.  .
 
         :param image_url: str = formatted image path to S3 bucket
         :param assumed_role: str = containing a formatted arn role
 
-        :return: bool
+        :return: None - raises an exception if image does not exist in S3
         """
         bucket, key = image_url.replace("s3://", "").split("/", 1)
         if assumed_role:
@@ -226,6 +226,5 @@ class ImageRequest(object):
             # head_object is a fastest approach to determine if it exists in S3
             # also its less expensive to do the head_object approach
             s3_client.head_object(Bucket=bucket, Key=key)
-            return True
         except Exception as err:
             raise InvalidS3ObjectException("This image does not exist!") from err

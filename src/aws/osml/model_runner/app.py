@@ -94,6 +94,11 @@ class ModelRunner:
 
         :return: None
         """
+        # Set the running state to True
+        self.running = True
+
+        # Set up the GDAL configuration options that should remain unchanged for the life of this execution
+        set_gdal_default_configuration()
         self.monitor_work_queues()
 
     def stop(self) -> None:
@@ -120,8 +125,6 @@ class ModelRunner:
                 GDALDigitalElevationModelTileFactory(ServiceConfig.elevation_data_location),
             )
 
-        return None
-
     @metric_scope
     def monitor_work_queues(self, metrics: MetricsLogger = None) -> None:
         """
@@ -132,11 +135,6 @@ class ModelRunner:
 
         :return: None
         """
-        # Set the running state to True
-        self.running = True
-
-        # Set up the GDAL configuration options that should remain unchanged for the life of this execution
-        set_gdal_default_configuration()
         try:
             while self.running:
                 logger.debug("Checking work queue for regions to process ...")
@@ -148,13 +146,7 @@ class ModelRunner:
                         # Parse the message into a working RegionRequest
                         region_request = RegionRequest(region_request_attributes)
 
-                        # If the image request has a s3 url lets augment its path for virtual hosting
-                        if "s3:/" in region_request.image_url:
-                            # Validate that image exists in S3
-                            ImageRequest.validate_image_path(region_request.image_url, region_request.image_read_role)
-                            image_path = region_request.image_url.replace("s3:/", "/vsis3", 1)
-                        else:
-                            image_path = region_request.image_url
+                        image_path = self.get_virtual_path(region_request.image_url, region_request.image_read_role)
 
                         # Load the image into a GDAL dataset
                         raster_dataset, sensor_model = load_gdal_dataset(image_path)
@@ -238,8 +230,8 @@ class ModelRunner:
                             self.fail_image_request_send_messages(minimal_job_item, err, metrics)
                             self.image_request_queue.finish_request(receipt_handle)
         finally:
-            # If we stop monitoring the queue set run state to false
-            self.running = False
+            # If we stop monitoring the queue then stop Model Runner
+            self.stop()
 
     @metric_scope
     def process_image_request(self, image_request: ImageRequest, metrics: MetricsLogger = None) -> None:
@@ -490,7 +482,7 @@ class ModelRunner:
 
         try:
             with Timer(
-                task_str="Processing region {} {}".format(region_request.image_url, region_request.region_bounds),
+                task_str=f"Processing region {region_request.image_url} {region_request.region_bounds}",
                 metric_name=MetricLabels.REGION_LATENCY,
                 logger=logger,
                 metrics_logger=metrics,
@@ -526,7 +518,7 @@ class ModelRunner:
         except Exception as err:
             logger.error("Failed to process image region: {}".format(err))
             # update the table to take in that exception
-            region_request_item.message = "Failed to process image region: {0}".format(err)
+            region_request_item.message = "Failed to process image region: {}".format(err)
             return self.fail_region_request(region_request_item, metrics)
 
         finally:
@@ -534,8 +526,8 @@ class ModelRunner:
             if ServiceConfig.self_throttling:
                 self.endpoint_statistics_table.decrement_region_count(region_request.model_name)
 
-    @staticmethod
     def load_image_request(
+        self,
         image_request_item: JobItem,
         roi: shapely.geometry.base.BaseGeometry,
         metrics: MetricsLogger = None,
@@ -568,14 +560,7 @@ class ModelRunner:
                     metrics.put_metric(MetricLabels.IMAGE_PROCESSING_ERROR, 1, str(Unit.COUNT.value))
                 raise InvalidImageURLException("No image URL specified. Image URL is required.")
 
-            # If the image request have a valid s3 image url, otherwise this is a local file
-            if "s3:/" in image_request_item.image_url:
-                # Validate that image exists in S3
-                ImageRequest.validate_image_path(image_request_item.image_url, image_request_item.image_read_role)
-
-                image_path = image_request_item.image_url.replace("s3:/", "/vsis3", 1)
-            else:
-                image_path = image_request_item.image_url
+            image_path = self.get_virtual_path(image_request_item.image_url, image_request_item.image_read_role)
 
             # Use gdal to load the image url we were given
             raster_dataset, sensor_model = load_gdal_dataset(image_path)
@@ -757,10 +742,9 @@ class ModelRunner:
         # Ensure we are given a validate tile size and overlap
         if image_request_item.tile_size and image_request_item.tile_overlap:
             # Read all the features from DDB.
-            features = feature_table.get_features(image_request_item.image_id)
+            return feature_table.get_features(image_request_item.image_id)
         else:
             raise AggregateFeaturesException("Tile size and overlap must be provided for feature aggregation")
-        return features
 
     @staticmethod
     @metric_scope
@@ -913,8 +897,10 @@ class ModelRunner:
     def calculate_region_status(total_tile_count: int, tile_error_count: int) -> RegionRequestStatus:
         """
         Calculate the processing status of a region upon completion
+
         :param total_tile_count: number of tiles that were processed
         :param tile_error_count: number of tiles with errors
+
         :return: RegionRequestStatus
         """
         region_status = RegionRequestStatus.SUCCESS
@@ -923,3 +909,19 @@ class ModelRunner:
         if 0 < tile_error_count < total_tile_count:
             region_status = RegionRequestStatus.PARTIAL
         return region_status
+
+    @staticmethod
+    def get_virtual_path(image_url, image_read_role) -> str:
+        """
+        If the image url is a valid s3 image url, replace it with a /vsis path. otherwise this is a local file
+
+        :param image_url: path to image
+        :param image_read_role: S3 role to read image
+
+        :return: modified /vsis path if s3 or unaltered path if local
+        """
+        if "s3:/" in image_url:
+            ImageRequest.validate_image_path(image_url, image_read_role)
+            return image_url.replace("s3:/", "/vsis3", 1)
+        else:
+            return image_url

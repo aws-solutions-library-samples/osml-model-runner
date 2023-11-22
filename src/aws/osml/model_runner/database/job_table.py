@@ -185,8 +185,8 @@ class JobTable(DDBHelper):
             # Update the item in the table
             return self.update_image_request(image_request_item)
 
-        except Exception as e:
-            raise EndImageException("Failed to end image!") from e
+        except Exception as err:
+            raise EndImageException("Failed to end image!") from err
 
     def get_image_request(self, image_id: str) -> JobItem:
         """
@@ -199,8 +199,8 @@ class JobTable(DDBHelper):
         try:
             # Retrieve job item from our table and set to expected JobItem class
             return from_dict(JobItem, self.get_ddb_item(JobItem(image_id=image_id)))
-        except Exception as e:
-            raise GetImageRequestItemException("Failed to get ImageRequestItem!") from e
+        except Exception as err:
+            raise GetImageRequestItemException("Failed to get ImageRequestItem!") from err
 
     def update_image_request(self, image_request_item: JobItem) -> JobItem:
         """

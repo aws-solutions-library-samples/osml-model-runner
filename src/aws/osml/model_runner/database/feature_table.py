@@ -84,7 +84,9 @@ class FeatureTable(DDBHelper):
                     image_id, tile_id = key.split("-region-", 1)
 
                     logger.debug(
-                        f"Starting Add Features to DDB: {len(grouped_features)} " f"features for {tile_id} {image_id}"
+                        "Starting Add Features to DDB: {} features for {} {}".format(
+                            len(grouped_features), tile_id, image_id
+                        )
                     )
 
                     feature_count = 0
@@ -102,8 +104,9 @@ class FeatureTable(DDBHelper):
                             grouped_features
                         ):
                             logger.debug(
-                                f"Putting Feature Batch of {len(encoded_features)} "
-                                f"features with total size of {total_encoded_length} for {tile_id} {image_id}"
+                                "Putting Feature Batch of {} features with total size of {} for {} {}".format(
+                                    len(encoded_features), total_encoded_length, tile_id, image_id
+                                )
                             )
 
                             # Build up a feature item and put it in the table
@@ -139,10 +142,9 @@ class FeatureTable(DDBHelper):
     def get_features(self, image_id: str, metrics: MetricsLogger = None) -> List[Feature]:
         """
         Query the database for all items with given image_id, the convert them into feature items, then
-        go through all of the items and group the features per tile
+        go through all the items and group the features per tile
 
         :param image_id: str = unique image_id for the job
-        :param dedupe: Optional[bool] = remove any duplicate items
         :param metrics: MetricsLogger = the metrics logger to use to report metrics.
 
         :return: List[Feature] = the list of features
@@ -175,7 +177,7 @@ class FeatureTable(DDBHelper):
                         for feature in item.features:
                             batch_features.append(geojson.loads(feature))
                     else:
-                        logger.warning(f"Found FeatureTable item: {item.range_key} with no features!")
+                        logger.warning("Found FeatureTable item: {} with no features!".format(item.range_key))
                 features.extend(batch_features)
         return features
 
@@ -209,7 +211,7 @@ class FeatureTable(DDBHelper):
             if item.tile_id:
                 grouped_items.setdefault(item.tile_id, []).append(item)
             else:
-                logger.warning(f"Found FeatureTable item: {item.range_key} with no tile_id!")
+                logger.warning("Found FeatureTable item: {} with no tile_id!".format(item.range_key))
         return grouped_items
 
     def generate_tile_key(self, feature: Feature) -> str:
@@ -240,6 +242,4 @@ class FeatureTable(DDBHelper):
         if min_y_offset < self.overlap[1] and min_y_index > 0:
             min_y_index -= 1
 
-        return "{}-region-{}:{}:{}:{}".format(
-            feature["properties"]["image_id"], min_x_index, max_x_index, min_y_index, max_y_index
-        )
+        return f"{feature['properties']['image_id']}-region-{min_x_index}:{max_x_index}:{min_y_index}:{max_y_index}"
