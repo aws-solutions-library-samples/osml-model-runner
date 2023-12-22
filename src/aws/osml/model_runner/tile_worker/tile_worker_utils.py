@@ -151,7 +151,7 @@ def process_tiles(
                     # Use GDAL to create an encoded tile of the image region
                     absolute_tile_path = tmp_image_path.absolute()
                     with Timer(
-                        task_str="Creating image tile: {}".format(absolute_tile_path),
+                        task_str=f"Creating image tile: {absolute_tile_path}",
                         metric_name=MetricLabels.TILING_LATENCY,
                         logger=logger,
                         metrics_logger=metrics,
@@ -166,10 +166,7 @@ def process_tiles(
                     # GDAL doesn't always generate errors, so we need to make sure the NITF
                     # encoded region was actually created.
                     if not tmp_image_path.is_file():
-                        logger.error(
-                            "GDAL unable to create tile %s. Does not exist!",
-                            absolute_tile_path,
-                        )
+                        logger.error("GDAL unable to create tile %s. Does not exist! {}".format(absolute_tile_path))
                         if isinstance(metrics, MetricsLogger):
                             metrics.put_metric(MetricLabels.TILE_CREATION_FAILURE, 1, str(Unit.COUNT.value))
                             metrics.put_metric(MetricLabels.REGION_PROCESSING_ERROR, 1, str(Unit.COUNT.value))
@@ -213,7 +210,7 @@ def process_tiles(
             )
         )
     except Exception as err:
-        logger.exception("File processing tiles: {}", err)
+        logger.exception("File processing tiles: {}".format(err))
         raise ProcessTilesException("Failed to process tiles!") from err
 
     return total_tile_count, tile_error_count
@@ -240,7 +237,7 @@ def generate_crops(region: ImageRegion, chip_size: ImageDimensions, overlap: Ima
     :return: List[ImageRegion] = an iterable list of tuples for the chip bounding boxes [((ul_r, ul_c), (w, h)), ...]
     """
     if overlap[0] >= chip_size[0] or overlap[1] >= chip_size[1]:
-        raise ValueError("Overlap must be less than chip size! chip_size = " + str(chip_size) + " overlap = " + str(overlap))
+        raise ValueError(f"Overlap must be less than chip size! chip_size = {str(chip_size)}, overlap = {str(overlap)}")
 
     # Calculate the spacing for the chips taking into account the horizontal and vertical overlap
     # and how many are needed to cover the region

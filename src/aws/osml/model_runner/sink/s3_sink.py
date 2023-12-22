@@ -67,8 +67,7 @@ class S3Sink(Sink):
                 "Wrote aggregate feature collection for Image '{}' to s3://{}/{}".format(image_id, self.bucket, object_key)
             )
             return True
-        else:
-            return False
+        return False
 
     def validate_s3_bucket(self) -> bool:
         """

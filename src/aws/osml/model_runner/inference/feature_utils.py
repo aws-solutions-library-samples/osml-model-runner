@@ -97,7 +97,7 @@ def create_mock_feature_collection(payload: BufferedReader, geom=False) -> Featu
     detection points in our pipeline.
 
     :param payload: BufferedReader = object that holds the data that will be  sent to the feature generator
-    :param geom: Bool = whether or not to return the geom_imcoords field in the geojson
+    :param geom: Bool = whether to return the geom_imcoords field in the geojson
     :return: FeatureCollection = feature collection containing the center point of a tile given as a detection point
     """
     logging.debug("Creating a fake feature collection to use for testing ModelRunner!")

@@ -68,9 +68,15 @@ class EndpointUtils:
             / int(ServiceConfig.workers_per_cpu)
         )
         logger.info(
-            f"Max regions for endpoint: {endpoint_name} calculated to be {max_regions}."
-            f"(ScaleFactor: {ServiceConfig.throttling_vcpu_scale_factor}, InstanceType:{instance_type},"
-            f"VCPU Count:{vcpus}, WorkersPerCPU: {ServiceConfig.workers_per_cpu}"
+            "Max regions for endpoint {} calculated to be {}. "
+            "(ScaleFactor: {}, InstanceType:{}, VCPU Count:{}, WorkersPerCPU: {})".format(
+                endpoint_name,
+                max_regions,
+                ServiceConfig.throttling_vcpu_scale_factor,
+                instance_type,
+                vcpus,
+                ServiceConfig.workers_per_cpu,
+            )
         )
 
         return max_regions

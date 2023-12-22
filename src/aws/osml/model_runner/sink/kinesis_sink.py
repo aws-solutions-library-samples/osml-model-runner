@@ -96,7 +96,7 @@ class KinesisSink(Sink):
 
             # check if Stream is ACTIVE
             stream_status = describe_stream_response["StreamDescription"]["StreamStatus"]
-            if stream_status == "ACTIVE" or stream_status == "UPDATING":
+            if stream_status in ["ACTIVE", "UPDATING"]:
                 # reason to include UPDATING is that Kinesis Stream functions during these operations
                 return True
             else:
@@ -104,8 +104,8 @@ class KinesisSink(Sink):
                     "{} current status is: {}. It is not in ACTIVE or UPDATING state.".format(self.stream, stream_status)
                 )
                 return False
-        except Exception as e:
-            logger.error("Failed to fetch Kinesis stream - {}. {}".format(self.stream, e))
+        except Exception as err:
+            logger.error("Failed to fetch Kinesis stream - {}. {}".format(self.stream, err))
             return False
 
     @staticmethod

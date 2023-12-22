@@ -111,8 +111,8 @@ class RegionRequestTable(DDBHelper):
                 RegionRequestItem,
                 self.update_ddb_item(region_request_item),
             )
-        except Exception as e:
-            raise CompleteRegionException("Failed to complete region!") from e
+        except Exception as err:
+            raise CompleteRegionException("Failed to complete region!") from err
 
     def update_region_request(self, region_request_item: RegionRequestItem) -> RegionRequestItem:
         """
@@ -129,8 +129,8 @@ class RegionRequestTable(DDBHelper):
                 RegionRequestItem,
                 self.update_ddb_item(region_request_item),
             )
-        except Exception as e:
-            raise UpdateRegionException("Failed to update region!") from e
+        except Exception as err:
+            raise UpdateRegionException("Failed to update region!") from err
 
     def get_region_request(self, region_id: str, image_id: str) -> Optional[RegionRequestItem]:
         """
@@ -147,6 +147,6 @@ class RegionRequestTable(DDBHelper):
                 RegionRequestItem,
                 self.get_ddb_item(RegionRequestItem(region_id=region_id, image_id=image_id)),
             )
-        except Exception as e:
-            logger.warning(GetRegionRequestItemException("Failed to get RegionRequestItem! {0}".format(e)))
+        except Exception as err:
+            logger.warning(GetRegionRequestItemException("Failed to get RegionRequestItem! {0}".format(err)))
             return None
