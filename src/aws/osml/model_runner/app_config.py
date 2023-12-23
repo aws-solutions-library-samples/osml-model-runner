@@ -73,13 +73,14 @@ class BotoConfig:
     BotoConfig is a dataclass meant to vend our application the set of boto client configurations required for OSML
 
     The data schema is defined as follows:
-    default:  (Config) the standard boto client configuration
+    default: (Config) the standard boto client configuration
     sagemaker: (Config) the sagemaker specific boto client configuration
     """
 
     # required env configuration
     default: Config = Config(region_name=ServiceConfig.aws_region, retries={"max_attempts": 15, "mode": "standard"})
     sagemaker: Config = Config(region_name=ServiceConfig.aws_region, retries={"max_attempts": 30, "mode": "adaptive"})
+    ddb: Config = Config(region_name=ServiceConfig.aws_region, retries={"max_attempts": 50, "mode": "adaptive"})
 
 
 class MetricLabels(str, Enum):

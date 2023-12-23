@@ -79,61 +79,66 @@ class FeatureTable(DDBHelper):
             logger=logger,
             metrics_logger=metrics,
         ):
-            for key, grouped_features in self.group_features_by_key(features).items():
-                try:
-                    image_id, tile_id = key.split("-region-", 1)
+            try:
+                for key, grouped_features in self.group_features_by_key(features).items():
+                        image_id, tile_id = key.split("-region-", 1)
 
-                    logger.debug(
-                        f"Starting Add Features to DDB: {len(grouped_features)} " f"features for {tile_id} {image_id}"
-                    )
+                        logger.debug(
+                            f"Starting Add Features to DDB: {len(grouped_features)} " f"features for {tile_id} {image_id}"
+                        )
 
-                    feature_count = 0
-                    total_encoded_length = 0
-                    encoded_features = []
-                    for feature in grouped_features:
-                        feature_count += 1
-                        encoded_feature = geojson.dumps(feature)
-                        total_encoded_length += len(encoded_feature)
-                        encoded_features.append(encoded_feature)
-                        # Once we exceed the 200K byte limit on our features write them to DDB. We are
-                        # batching at this size because a single row in DDB only allows for 400K. We also
-                        # need to make sure we are processing the last item no matter what the size is.
-                        if total_encoded_length > int(ServiceConfig.ddb_max_item_size) or feature_count >= len(
-                            grouped_features
-                        ):
-                            logger.debug(
-                                f"Putting Feature Batch of {len(encoded_features)} "
-                                f"features with total size of {total_encoded_length} for {tile_id} {image_id}"
-                            )
-
-                            # Build up a feature item and put it in the table
-                            result = self.put_ddb_item(
-                                FeatureItem(
-                                    hash_key=image_id,
-                                    range_key=token_hex(16),
-                                    tile_id=tile_id,
-                                    features=encoded_features,
-                                    expire_time=expire_time_epoch_sec,
+                        feature_count = 0
+                        total_encoded_length = 0
+                        encoded_features = []
+                        results = []
+                        for feature in grouped_features:
+                            feature_count += 1
+                            encoded_feature = geojson.dumps(feature)
+                            total_encoded_length += len(encoded_feature)
+                            encoded_features.append(encoded_feature)
+                            # Once we exceed the 200K byte limit on our features write them to DDB. We are
+                            # batching at this size because a single row in DDB only allows for 400K. We also
+                            # need to make sure we are processing the last item no matter what the size is.
+                            if total_encoded_length > int(ServiceConfig.ddb_max_item_size) or feature_count >= len(
+                                grouped_features
+                            ):
+                                logger.debug(
+                                    f"Putting Feature Batch of {len(encoded_features)} "
+                                    f"features with total size of {total_encoded_length} for {tile_id} {image_id}"
                                 )
-                            )
 
-                            # Reset the batch
-                            total_encoded_length = 0
-                            encoded_features = []
+                                # Build up a feature item and put it in the table
+                                results.append(
+                                    FeatureItem(
+                                        hash_key=image_id,
+                                        range_key=token_hex(16),
+                                        tile_id=tile_id,
+                                        features=encoded_features,
+                                        expire_time=expire_time_epoch_sec,
+                                    )
+                                )
 
-                            # Check that we got a success response
-                            status_code = result.get("ResponseMetadata", {}).get("HTTPStatusCode")
-                            if status_code != 200:
-                                if isinstance(metrics, MetricsLogger):
-                                    metrics.put_metric(MetricLabels.FEATURE_UPDATE, 1, str(Unit.COUNT.value))
-                                    metrics.put_metric(MetricLabels.FEATURE_ERROR, 1, str(Unit.COUNT.value))
-                                logger.error("Unable to update feature table - HTTP Status Code: {}".format(status_code))
-                except Exception as err:
+                                # Reset the batch
+                                total_encoded_length = 0
+                                encoded_features = []
+
+                # Write the results in batches to DynamoDB
+                status = self.batch_write_items(results)
+
+                # Check that we got a success response
+                status_code = status.get("ResponseMetadata", {}).get("HTTPStatusCode")
+                if status_code != 200:
                     if isinstance(metrics, MetricsLogger):
-                        metrics.put_metric(MetricLabels.FEATURE_UPDATE_EXCEPTION, 1, str(Unit.COUNT.value))
+                        metrics.put_metric(MetricLabels.FEATURE_UPDATE, 1, str(Unit.COUNT.value))
                         metrics.put_metric(MetricLabels.FEATURE_ERROR, 1, str(Unit.COUNT.value))
-                    logger.error("There was a problem adding features: {}".format(err))
-                    raise AddFeaturesException("Failed to add features for tile!") from err
+                    logger.error("Unable to update feature table - HTTP Status Code: {}".format(status_code))
+
+            except Exception as err:
+                if isinstance(metrics, MetricsLogger):
+                    metrics.put_metric(MetricLabels.FEATURE_UPDATE_EXCEPTION, 1, str(Unit.COUNT.value))
+                    metrics.put_metric(MetricLabels.FEATURE_ERROR, 1, str(Unit.COUNT.value))
+                logger.error("There was a problem adding features: {}".format(err))
+                raise AddFeaturesException("Failed to add features for tile!") from err
 
     @metric_scope
     def get_features(self, image_id: str, metrics: MetricsLogger = None) -> List[Feature]:

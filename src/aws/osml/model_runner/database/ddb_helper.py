@@ -1,6 +1,8 @@
 #  Copyright 2023 Amazon.com, Inc. or its affiliates.
 
 import logging
+import random
+import time
 from dataclasses import asdict, dataclass, field, fields
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -74,7 +76,7 @@ class DDBHelper:
 
     def __init__(self, table_name: str) -> None:
         # build a table resource to use for accessing data
-        self.table = boto3.resource("dynamodb", config=BotoConfig.default).Table(table_name)
+        self.table = boto3.resource("dynamodb", config=BotoConfig.ddb).Table(table_name)
         self.table_name = table_name
 
     def get_ddb_item(self, ddb_item: DDBItem) -> Dict[str, Any]:
@@ -103,6 +105,44 @@ class DDBHelper:
             response = self.table.put_item(Item=ddb_item.to_put())
 
         return response
+
+    def batch_write_items(self, ddb_items: List[DDBItem], max_retries: int = 5, initial_retry_delay: float = 0.5,
+                          max_retry_delay: float = 16) -> Dict[str, Any]:
+        """
+            Write multiple DynamoDB items in a batch with exponential back-off retry logic for unprocessed items.
+
+            :param ddb_items: List[DDBItem] = List of items that we want to write.
+            :param max_retries: int = Maximum number of retries for unprocessed items.
+            :param initial_retry_delay: float = Initial delay in seconds for the first retry.
+            :param max_retry_delay: float = Maximum delay in seconds between retries.
+
+            :return: None
+            """
+
+        def _batch_write(request_items, retries=0) -> Dict[str, Any]:
+            response = self.table.batch_write_item(RequestItems=request_items)
+            unprocessed_items = response.get('UnprocessedItems', {})
+
+            if unprocessed_items and retries < max_retries:
+                # Calculate delay with exponential back-off
+                delay = min(max_retry_delay, initial_retry_delay * (2 ** retries))
+                # Add random jitter to avoid the thundering herd problem
+                delay += random.uniform(0, delay * 0.1)
+                time.sleep(delay)
+
+                return _batch_write(unprocessed_items, retries + 1)
+            elif unprocessed_items:
+                logger.error(f"Failed to process items after {max_retries} retries: {unprocessed_items}")
+
+        batch_size = 25
+        for i in range(0, len(ddb_items), batch_size):
+            batch = ddb_items[i:i + batch_size]
+            request_items = {self.table_name: []}
+
+            for item in batch:
+                request_items[self.table_name].append({'PutRequest': {'Item': item.to_put()}})
+
+            return _batch_write(request_items)
 
     def delete_ddb_item(self, ddb_item: DDBItem) -> Dict[str, Any]:
         """
