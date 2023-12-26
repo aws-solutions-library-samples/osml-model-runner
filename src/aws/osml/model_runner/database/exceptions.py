@@ -10,6 +10,10 @@ class DDBUpdateException(Exception):
     pass
 
 
+class DDBBatchWriteException(Exception):
+    pass
+
+
 class EndImageException(Exception):
     pass
 

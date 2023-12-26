@@ -72,15 +72,16 @@ class FeatureTable(DDBHelper):
         # These records are temporary and will expire 24 hours after creation. Jobs should take
         # minutes to run so this time should be conservative enough to let a team debug an urgent
         # issue without leaving a ton of state leftover in the system.
-        expire_time_epoch_sec = Decimal(int(start_time_millisec / 1000) + (24 * 60 * 60))
+        expire_time_epoch_sec = Decimal(int(start_time_millisec / 1000) + (2 * 60 * 60))
         with Timer(
             task_str="Add image features",
             metric_name=MetricLabels.FEATURE_STORE_LATENCY,
             logger=logger,
             metrics_logger=metrics,
         ):
-            for key, grouped_features in self.group_features_by_key(features).items():
-                try:
+            try:
+                items = []
+                for key, grouped_features in self.group_features_by_key(features).items():
                     image_id, tile_id = key.split("-region-", 1)
 
                     logger.debug(
@@ -98,7 +99,7 @@ class FeatureTable(DDBHelper):
                         # Once we exceed the 200K byte limit on our features write them to DDB. We are
                         # batching at this size because a single row in DDB only allows for 400K. We also
                         # need to make sure we are processing the last item no matter what the size is.
-                        if total_encoded_length > int(ServiceConfig.ddb_max_item_size) or feature_count >= len(
+                        if total_encoded_length > int(ServiceConfig.ddb_max_item_size) or feature_count == len(
                             grouped_features
                         ):
                             logger.debug(
@@ -107,7 +108,7 @@ class FeatureTable(DDBHelper):
                             )
 
                             # Build up a feature item and put it in the table
-                            result = self.put_ddb_item(
+                            items.append(
                                 FeatureItem(
                                     hash_key=image_id,
                                     range_key=token_hex(16),
@@ -121,28 +122,22 @@ class FeatureTable(DDBHelper):
                             total_encoded_length = 0
                             encoded_features = []
 
-                            # Check that we got a success response
-                            status_code = result.get("ResponseMetadata", {}).get("HTTPStatusCode")
-                            if status_code != 200:
-                                if isinstance(metrics, MetricsLogger):
-                                    metrics.put_metric(MetricLabels.FEATURE_UPDATE, 1, str(Unit.COUNT.value))
-                                    metrics.put_metric(MetricLabels.FEATURE_ERROR, 1, str(Unit.COUNT.value))
-                                logger.error("Unable to update feature table - HTTP Status Code: {}".format(status_code))
-                except Exception as err:
-                    if isinstance(metrics, MetricsLogger):
-                        metrics.put_metric(MetricLabels.FEATURE_UPDATE_EXCEPTION, 1, str(Unit.COUNT.value))
-                        metrics.put_metric(MetricLabels.FEATURE_ERROR, 1, str(Unit.COUNT.value))
-                    logger.error("There was a problem adding features: {}".format(err))
-                    raise AddFeaturesException("Failed to add features for tile!") from err
+                # Write batch to the table and check that it succeeded for all items
+                self.batch_write_items(items)
+
+            except Exception as err:
+                if isinstance(metrics, MetricsLogger):
+                    metrics.put_metric(MetricLabels.FEATURE_UPDATE_EXCEPTION, 1, str(Unit.COUNT.value))
+                    metrics.put_metric(MetricLabels.FEATURE_ERROR, 1, str(Unit.COUNT.value))
+                raise AddFeaturesException("Failed to add features for tile!") from err
 
     @metric_scope
     def get_features(self, image_id: str, metrics: MetricsLogger = None) -> List[Feature]:
         """
         Query the database for all items with given image_id, the convert them into feature items, then
-        go through all of the items and group the features per tile
+        go through all the items and group the features per tile
 
         :param image_id: str = unique image_id for the job
-        :param dedupe: Optional[bool] = remove any duplicate items
         :param metrics: MetricsLogger = the metrics logger to use to report metrics.
 
         :return: List[Feature] = the list of features
@@ -222,7 +217,6 @@ class FeatureTable(DDBHelper):
         """
         bbox = feature["properties"][GeojsonDetectionField.BOUNDS]
 
-        # TODO: Check tile size to see if it is w,h or row/col
         # This is the size of the unique pixels in each tile
         stride_x = self.tile_size[0] - self.overlap[0]
         stride_y = self.tile_size[1] - self.overlap[1]
