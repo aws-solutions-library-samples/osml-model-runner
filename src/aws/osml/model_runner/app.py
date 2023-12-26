@@ -758,6 +758,7 @@ class ModelRunner:
         if image_request_item.tile_size and image_request_item.tile_overlap:
             # Read all the features from DDB.
             features = feature_table.get_features(image_request_item.image_id)
+            logger.info(f"Found {len(features)} features!")
         else:
             raise AggregateFeaturesException("Tile size and overlap must be provided for feature aggregation")
         return features

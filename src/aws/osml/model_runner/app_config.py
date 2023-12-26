@@ -77,9 +77,9 @@ class BotoConfig:
     sagemaker: (Config) the sagemaker specific boto client configuration
     """
 
-    # required env configuration
     default: Config = Config(region_name=ServiceConfig.aws_region, retries={"max_attempts": 15, "mode": "standard"})
     sagemaker: Config = Config(region_name=ServiceConfig.aws_region, retries={"max_attempts": 30, "mode": "adaptive"})
+    ddb: Config = Config(region_name=ServiceConfig.aws_region, retries={"max_attempts": 3, "mode": "standard"})
 
 
 class MetricLabels(str, Enum):

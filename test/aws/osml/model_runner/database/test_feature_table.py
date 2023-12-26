@@ -57,7 +57,9 @@ TEST_FEATURE_2 = {
     },
 }
 
-TEST_MOCK_PUT_EXCEPTION = Mock(side_effect=ClientError({"Error": {"Code": 500, "Message": "ClientError"}}, "put_item"))
+TEST_MOCK_BATCH_WRITE_EXCEPTION = Mock(
+    side_effect=ClientError({"Error": {"Code": 500, "Message": "ClientError"}}, "batch_write_item")
+)
 
 
 @mock_dynamodb
@@ -140,7 +142,7 @@ class TestFeatureTable(unittest.TestCase):
         from aws.osml.model_runner.database.exceptions import AddFeaturesException
 
         features = self.get_feature_list()
-        self.feature_table.table.put_item = TEST_MOCK_PUT_EXCEPTION
+        self.feature_table.client.batch_write_item = TEST_MOCK_BATCH_WRITE_EXCEPTION
         with self.assertRaises(AddFeaturesException):
             self.feature_table.add_features(features)
 
