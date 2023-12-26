@@ -19,4 +19,12 @@ testpaths = [
     "test"
 ]
 
+[tool.autopep8]
+max_line_length = 125
+ignore = "E203,W503,W605"
+in-place = true
+recursive = true
+aggressive = 3
+
+
 # Note Flake8 can't currently be configured in pyproject.toml. See .flake8 for the configuration settings.
