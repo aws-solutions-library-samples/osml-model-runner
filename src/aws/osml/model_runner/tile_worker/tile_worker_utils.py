@@ -135,7 +135,7 @@ def process_tiles(
                     region_request.tile_size,
                     region_request.tile_overlap,
                 ):
-                    # Create a temp file name for the NITF encoded region
+                    # Create a temp file name for the encoded region
                     region_image_filename = "{}-region-{}-{}-{}-{}.{}".format(
                         token_hex(16),
                         tile_bounds[0][0],
