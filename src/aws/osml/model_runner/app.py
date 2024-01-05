@@ -238,7 +238,7 @@ class ModelRunner:
                             self.fail_image_request_send_messages(minimal_job_item, err, metrics)
                             self.image_request_queue.finish_request(receipt_handle)
         finally:
-            # If we stop monitoring the queue set run state to false
+            # If we stop monitoring, the queue set run state to false
             self.running = False
 
     @metric_scope
@@ -337,7 +337,7 @@ class ModelRunner:
                 self.queue_region_request(all_regions, image_request, raster_dataset, sensor_model, image_extension)
 
         except Exception as err:
-            # We failed try and gracefully update our image request
+            # We failed to try and gracefully update our image request
             if image_request_item:
                 self.fail_image_request(image_request_item, err, metrics)
             else:
@@ -361,7 +361,7 @@ class ModelRunner:
         image_extension: Optional[str],
     ) -> None:
         """
-        Loads the list of regions into the queue. First it will create a RequestRequestItem and creates
+        Loads the list of regions into the queue. First, it will create a RequestRequestItem and create
         an entry into the RegionRequestTable for traceability. Then process the region request. Once it's completed,
         it will update an entry in the RegionRequestTable.
 
