@@ -90,17 +90,12 @@ class DDBHelper:
         """
         return self.table.get_item(Key=self.get_keys(ddb_item=ddb_item))["Item"]
 
-    def put_ddb_item(
-        self, ddb_item: DDBItem, condition_expression: str = None, max_retries: int = 30, max_delay: float = 8
-    ) -> Dict[str, Any]:
+    def put_ddb_item(self, ddb_item: DDBItem, condition_expression: str = None) -> Dict[str, Any]:
         """
         Put a DynamoDB item into the table with a jitter-delayed retry logic for unprocessed items.
 
         :param ddb_item: DDBItem = item that we want to put (required)
-        :param condition_expression: str = condition that must be satisfied in order for a
-                                            conditional PutItem operation to succeed.
-        :param max_retries: int = Maximum number of retries for unprocessed items.
-        :param max_delay: float = Maximum delay in seconds between retries.
+        :param condition_expression: str = Condition that must be satisfied in order for a PutItem operation to succeed.
 
         :return: Dict[str, Any] = item from the put_item response
         """

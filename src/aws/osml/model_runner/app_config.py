@@ -79,7 +79,9 @@ class BotoConfig:
 
     default: Config = Config(region_name=ServiceConfig.aws_region, retries={"max_attempts": 15, "mode": "standard"})
     sagemaker: Config = Config(region_name=ServiceConfig.aws_region, retries={"max_attempts": 30, "mode": "adaptive"})
-    ddb: Config = Config(region_name=ServiceConfig.aws_region, retries={"max_attempts": 3, "mode": "standard"})
+    ddb: Config = Config(
+        region_name=ServiceConfig.aws_region, retries={"max_attempts": 3, "mode": "standard"}, max_pool_connections=50
+    )
 
 
 class MetricLabels(str, Enum):
