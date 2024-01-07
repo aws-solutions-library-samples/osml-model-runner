@@ -3,6 +3,7 @@
 import logging
 import random
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from secrets import token_hex
 from typing import Dict, List, Optional
@@ -12,6 +13,7 @@ from _decimal import Decimal
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_embedded_metrics.metric_scope import metric_scope
 from aws_embedded_metrics.unit import Unit
+from botocore.parsers import PROTOCOL_PARSERS
 from dacite import from_dict
 from geojson import Feature
 
@@ -22,6 +24,24 @@ from .ddb_helper import DDBHelper, DDBItem, DDBKey
 from .exceptions import AddFeaturesException
 
 logger = logging.getLogger(__name__)
+
+# The logic below removes of some redundant type checking in the DDB client
+# https://maori.geek.nz/make-pythons-dynamodb-client-faster-with-this-one-simple-trick-2eb2888269ce
+parser = PROTOCOL_PARSERS.get("json")
+
+
+def handle_json_body(self, raw_body, shape) -> Dict[str, any]:
+    """
+
+    :param self: Boto core class object.
+    :param raw_body: Raw JSON body content to be type checked.
+    :param shape: The type enforced shape to check against (none).
+    :return: The parsed body as a JSON object.
+    """
+    return self._parse_body_as_json(raw_body)
+
+
+setattr(parser, "_handle_json_body", handle_json_body)
 
 
 @dataclass
@@ -56,15 +76,15 @@ class FeatureTable(DDBHelper):
         super().__init__(table_name)
         self.tile_size = tile_size
         self.overlap = overlap
+        self.hash_salt = 50
 
     @metric_scope
     def add_features(self, features: List[Feature], metrics: MetricsLogger = None):
         """
         Group all the features together and add/update an item in the DDB
 
-        :param features: List[Feature] = the list of features
-        :param metrics: MetricsLogger = the metrics logger to use to report metrics.
-
+        :param features: The list of features to add to the DDB table.
+        :param metrics: Metrics logger to use to report metrics.
         :return: None
         """
         if isinstance(metrics, MetricsLogger):
@@ -111,7 +131,7 @@ class FeatureTable(DDBHelper):
                             # Build up a feature item and put it in the table
                             items.append(
                                 FeatureItem(
-                                    hash_key=image_id + "-" + str(random.randrange(1, 10)),
+                                    hash_key=image_id + "-" + str(random.randint(1, self.hash_salt)),
                                     range_key=token_hex(16),
                                     tile_id=tile_id,
                                     features=encoded_features,
@@ -135,54 +155,59 @@ class FeatureTable(DDBHelper):
     @metric_scope
     def get_features(self, image_id: str, metrics: MetricsLogger = None) -> List[Feature]:
         """
-        Query the database for all items with given image_id, the convert them into feature items, then
-        go through all the items and group the features per tile
+        Parallelized version to query the database for all items with a given image_id,
+        then convert them into feature items, and group the features per tile.
 
-        :param image_id: str = unique image_id for the job
+        :param image_id: The image_id to aggregate features from DDB for.
         :param metrics: MetricsLogger = the metrics logger to use to report metrics.
-
-        :return: List[Feature] = the list of features
+        :return: List of features aggregates from the DDB table.
         """
+
+        def process_query(index: int):
+            items: List[FeatureItem] = []
+            rows = self.query_items(FeatureItem(image_id + "-" + str(index)))
+            for row in rows:
+                items.append(from_dict(FeatureItem, row))
+            return items
+
         if isinstance(metrics, MetricsLogger):
             metrics.set_dimensions()
+
+        features: List[Feature] = []
+
         with Timer(
             task_str="Aggregate image features",
             metric_name=MetricLabels.FEATURE_AGG_LATENCY,
             logger=logger,
             metrics_logger=metrics,
         ):
-            # Convert them into feature items
-            feature_items: List[FeatureItem] = []
-            for i in range(1, 10):
-                # Query the database for all items with the given image_id (hash_key)
-                rows = self.query_items(FeatureItem(image_id + "-" + str(i)))
+            with ThreadPoolExecutor(max_workers=5) as executor:
+                # Create a range of tasks to query the database for the salted image hash
+                futures = [executor.submit(process_query, i) for i in range(1, self.hash_salt + 1)]
 
-                for row in rows:
-                    feature_items.append(from_dict(FeatureItem, row))
+                # For each of the salted index processes the returned items
+                for future in as_completed(futures):
+                    feature_items = future.result()
+                    grouped_items = self.group_items_by_tile_id(feature_items)
+                    for group in grouped_items:
+                        batch_features = []
+                        for item in grouped_items[group]:
+                            if item.features:
+                                for feature in item.features:
+                                    batch_features.append(geojson.loads(feature))
+                            else:
+                                logger.warning(f"Found FeatureTable item: {item.range_key} with no features!")
+                        features.extend(batch_features)
 
-                # Combine all feature batches from the same tile together
-                grouped_items = self.group_items_by_tile_id(feature_items)
-
-                # Go through our items and group our features per tile
-                features: List[Feature] = []
-                for group in grouped_items:
-                    batch_features = []
-                    for item in grouped_items[group]:
-                        if item.features:
-                            for feature in item.features:
-                                batch_features.append(geojson.loads(feature))
-                        else:
-                            logger.warning(f"Found FeatureTable item: {item.range_key} with no features!")
-                    features.extend(batch_features)
         return features
 
     def group_features_by_key(self, features: List[Feature]) -> Dict[str, List[Feature]]:
         """
         Group all the feature items by key
 
-        :param features: List[Feature] = the list of features
+        :param features: The list of features
 
-        :return: Dict[str, List[Feature]] = a map of keys containing a list of features
+        :return: Map of keys containing a list of features
         """
         result: Dict[str, List[Feature]] = {}
         for feature in features:
@@ -195,10 +220,8 @@ class FeatureTable(DDBHelper):
         """
         Group all the feature items by tile id
 
-        :param items: List[FeatureItem] = the list of feature items
-
-        :return: Dict[str, List[FeatureItem]] = dict which contains a unique tile id and within
-                                    tile id contains a list of features
+        :param items: The list of feature items
+        :return: A unique tile id and within tile id contains a list of features
         """
         grouped_items: Dict[str, List[FeatureItem]] = {}
         for item in items:
@@ -212,9 +235,8 @@ class FeatureTable(DDBHelper):
         """
         Generate the tile key based on the given feature.
 
-        :param feature: Feature = properties of a feature
-
-        :return: str = tile key
+        :param feature: Properties of a feature
+        :return: The tile key associated with this list of features.
         """
         bbox = feature["properties"][GeojsonDetectionField.BOUNDS]
 
