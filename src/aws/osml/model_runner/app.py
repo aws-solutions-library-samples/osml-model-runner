@@ -238,7 +238,7 @@ class ModelRunner:
                             self.fail_image_request_send_messages(minimal_job_item, err, metrics)
                             self.image_request_queue.finish_request(receipt_handle)
         finally:
-            # If we stop monitoring, the queue set run state to false
+            # If we stop monitoring the queue set run state to false
             self.running = False
 
     @metric_scope
@@ -337,7 +337,7 @@ class ModelRunner:
                 self.queue_region_request(all_regions, image_request, raster_dataset, sensor_model, image_extension)
 
         except Exception as err:
-            # We failed to try and gracefully update our image request
+            # We failed try and gracefully update our image request
             if image_request_item:
                 self.fail_image_request(image_request_item, err, metrics)
             else:
@@ -361,7 +361,7 @@ class ModelRunner:
         image_extension: Optional[str],
     ) -> None:
         """
-        Loads the list of regions into the queue. First, it will create a RequestRequestItem and create
+        Loads the list of regions into the queue. First it will create a RequestRequestItem and creates
         an entry into the RegionRequestTable for traceability. Then process the region request. Once it's completed,
         it will update an entry in the RegionRequestTable.
 
@@ -667,7 +667,9 @@ class ModelRunner:
             # Sink the features into the right outputs
             is_write_succeeded = self.sync_features(image_request_item, features)
             if not is_write_succeeded:
-                raise AggregateOutputFeaturesException("Failed to write features to S3 or Kinesis! Please check the log...")
+                raise AggregateOutputFeaturesException(
+                    "Failed to write features to S3 or Kinesis! Please check the " "log..."
+                )
 
             if isinstance(metrics, MetricsLogger):
                 # Record model used for this image
@@ -758,10 +760,68 @@ class ModelRunner:
         if image_request_item.tile_size and image_request_item.tile_overlap:
             # Read all the features from DDB.
             features = feature_table.get_features(image_request_item.image_id)
-            logger.info(f"Found {len(features)} features!")
+            logger.info(f"Total features aggregated: {len(features)}")
         else:
             raise AggregateFeaturesException("Tile size and overlap must be provided for feature aggregation")
         return features
+
+    @staticmethod
+    def identify_overlap(
+        feature: Feature, shape: Tuple[int, int], overlap: Tuple[int, int], origin: Tuple[int, int] = (0, 0)
+    ) -> Tuple[int, int, int, int]:
+        """
+        Generate a tuple that contains the min and max indexes of adjacent tiles or regions for a given feature. If
+        the min and max values for both x and y are the same then this feature does not touch an overlap region.
+
+        :param feature: the geojson Feature that must contain properties to identify its location in an image
+        :param shape: the width, height of the area in pixels
+        :param overlap: the x, y overlap between areas in pixels
+        :param origin: the x, y coordinate of the area in relation to the full image
+
+        :return: a tuple: minx, maxx, miny, maxy that identifies any overlap.
+        """
+        bbox = feature["properties"][GeojsonDetectionField.BOUNDS]
+
+        # If an offset origin was supplied adjust the bbox so the key is relative to the origin.
+        bbox = (bbox[0] - origin[0], bbox[1] - origin[1], bbox[2] - origin[0], bbox[3] - origin[1])
+
+        stride_x = shape[0] - overlap[0]
+        stride_y = shape[0] - overlap[1]
+
+        max_x_index = int(bbox[2] / stride_x)
+        max_y_index = int(bbox[3] / stride_y)
+
+        min_x_index = int(bbox[0] / stride_x)
+        min_y_index = int(bbox[1] / stride_y)
+        min_x_offset = int(bbox[0]) % stride_x
+        min_y_offset = int(bbox[1]) % stride_y
+
+        if min_x_offset < overlap[0] and min_x_index > 0:
+            min_x_index -= 1
+        if min_y_offset < overlap[1] and min_y_index > 0:
+            min_y_index -= 1
+
+        return min_x_index, max_x_index, min_y_index, max_y_index
+
+    @staticmethod
+    def group_features_by_overlap(
+        features: List[Feature], shape: Tuple[int, int], overlap: Tuple[int, int], origin: Tuple[int, int] = (0, 0)
+    ) -> Dict[Tuple[int, int, int, int], List[Feature]]:
+        """
+        Group all the feature items by tile id
+
+        :param features: List[FeatureItem] = the list of feature items
+        :param shape: the width, height of the area in pixels
+        :param overlap: the x, y overlap between areas in pixels
+        :param origin: the x, y coordinate of the area in relation to the full image
+
+        :return: a mapping of overlap id to a list of features that intersect that overlap region
+        """
+        grouped_features: Dict[Tuple[int, int, int, int], List[Feature]] = {}
+        for feature in features:
+            overlap_key = ModelRunner.identify_overlap(feature, shape, overlap, origin)
+            grouped_features.setdefault(overlap_key, []).append(feature)
+        return grouped_features
 
     @staticmethod
     @metric_scope
@@ -769,7 +829,19 @@ class ModelRunner:
         image_request_item: JobItem, features: List[Feature], metrics: MetricsLogger = None
     ) -> List[Feature]:
         """
-        Selects the desired features using the options in the JobItem (NMS, SOFT_NMS, etc.)
+        Selects the desired features using the options in the JobItem (NMS, SOFT_NMS, etc.).
+        This code applies a feature selector only to the features that came from regions of the image
+        that were processed multiple times. First features are grouped based on the region they were
+        processed in. Any features found in the overlap area between regions are run through the
+        FeatureSelector. If they were not part of an overlap area between regions, they will be grouped
+        based on tile boundaries. Any features that fall into the overlap of adjacent tiles are filtered
+        by the FeatureSelector. All other features should not be duplicates; they are added to the result
+        without additional filtering.
+
+        Computationally, this implements two critical factors that lower the overall processing time for the
+        O(N^2) selection algorithms. First, it will filter out the majority of features that couldn't possibly
+        have duplicates generated by our tiled image processing; Second, it runs the selection algorithms
+        incrementally on much smaller groups of features.
 
         :param image_request_item: JobItem = the image request
         :param features: List[Feature] = the list of geojson features to process
@@ -787,7 +859,43 @@ class ModelRunner:
             feature_distillation_option_dict = json.loads(image_request_item.feature_distillation_option)
             feature_distillation_option = FeatureDistillationDeserializer().deserialize(feature_distillation_option_dict)
             feature_selector = FeatureSelector(feature_distillation_option)
-            return feature_selector.select_features(features)
+
+            region_size = ast.literal_eval(ServiceConfig.region_size)
+            tile_size = ast.literal_eval(image_request_item.tile_size)
+            overlap = ast.literal_eval(image_request_item.tile_overlap)
+
+            logger.debug("FeatureSelection: Starting overlap-aware deduplication of features.")
+            total_skipped = 0
+            deduped_features = []
+            features_grouped_by_region = ModelRunner.group_features_by_overlap(features, region_size, overlap)
+            for region_key, region_features in features_grouped_by_region.items():
+                region_stride = (region_size[0] - overlap[0], region_size[1] - overlap[1])
+                region_origin = (region_stride[0] * region_key[0], region_stride[1] * region_key[1])
+
+                if region_key[0] != region_key[1] or region_key[2] != region_key[3]:
+                    # The Group contains contributions from multiple regions, run selection on the entire group
+                    deduped_features.extend(feature_selector.select_features(region_features))
+                else:
+                    # Not an overlap between regions group these features using tile size to identify overlaps
+                    features_grouped_by_tile = ModelRunner.group_features_by_overlap(
+                        region_features, tile_size, overlap, region_origin
+                    )
+
+                    for tile_key, tile_features in features_grouped_by_tile.items():
+                        if tile_key[0] != tile_key[1] or tile_key[2] != tile_key[3]:
+                            # Group contains contributions from multiple tiles, run selection
+                            deduped_features.extend(feature_selector.select_features(tile_features))
+                        else:
+                            # No overlap between tiles, features can be added directly to the result
+                            total_skipped += len(tile_features)
+                            deduped_features.extend(tile_features)
+
+            logger.debug(
+                f"FeatureSelection: Skipped processing of {total_skipped} of {len(features)} features. "
+                "They were not inside an overlap region."
+            )
+
+            return deduped_features
 
     @staticmethod
     def sync_features(image_request_item: JobItem, features: List[Feature]) -> bool:
@@ -897,9 +1005,9 @@ class ModelRunner:
         """
         Returns a list of driver extensions
 
-        :param ds: the gdal dateaset
+        :param ds: the gdal dataset
 
-        :return: List[number] = the extents of the image
+        :return: List[number] = the extent of the image
         """
         geo_transform = ds.GetGeoTransform()
         minx = geo_transform[0]

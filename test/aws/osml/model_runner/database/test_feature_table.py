@@ -81,6 +81,7 @@ class TestFeatureTable(unittest.TestCase):
             BillingMode="PAY_PER_REQUEST",
         )
         self.feature_table = FeatureTable(os.environ["FEATURE_TABLE"], (2048, 2048), (50, 50))
+        self.feature_table.hash_salt = 1
 
     def tearDown(self):
         """
@@ -142,7 +143,7 @@ class TestFeatureTable(unittest.TestCase):
         from aws.osml.model_runner.database.exceptions import AddFeaturesException
 
         features = self.get_feature_list()
-        self.feature_table.client.batch_write_item = TEST_MOCK_BATCH_WRITE_EXCEPTION
+        self.feature_table.batch_write_items = TEST_MOCK_BATCH_WRITE_EXCEPTION
         with self.assertRaises(AddFeaturesException):
             self.feature_table.add_features(features)
 
