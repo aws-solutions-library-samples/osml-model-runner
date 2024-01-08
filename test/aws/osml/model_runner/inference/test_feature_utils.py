@@ -92,10 +92,21 @@ class TestFeatureUtils(unittest.TestCase):
 
     def test_calculate_processing_bounds_full_image(self):
         from aws.osml.model_runner.inference.feature_utils import calculate_processing_bounds
+        from aws.osml.photogrammetry import ImageCoordinate
 
         ds, sensor_model = self.get_dataset_and_camera()
 
-        roi = shapely.wkt.loads("POLYGON ((8 50, 10 50, 10 60, 8 60, 8 50))")
+        chip_ul = sensor_model.image_to_world(ImageCoordinate([0, 0]))
+        chip_lr = sensor_model.image_to_world(ImageCoordinate([101, 101]))
+        min_vals = np.minimum(chip_ul.coordinate, chip_lr.coordinate)
+        max_vals = np.maximum(chip_ul.coordinate, chip_lr.coordinate)
+        polygon_coords = []
+        polygon_coords.append([degrees(min_vals[0]), degrees(min_vals[1])])
+        polygon_coords.append([degrees(min_vals[0]), degrees(max_vals[1])])
+        polygon_coords.append([degrees(max_vals[0]), degrees(max_vals[1])])
+        polygon_coords.append([degrees(max_vals[0]), degrees(min_vals[1])])
+        polygon_coords.append([degrees(min_vals[0]), degrees(min_vals[1])])
+        roi = shapely.geometry.Polygon(polygon_coords)
 
         processing_bounds = calculate_processing_bounds(ds, roi, sensor_model)
 
@@ -146,6 +157,19 @@ class TestFeatureUtils(unittest.TestCase):
 
         # Processing bounds is in ((r, c), (w, h))
         assert processing_bounds == ((15, 10), (60, 75))
+
+    def test_get_source_property_not_available(self):
+        from aws.osml.model_runner.inference.feature_utils import get_source_property
+
+        ds, sensor_model = self.get_dataset_and_camera()
+        source_property = get_source_property("UNSUPPORTED", ds)
+        assert source_property is None
+
+    def test_get_source_property_exception(self):
+        from aws.osml.model_runner.inference.feature_utils import get_source_property
+
+        source_property = get_source_property("NITF", dataset=None)
+        assert source_property is None
 
     @staticmethod
     def build_gdal_sensor_model():

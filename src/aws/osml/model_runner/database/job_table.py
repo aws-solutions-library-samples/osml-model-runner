@@ -32,7 +32,7 @@ class JobItem(DDBItem):
     region_count: Optional[Decimal] = total count of regions expected for this image
     width: Optional[Decimal] = width of the image
     height: Optional[Decimal] = height of the image
-    feature_selection_options: Optional[str] = the options used in selecting features (NMS/SOFT_NMS, thresholds, etc.)
+    feature_distillation_options: Optional[str] = the options used in selecting features (NMS/SOFT_NMS, thresholds, etc.)
     """
 
     image_id: str
@@ -57,7 +57,7 @@ class JobItem(DDBItem):
     processing_time: Optional[Decimal] = None
     feature_properties: Optional[str] = None
     image_security_classification: Optional[str] = None
-    feature_selection_options: Optional[str] = None
+    feature_distillation_option: Optional[str] = None
 
     def __post_init__(self):
         self.ddb_key = DDBKey(hash_key="image_id", hash_value=self.image_id)
@@ -109,7 +109,7 @@ class JobTable(DDBHelper):
         except Exception as err:
             raise StartImageException("Failed to start image processing!") from err
 
-    def complete_region_request(self, image_id: str, error: bool = False) -> JobItem:
+    def complete_region_request(self, image_id: str, error: bool) -> JobItem:
         """
         Update the image job to reflect that a region has succeeded or failed.
 

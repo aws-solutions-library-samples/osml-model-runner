@@ -1,11 +1,72 @@
 #  Copyright 2023 Amazon.com, Inc. or its affiliates.
 
-import unittest
+from unittest import TestCase, main, mock
 
 import pytest
+from mock import Mock
 
 
-class TestTileWorkerUtils(unittest.TestCase):
+class TestTileWorkerUtils(TestCase):
+    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.TileWorker", autospec=True)
+    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.ServiceConfig", autospec=True)
+    def test_setup_tile_workers(self, mock_service_config, mock_tile_worker):
+        from aws.osml.model_runner.api import RegionRequest
+        from aws.osml.model_runner.tile_worker.tile_worker_utils import setup_tile_workers
+
+        mock_tile_worker.start = Mock()
+        mock_num_tile_workers = 4
+        mock_service_config.workers = mock_num_tile_workers
+        mock_region_request = RegionRequest(
+            {
+                "tile_size": (10, 10),
+                "tile_overlap": (1, 1),
+                "tile_format": "NITF",
+                "image_id": "1",
+                "image_url": "/mock/path",
+                "region_bounds": ((0, 0), (50, 50)),
+                "model_invoke_mode": "SM_ENDPOINT",
+                "image_extension": "fake",
+            }
+        )
+        mock_sensor_model = None
+        mock_elevation_model = None
+        mock_metrics = None
+        work_queue, tile_worker_list = setup_tile_workers(
+            mock_region_request, mock_sensor_model, mock_elevation_model, mock_metrics
+        )
+        assert len(tile_worker_list) == mock_num_tile_workers
+
+    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.FeatureTable", autospec=True)
+    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.TileWorker", autospec=True)
+    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.ServiceConfig", autospec=True)
+    def test_setup_tile_workers_exception(self, mock_service_config, mock_tile_worker, mock_feature_table):
+        from aws.osml.model_runner.api import RegionRequest
+        from aws.osml.model_runner.tile_worker.exceptions import SetupTileWorkersException
+        from aws.osml.model_runner.tile_worker.tile_worker_utils import setup_tile_workers
+
+        mock_tile_worker.start = Mock()
+        mock_num_tile_workers = 4
+        mock_service_config.workers = mock_num_tile_workers
+        mock_feature_table.side_effect = Exception("Mock processing exception")
+        mock_region_request = RegionRequest(
+            {
+                "tile_size": (10, 10),
+                "tile_overlap": (1, 1),
+                "tile_format": "NITF",
+                "image_id": "1",
+                "image_url": "/mock/path",
+                "region_bounds": ((0, 0), (50, 50)),
+                "model_invoke_mode": "SM_ENDPOINT",
+                "image_extension": "fake",
+            }
+        )
+        mock_sensor_model = None
+        mock_elevation_model = None
+        mock_metrics = None
+        with self.assertRaises(SetupTileWorkersException):
+            # with self.assertRaises(ValueError):
+            setup_tile_workers(mock_region_request, mock_sensor_model, mock_elevation_model, mock_metrics)
+
     def test_chip_generator(self):
         from aws.osml.model_runner.tile_worker.tile_worker_utils import generate_crops
 
@@ -127,4 +188,4 @@ class TestTileWorkerUtils(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    main()

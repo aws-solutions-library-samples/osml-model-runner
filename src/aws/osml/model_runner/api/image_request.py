@@ -1,6 +1,7 @@
 #  Copyright 2023 Amazon.com, Inc. or its affiliates.
 
 import logging
+from json import dumps, loads
 from typing import Any, Dict, List, Optional
 
 import boto3
@@ -10,10 +11,14 @@ from shapely.geometry.base import BaseGeometry
 
 from aws.osml.model_runner.app_config import BotoConfig
 from aws.osml.model_runner.common import (
-    FeatureSelectionOptions,
+    FeatureDistillationAlgorithm,
+    FeatureDistillationNMS,
     ImageCompression,
     ImageDimensions,
     ImageFormats,
+    MRPostProcessing,
+    MRPostprocessingStep,
+    deserialize_post_processing_list,
     get_credentials_for_assumed_role,
 )
 
@@ -42,6 +47,10 @@ class ImageRequest(object):
                              attributes
         :param kwargs: Any = keyword arguments provided on the constructor to set specific attributes
         """
+        default_post_processing = [
+            MRPostProcessing(step=MRPostprocessingStep.FEATURE_DISTILLATION, algorithm=FeatureDistillationNMS())
+        ]
+
         self.job_id: str = ""
         self.job_arn: str = ""
         self.image_id: str = ""
@@ -57,7 +66,7 @@ class ImageRequest(object):
         self.model_invocation_role: str = ""
         self.feature_properties: List[dict] = []
         self.roi: Optional[BaseGeometry] = None
-        self.feature_selection_options: FeatureSelectionOptions = FeatureSelectionOptions()
+        self.post_processing: List[MRPostProcessing] = default_post_processing
 
         for dictionary in initial_data:
             for key in dictionary:
@@ -122,6 +131,14 @@ class ImageRequest(object):
             ]
         if image_request.get("featureProperties"):
             properties["feature_properties"] = image_request["featureProperties"]
+        if image_request.get("postProcessing"):
+            image_request["postProcessing"] = loads(
+                dumps(image_request["postProcessing"])
+                .replace("algorithmType", "algorithm_type")
+                .replace("iouThreshold", "iou_threshold")
+                .replace("skipBoxThreshold", "skip_box_threshold")
+            )
+            properties["post_processing"] = deserialize_post_processing_list(image_request.get("postProcessing"))
 
         return ImageRequest(properties)
 
@@ -133,9 +150,16 @@ class ImageRequest(object):
                  False otherwise
         """
         if not shared_properties_are_valid(self):
+            logger.error("Invalid shared properties in ImageRequest")
             return False
 
         if not self.job_arn or not self.job_id or not self.outputs:
+            logger.error("Missing job arn, job id, or outputs properties in ImageRequest")
+            return False
+
+        num_feature_detection_options = len(self.get_feature_distillation_option())
+        if num_feature_detection_options > 1:
+            logger.error("{} feature distillation options in ImageRequest".format(num_feature_detection_options))
             return False
 
         return True
@@ -159,6 +183,18 @@ class ImageRequest(object):
             "tile_format": self.tile_format,
             "tile_compression": self.tile_compression,
         }
+
+    def get_feature_distillation_option(self) -> List[FeatureDistillationAlgorithm]:
+        """
+        Parses the post-processing property and extracts the relevant feature distillation selection, if present
+        :return:
+        """
+        return [
+            op.algorithm
+            for op in self.post_processing
+            if op.step == MRPostprocessingStep.FEATURE_DISTILLATION
+            and isinstance(op.algorithm, FeatureDistillationAlgorithm)
+        ]
 
     @staticmethod
     def validate_image_path(image_url: str, assumed_role: str) -> bool:

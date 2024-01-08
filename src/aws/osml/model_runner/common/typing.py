@@ -47,6 +47,18 @@ class ImageRequestStatus(str, AutoStringEnum):
     FAILED = auto()
 
 
+class RegionRequestStatus(str, AutoStringEnum):
+    """
+    Enumeration defining status for region
+    """
+
+    STARTING = auto()
+    PARTIAL = auto()
+    IN_PROGRESS = auto()
+    SUCCESS = auto()
+    FAILED = auto()
+
+
 class GeojsonDetectionField(str, Enum):
     """
     Enumeration defining the model geojson field to index depending on the shape

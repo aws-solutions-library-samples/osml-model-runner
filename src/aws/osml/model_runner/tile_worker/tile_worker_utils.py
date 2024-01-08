@@ -79,7 +79,7 @@ def setup_tile_workers(
 
         return tile_queue, tile_workers
     except Exception as err:
-        logger.exception("Failed to setup tile workers!: {}", err)
+        logger.exception("Failed to setup tile workers!: {}".format(err))
         raise SetupTileWorkersException("Failed to setup tile workers!") from err
 
 
@@ -90,7 +90,7 @@ def process_tiles(
     raster_dataset: gdal.Dataset,
     metrics: MetricsLogger = None,
     sensor_model: Optional[SensorModel] = None,
-) -> int:
+) -> Tuple[int, int]:
     """
     Loads a GDAL dataset into memory and processes it with a pool of tile workers.
 
@@ -101,7 +101,7 @@ def process_tiles(
     :param metrics: MetricsLogger = the metrics logger to use to report metrics.
     :param sensor_model: Optional[SensorModel] = the sensor model for this raster dataset
 
-    :return: int = number of tiles processed
+    :return: Tuple[int, int] = number of tiles processed, number of tiles with an error
     """
     try:
         # This will update the GDAL configuration options to use the security credentials for
@@ -135,7 +135,7 @@ def process_tiles(
                     region_request.tile_size,
                     region_request.tile_overlap,
                 ):
-                    # Create a temp file name for the NITF encoded region
+                    # Create a temp file name for the encoded region
                     region_image_filename = "{}-region-{}-{}-{}-{}.{}".format(
                         token_hex(16),
                         tile_bounds[0][0],
@@ -202,19 +202,21 @@ def process_tiles(
                 # the temp directory. If the context is exited before all workers return then
                 # the directory will be deleted, and we will potentially lose tiles.
                 # Wait for all the workers to finish gracefully before we clean up the temp directory
+                tile_error_count = 0
                 for worker in tile_workers:
                     worker.join()
+                    tile_error_count += worker.feature_detector.error_count
 
         logger.info(
-            "Model Runner Stats Processed {} image tiles for region {}.".format(
-                total_tile_count, region_request.region_bounds
+            "Model Runner Stats Processed {} image tiles for region {}. {} tile errors.".format(
+                total_tile_count, region_request.region_bounds, tile_error_count
             )
         )
     except Exception as err:
         logger.exception("File processing tiles: {}", err)
         raise ProcessTilesException("Failed to process tiles!") from err
 
-    return total_tile_count
+    return total_tile_count, tile_error_count
 
 
 def sizeof_fmt(num: float, suffix: str = "B") -> str:

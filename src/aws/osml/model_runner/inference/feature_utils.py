@@ -220,8 +220,8 @@ def get_source_property(image_extension: str, dataset: gdal.Dataset) -> Optional
     """
     # Currently we only support deriving source metadata from NITF images
     if image_extension == "NITF":
-        metadata = dataset.GetMetadata()
         try:
+            metadata = dataset.GetMetadata()
             # Extract metadata headers from NITF
             data_type = metadata.get("NITF_ICAT", None)
             source_id = metadata.get("NITF_FTITLE", None)
@@ -256,8 +256,8 @@ def get_source_property(image_extension: str, dataset: gdal.Dataset) -> Optional
 
             return source_property
         except Exception as err:
-            logging.warning(f"Source metadata not available for {image_extension} image extension! {err}")
+            logging.warning("Source metadata not available for {} image extension! {}".format(image_extension, err))
             return None
     else:
-        logging.warning(f"Source metadata not available for {image_extension} image extension!")
+        logging.warning("Source metadata not available for {} image extension!".format(image_extension))
         return None
