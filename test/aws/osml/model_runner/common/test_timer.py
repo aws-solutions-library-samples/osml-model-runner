@@ -1,12 +1,11 @@
 #  Copyright 2023 Amazon.com, Inc. or its affiliates.
 
 import time
-import unittest
+from unittest import TestCase, main
+from unittest.mock import Mock
 
-from mock import Mock
 
-
-class TestTimer(unittest.TestCase):
+class TestTimer(TestCase):
     def test_timer_with_normalized_unit(self):
         from aws.osml.model_runner.common import Timer
 
@@ -114,4 +113,4 @@ class TestTimer(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    main()
