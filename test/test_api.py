@@ -1,10 +1,10 @@
 #  Copyright 2023 Amazon.com, Inc. or its affiliates.
 
-import unittest
 from typing import Any, Dict
+from unittest import TestCase, main
+from unittest.mock import patch
 
 import boto3
-import mock
 import pytest
 import shapely.geometry
 from botocore.stub import Stubber
@@ -20,7 +20,7 @@ base_request = {
 }
 
 
-class TestModelRunnerAPI(unittest.TestCase):
+class TestModelRunnerAPI(TestCase):
     def test_region_request_constructor(self):
         from aws.osml.model_runner.api.image_request import ModelInvokeMode
         from aws.osml.model_runner.api.region_request import RegionRequest
@@ -108,7 +108,7 @@ class TestModelRunnerAPI(unittest.TestCase):
         assert s3_sink.__getattribute__("prefix") == "images/outputs"
         assert ir.roi is None
 
-    @mock.patch("aws.osml.model_runner.common.credentials_utils.sts_client")
+    @patch("aws.osml.model_runner.common.credentials_utils.sts_client")
     def test_image_request_from_message(self, mock_sts):
         from aws.osml.model_runner.api.image_request import ImageRequest
         from aws.osml.model_runner.common.typing import ImageCompression
@@ -282,4 +282,4 @@ class TestModelRunnerAPI(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    main()
