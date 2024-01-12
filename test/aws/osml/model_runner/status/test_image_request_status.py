@@ -6,7 +6,7 @@ from unittest import TestCase
 from shapely.geometry import Point
 
 
-class TestImageStatusHelper(TestCase):
+class TestImageRequestStatus(TestCase):
     def setUp(self):
         from aws.osml.model_runner.api.inference import ModelInvokeMode
         from aws.osml.model_runner.common.typing import ImageCompression, ImageFormats, ImageRequestStatus
