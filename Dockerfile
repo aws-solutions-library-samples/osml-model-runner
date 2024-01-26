@@ -24,7 +24,7 @@ RUN wget -c ${MINICONDA_URL} && \
     ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
 
 # Copy the conda environment file
-COPY environment-py310.yml environment.yml
+COPY environment-py311.yml environment.yml
 
 # Create the conda environment and remove additional unnecessary files
 RUN conda env create -f environment.yml \
