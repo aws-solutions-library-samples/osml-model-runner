@@ -1,12 +1,15 @@
 #  Copyright 2023 Amazon.com, Inc. or its affiliates.
 
 import ast
+import functools
 import json
 import logging
+import math
 from dataclasses import asdict
 from datetime import datetime
 from decimal import Decimal
 from json import dumps
+from math import degrees
 from secrets import token_hex
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -25,7 +28,7 @@ from aws.osml.gdal import (
     load_gdal_dataset,
     set_gdal_default_configuration,
 )
-from aws.osml.photogrammetry import DigitalElevationModel, ElevationModel, SensorModel, SRTMTileSet
+from aws.osml.photogrammetry import DigitalElevationModel, ElevationModel, ImageCoordinate, SensorModel, SRTMTileSet
 
 from .api import VALID_MODEL_HOSTING_OPTIONS, ImageRequest, InvalidImageRequestException, RegionRequest, SinkMode
 from .app_config import MetricLabels, ServiceConfig
@@ -312,7 +315,7 @@ class ModelRunner:
                 image_request_item.width = Decimal(raster_dataset.RasterXSize)
                 image_request_item.height = Decimal(raster_dataset.RasterYSize)
                 try:
-                    image_request_item.extents = json.dumps(ModelRunner.get_extents(raster_dataset))
+                    image_request_item.extents = json.dumps(ModelRunner.get_extents(raster_dataset, sensor_model))
                 except Exception as e:
                     logger.warning(f"Could not get extents for image: {image_request_item.image_id}")
                     logger.exception(e)
@@ -568,7 +571,7 @@ class ModelRunner:
                     metrics.put_metric(MetricLabels.IMAGE_PROCESSING_ERROR, 1, str(Unit.COUNT.value))
                 raise InvalidImageURLException("No image URL specified. Image URL is required.")
 
-            # If the image request have a valid s3 image url, otherwise this is a local file
+            # If the image request has a valid s3 image url, otherwise this is a local file
             if "s3:/" in image_request_item.image_url:
                 # Validate that image exists in S3
                 ImageRequest.validate_image_path(image_request_item.image_url, image_request_item.image_read_role)
@@ -593,7 +596,7 @@ class ModelRunner:
                     metrics.put_metric(MetricLabels.IMAGE_PROCESSING_ERROR, 1, str(Unit.COUNT.value))
                 raise LoadImageException("Failed to create processing bounds for image!")
             else:
-                # Calculate a set of ML engine sized regions that we need to process for this image
+                # Calculate a set of ML engine-sized regions that we need to process for this image
                 # Region size chosen to break large images into pieces that can be handled by a
                 # single tile worker
                 region_size: ImageDimensions = ast.literal_eval(ServiceConfig.region_size)
@@ -1001,22 +1004,38 @@ class ModelRunner:
         return inference_metadata_property
 
     @staticmethod
-    def get_extents(ds: gdal.Dataset) -> dict[str, Any]:
+    def get_extents(ds: gdal.Dataset, sm: SensorModel) -> Dict[str, Any]:
         """
-        Returns a list of driver extensions
+        Returns the geographic extents of the given GDAL dataset.
 
-        :param ds: the gdal dataset
-
-        :return: List[number] = the extent of the image
+        :param ds: GDAL dataset.
+        :param sm: OSML Sensor Model imputed for dataset
+        :return: Dictionary with keys 'north', 'south', 'east', 'west' representing the extents.
         """
-        geo_transform = ds.GetGeoTransform()
-        minx = geo_transform[0]
-        maxy = geo_transform[3]
-        maxx = minx + geo_transform[1] * ds.RasterXSize
-        miny = maxy + geo_transform[5] * ds.RasterYSize
+        try:
+            # Compute WGS-84 world coordinates for each image corners to impute the extents for visualizations
+            image_corners = [[0, 0], [ds.RasterXSize, 0], [ds.RasterXSize, ds.RasterYSize], [0, ds.RasterYSize]]
+            geo_image_corners = [sm.image_to_world(ImageCoordinate(corner)) for corner in image_corners]
+            locations = [(degrees(p.latitude), degrees(p.longitude)) for p in geo_image_corners]
+            feature_bounds = functools.reduce(
+                lambda prev, f: [
+                    min(f[0], prev[0]),
+                    min(f[1], prev[1]),
+                    max(f[0], prev[2]),
+                    max(f[1], prev[3]),
+                ],
+                locations,
+                [math.inf, math.inf, -math.inf, -math.inf],
+            )
 
-        extents = {"north": maxy, "south": miny, "east": maxx, "west": minx}
-        return extents
+            return {
+                "north": feature_bounds[2],
+                "south": feature_bounds[0],
+                "east": feature_bounds[3],
+                "west": feature_bounds[1],
+            }
+        except Exception as e:
+            logger.error(f"Error in getting extents: {e}")
 
     @staticmethod
     def calculate_region_status(total_tile_count: int, tile_error_count: int) -> RegionRequestStatus:

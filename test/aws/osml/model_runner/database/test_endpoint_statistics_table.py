@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 import boto3
 from botocore.exceptions import ClientError
-from moto import mock_dynamodb
+from moto import mock_aws
 
 TEST_ENDPOINT_TABLE_KEY_SCHEMA = [{"AttributeName": "endpoint", "KeyType": "HASH"}]
 TEST_ENDPOINT_TABLE_ATTRIBUTE_DEFINITIONS = [
@@ -18,7 +18,7 @@ TEST_MOCK_PUT_CONDITIONAL_EXCEPTION = Mock(
 TEST_MOCK_UPDATE_EXCEPTION = Mock(side_effect=ClientError({"Error": {"Code": 500, "Message": "ClientError"}}, "update_item"))
 
 
-@mock_dynamodb
+@mock_aws
 class TestEndpointStatisticsTable(unittest.TestCase):
     def setUp(self):
         """

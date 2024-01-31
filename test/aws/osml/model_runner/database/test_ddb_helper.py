@@ -4,14 +4,14 @@ from unittest import TestCase
 
 import boto3
 from botocore.exceptions import ClientError
-from moto import mock_dynamodb
+from moto import mock_aws
 
 TEST_JOB_TABLE_KEY_SCHEMA = [{"AttributeName": "image_id", "KeyType": "HASH"}]
 TEST_JOB_TABLE_ATTRIBUTE_DEFINITIONS = [{"AttributeName": "image_id", "AttributeType": "S"}]
 TEST_IMAGE_ID = "test-image-id"
 
 
-@mock_dynamodb
+@mock_aws
 class TestDDBHelper(TestCase):
     def setUp(self):
         from aws.osml.model_runner.app_config import BotoConfig

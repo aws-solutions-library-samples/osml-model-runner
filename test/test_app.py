@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch
 import boto3
 import geojson
 from botocore.exceptions import ClientError
-from moto import mock_dynamodb, mock_ec2, mock_kinesis, mock_s3, mock_sagemaker, mock_sns, mock_sqs
+from moto import mock_aws
 from osgeo import gdal
 
 TEST_MOCK_PUT_EXCEPTION = Mock(side_effect=ClientError({"Error": {"Code": 500, "Message": "ClientError"}}, "put_item"))
@@ -80,13 +80,7 @@ class RegionRequestMatcher:
             return other["region"] == self.region_request["region"] and other["image_id"] == self.region_request["image_id"]
 
 
-@mock_dynamodb
-@mock_ec2
-@mock_s3
-@mock_sagemaker
-@mock_sqs
-@mock_sns
-@mock_kinesis
+@mock_aws
 class TestModelRunner(TestCase):
     def setUp(self):
         """
