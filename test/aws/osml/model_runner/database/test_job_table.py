@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 import boto3
 from botocore.exceptions import ClientError
-from moto import mock_dynamodb
+from moto import mock_aws
 
 TEST_IMAGE_ID = "test-image-id"
 TEST_REGION_ID = "test-region-id"
@@ -17,7 +17,7 @@ TEST_MOCK_PUT_EXCEPTION = Mock(side_effect=ClientError({"Error": {"Code": 500, "
 TEST_MOCK_UPDATE_EXCEPTION = Mock(side_effect=ClientError({"Error": {"Code": 500, "Message": "ClientError"}}, "update_item"))
 
 
-@mock_dynamodb
+@mock_aws
 class TestJobTable(unittest.TestCase):
     def setUp(self):
         """

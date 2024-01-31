@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 import boto3
 from botocore.exceptions import ClientError
-from moto import mock_dynamodb
+from moto import mock_aws
 
 TEST_IMAGE_ID = "test-image-id"
 TEST_REGION_ID = "test-region-id"
@@ -22,7 +22,7 @@ TEST_REGION_REQUEST_TABLE_ATTRIBUTE_DEFINITIONS = [
 ]
 
 
-@mock_dynamodb
+@mock_aws
 class TestRegionRequestTable(unittest.TestCase):
     def setUp(self):
         """

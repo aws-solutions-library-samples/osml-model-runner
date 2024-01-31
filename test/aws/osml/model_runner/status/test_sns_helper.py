@@ -8,13 +8,12 @@ from unittest.mock import Mock
 
 import boto3
 from botocore.exceptions import ClientError
-from moto import mock_sns, mock_sqs
+from moto import mock_aws
 
 TEST_MOCK_PUBLISH_EXCEPTION = Mock(side_effect=ClientError({"Error": {"Code": 500, "Message": "ClientError"}}, "publish"))
 
 
-@mock_sqs
-@mock_sns
+@mock_aws
 class TestSnsHelper(TestCase):
     def setUp(self):
         from aws.osml.model_runner.app_config import BotoConfig
