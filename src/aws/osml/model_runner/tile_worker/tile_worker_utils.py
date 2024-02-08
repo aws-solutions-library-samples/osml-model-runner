@@ -187,6 +187,7 @@ def process_tiles(
                         "image_path": tmp_image_path,
                         "region": tile_bounds,
                         "image_id": region_request.image_id,
+                        "job_id": region_request.job_id,
                     }
                     # Increment our tile count tracking
                     total_tile_count += 1

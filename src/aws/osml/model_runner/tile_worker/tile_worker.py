@@ -13,7 +13,7 @@ from shapely.affinity import translate
 from shapely.geometry import Polygon
 
 from aws.osml.model_runner.app_config import MetricLabels
-from aws.osml.model_runner.common import GeojsonDetectionField
+from aws.osml.model_runner.common import GeojsonDetectionField, ThreadingLocalContextFilter
 from aws.osml.model_runner.database import FeatureTable
 from aws.osml.model_runner.inference import Detector
 from aws.osml.model_runner.tile_worker import FeatureRefinery
@@ -40,6 +40,7 @@ class TileWorker(Thread):
         asyncio.set_event_loop(thread_event_loop)
         while True:
             image_info: Dict = self.in_queue.get()
+            ThreadingLocalContextFilter.set_context(image_info)
 
             if image_info is None:
                 logging.info("All images processed. Stopping tile worker.")

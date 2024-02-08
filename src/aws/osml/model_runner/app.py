@@ -40,6 +40,7 @@ from .common import (
     ImageRegion,
     ImageRequestStatus,
     RegionRequestStatus,
+    ThreadingLocalContextFilter,
     Timer,
     build_embedded_metrics_config,
     get_credentials_for_assumed_role,
@@ -144,6 +145,7 @@ class ModelRunner:
             while self.running:
                 logger.debug("Checking work queue for regions to process ...")
                 (receipt_handle, region_request_attributes) = next(self.region_requests_iter)
+                ThreadingLocalContextFilter.set_context(region_request_attributes)
 
                 # If we found a region request on the queue
                 if region_request_attributes is not None:
@@ -213,6 +215,7 @@ class ModelRunner:
                         try:
                             # Parse the message into a working ImageRequest
                             image_request = ImageRequest.from_external_message(image_request_message)
+                            ThreadingLocalContextFilter.set_context(image_request.__dict__)
 
                             # Check that our image request looks good
                             if not image_request.is_valid():
