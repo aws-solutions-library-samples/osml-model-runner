@@ -37,7 +37,7 @@ def configure_logging(verbose: bool) -> None:
     ch.setLevel(logging_level)
     ch.addFilter(ThreadingLocalContextFilter(["job_id", "image_id"]))
     formatter = jsonlogger.JsonFormatter(
-        fmt="%(asctime)s %(levelname)s %(job_id)s %(image_id)s %(message)s", datefmt="%Y-%m-%dT%H:%M:%S"
+        fmt="%(levelname)s %(message)s %(job_id)s %(image_id)s", datefmt="%Y-%m-%dT%H:%M:%S"
     )
     ch.setFormatter(formatter)
 

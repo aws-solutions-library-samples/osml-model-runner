@@ -89,6 +89,13 @@ class FeatureTable(DDBHelper):
         """
         if isinstance(metrics, MetricsLogger):
             metrics.set_dimensions()
+            metrics.put_dimensions(
+                {
+                    MetricLabels.OPERATION_DIMENSION: MetricLabels.FEATURE_STORAGE_OPERATION,
+                }
+            )
+            metrics.put_metric(MetricLabels.INVOCATIONS, 1, str(Unit.COUNT.value))
+
         start_time_millisec = int(time.time() * 1000)
         # These records are temporary and will expire 24 hours after creation. Jobs should take
         # minutes to run, so this time should be conservative enough to let a team debug an urgent
@@ -96,7 +103,7 @@ class FeatureTable(DDBHelper):
         expire_time_epoch_sec = Decimal(int(start_time_millisec / 1000) + (2 * 60 * 60))
         with Timer(
             task_str="Add image features",
-            metric_name=MetricLabels.FEATURE_STORE_LATENCY,
+            metric_name=MetricLabels.DURATION,
             logger=logger,
             metrics_logger=metrics,
         ):
@@ -148,8 +155,7 @@ class FeatureTable(DDBHelper):
 
             except Exception as err:
                 if isinstance(metrics, MetricsLogger):
-                    metrics.put_metric(MetricLabels.FEATURE_UPDATE_EXCEPTION, 1, str(Unit.COUNT.value))
-                    metrics.put_metric(MetricLabels.FEATURE_ERROR, 1, str(Unit.COUNT.value))
+                    metrics.put_metric(MetricLabels.ERRORS, 1, str(Unit.COUNT.value))
                 raise AddFeaturesException("Failed to add features for tile!") from err
 
     @metric_scope
@@ -172,12 +178,14 @@ class FeatureTable(DDBHelper):
 
         if isinstance(metrics, MetricsLogger):
             metrics.set_dimensions()
+            metrics.put_dimensions({MetricLabels.OPERATION_DIMENSION: MetricLabels.FEATURE_AGG_OPERATION})
+            metrics.put_metric(MetricLabels.INVOCATIONS, 1, str(Unit.COUNT.value))
 
         features: List[Feature] = []
 
         with Timer(
             task_str="Aggregate image features",
-            metric_name=MetricLabels.FEATURE_AGG_LATENCY,
+            metric_name=MetricLabels.DURATION,
             logger=logger,
             metrics_logger=metrics,
         ):

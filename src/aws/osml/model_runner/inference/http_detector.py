@@ -111,16 +111,21 @@ class HTTPDetector(Detector):
         logger.info("Invoking Model: {}".format(self.name))
         if isinstance(metrics, MetricsLogger):
             metrics.set_dimensions()
-            metrics.put_dimensions({"ModelName": self.name})
+            metrics.put_dimensions(
+                {
+                    MetricLabels.OPERATION_DIMENSION: MetricLabels.MODEL_INVOCATION_OPERATION,
+                    MetricLabels.MODEL_NAME_DIMENSION: self.name,
+                }
+            )
 
         try:
             self.request_count += 1
             if isinstance(metrics, MetricsLogger):
-                metrics.put_metric(MetricLabels.MODEL_INVOCATION, 1, str(Unit.COUNT.value))
+                metrics.put_metric(MetricLabels.INVOCATIONS, 1, str(Unit.COUNT.value))
 
             with Timer(
                 task_str="Invoke HTTP Endpoint",
-                metric_name=MetricLabels.ENDPOINT_LATENCY,
+                metric_name=MetricLabels.DURATION,
                 logger=logger,
                 metrics_logger=metrics,
             ):
@@ -138,25 +143,24 @@ class HTTPDetector(Detector):
                     # get the history of retries and count them
                     retry_count = self.retry.retry_counts
                     if isinstance(metrics, MetricsLogger):
-                        metrics.put_metric(MetricLabels.ENDPOINT_RETRY_COUNT, retry_count, str(Unit.COUNT.value))
+                        metrics.put_metric(MetricLabels.RETRIES, retry_count, str(Unit.COUNT.value))
                     return geojson.loads(response.data.decode("utf-8"))
         except RetryError as err:
             self.error_count += 1
             if isinstance(metrics, MetricsLogger):
-                metrics.put_metric(MetricLabels.MODEL_ERROR, 1, str(Unit.COUNT.value))
+                metrics.put_metric(MetricLabels.ERRORS, 1, str(Unit.COUNT.value))
             logger.error("Retry failed - failed due to {}".format(err))
             logger.exception(err)
         except MaxRetryError as err:
             self.error_count += 1
             if isinstance(metrics, MetricsLogger):
-                metrics.put_metric(MetricLabels.MODEL_ERROR, 1, str(Unit.COUNT.value))
+                metrics.put_metric(MetricLabels.ERRORS, 1, str(Unit.COUNT.value))
             logger.error("Max retries reached - failed due to {}".format(err.reason))
             logger.exception(err)
         except JSONDecodeError as err:
             self.error_count += 1
             if isinstance(metrics, MetricsLogger):
-                metrics.put_metric(MetricLabels.FEATURE_DECODE, 1, str(Unit.COUNT.value))
-                metrics.put_metric(MetricLabels.MODEL_ERROR, 1, str(Unit.COUNT.value))
+                metrics.put_metric(MetricLabels.ERRORS, 1, str(Unit.COUNT.value))
             logger.error(
                 "Unable to decode response from model. URL: {}, Status: {}, Headers: {}, Response: {}".format(
                     self.endpoint, response.status, response.info(), response.data

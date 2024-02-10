@@ -8,6 +8,7 @@ from secrets import token_hex
 from typing import List, Optional, Tuple
 
 from aws_embedded_metrics import MetricsLogger
+from aws_embedded_metrics.metric_scope import metric_scope
 from aws_embedded_metrics.unit import Unit
 from osgeo import gdal
 
@@ -30,7 +31,6 @@ def setup_tile_workers(
     region_request: RegionRequest,
     sensor_model: Optional[SensorModel] = None,
     elevation_model: Optional[ElevationModel] = None,
-    metrics: MetricsLogger = None,
 ) -> Tuple[Queue, List[TileWorker]]:
     """
     Sets up a pool of tile-workers to process image tiles from a region request
@@ -38,7 +38,6 @@ def setup_tile_workers(
     :param region_request: RegionRequest = the region request to update.
     :param sensor_model: Optional[SensorModel] = the sensor model for this raster dataset
     :param elevation_model: Optional[ElevationModel] = an elevation model used to fix the elevation of the image coordinate
-    :param metrics: MetricsLogger = the metrics logger to use to report metrics.
 
     :return: Tuple[Queue, List[TileWorker] = a list of tile workers and the queue that manages them
     """
@@ -71,7 +70,7 @@ def setup_tile_workers(
             if sensor_model is not None:
                 feature_refinery = FeatureRefinery(sensor_model, elevation_model=elevation_model)
 
-            worker = TileWorker(tile_queue, feature_detector, feature_refinery, feature_table, metrics)
+            worker = TileWorker(tile_queue, feature_detector, feature_refinery, feature_table)
             worker.start()
             tile_workers.append(worker)
 
@@ -88,7 +87,6 @@ def process_tiles(
     tile_queue: Queue,
     tile_workers: List[TileWorker],
     raster_dataset: gdal.Dataset,
-    metrics: MetricsLogger = None,
     sensor_model: Optional[SensorModel] = None,
 ) -> Tuple[int, int]:
     """
@@ -98,7 +96,6 @@ def process_tiles(
     :param tile_queue: Queue = keeps the image in the queue for processing
     :param tile_workers: List[Tileworker] = the list of tile workers
     :param raster_dataset: gdal.Dataset = the raster dataset containing the region
-    :param metrics: MetricsLogger = the metrics logger to use to report metrics.
     :param sensor_model: Optional[SensorModel] = the sensor model for this raster dataset
 
     :return: Tuple[int, int] = number of tiles processed, number of tiles with an error
@@ -148,38 +145,10 @@ def process_tiles(
                     # Set a path for the tmp image
                     tmp_image_path = Path(tmp, region_image_filename)
 
-                    # Use GDAL to create an encoded tile of the image region
-                    absolute_tile_path = tmp_image_path.absolute()
-                    with Timer(
-                        task_str="Creating image tile: {}".format(absolute_tile_path),
-                        metric_name=MetricLabels.TILING_LATENCY,
-                        logger=logger,
-                        metrics_logger=metrics,
-                    ):
-                        encoded_tile_data = gdal_tile_factory.create_encoded_tile(
-                            [tile_bounds[0][1], tile_bounds[0][0], tile_bounds[1][0], tile_bounds[1][1]]
-                        )
-
-                        with open(absolute_tile_path, "wb") as binary_file:
-                            binary_file.write(encoded_tile_data)
-
-                    # GDAL doesn't always generate errors, so we need to make sure the NITF
-                    # encoded region was actually created.
-                    if not tmp_image_path.is_file():
-                        logger.error(
-                            "GDAL unable to create tile %s. Does not exist!",
-                            absolute_tile_path,
-                        )
-                        if isinstance(metrics, MetricsLogger):
-                            metrics.put_metric(MetricLabels.TILE_CREATION_FAILURE, 1, str(Unit.COUNT.value))
-                            metrics.put_metric(MetricLabels.REGION_PROCESSING_ERROR, 1, str(Unit.COUNT.value))
+                    # Generate an encoded tile of the requested image region
+                    absolute_tile_path = _create_tile(gdal_tile_factory, tile_bounds, tmp_image_path)
+                    if not absolute_tile_path:
                         continue
-                    else:
-                        logger.info(
-                            "Created %s size %s",
-                            absolute_tile_path,
-                            sizeof_fmt(tmp_image_path.stat().st_size),
-                        )
 
                     # Put the image info on the tile worker queue allowing each tile to be
                     # processed in parallel.
@@ -218,6 +187,64 @@ def process_tiles(
         raise ProcessTilesException("Failed to process tiles!") from err
 
     return total_tile_count, tile_error_count
+
+
+@metric_scope
+def _create_tile(gdal_tile_factory, tile_bounds, tmp_image_path, metrics: MetricsLogger = None) -> Optional[str]:
+    """
+    Create an encoded tile of the requested image region.
+
+    :param gdal_tile_factory: the factory used to create the tile
+    :param tile_bounds: the requested tile boundary
+    :param tmp_image_path: the output location of the tile
+    :param metrics: the current metrics scope
+    :return: the resulting tile path or None if the tile could not be created
+    """
+    if isinstance(metrics, MetricsLogger):
+        metrics.set_dimensions()
+        metrics.put_dimensions(
+            {
+                MetricLabels.OPERATION_DIMENSION: MetricLabels.TILE_GENERATION_OPERATION,
+                MetricLabels.INPUT_FORMAT_DIMENSION: str(gdal_tile_factory.raster_dataset.GetDriver().ShortName).upper(),
+            }
+        )
+
+    # Use GDAL to create an encoded tile of the image region
+    absolute_tile_path = tmp_image_path.absolute()
+    with Timer(
+        task_str="Creating image tile: {}".format(absolute_tile_path),
+        metric_name=MetricLabels.DURATION,
+        logger=logger,
+        metrics_logger=metrics,
+    ):
+        if isinstance(metrics, MetricsLogger):
+            metrics.put_metric(MetricLabels.INVOCATIONS, 1, str(Unit.COUNT.value))
+
+        encoded_tile_data = gdal_tile_factory.create_encoded_tile(
+            [tile_bounds[0][1], tile_bounds[0][0], tile_bounds[1][0], tile_bounds[1][1]]
+        )
+
+        with open(absolute_tile_path, "wb") as binary_file:
+            binary_file.write(encoded_tile_data)
+
+    # GDAL doesn't always generate errors, so we need to make sure the NITF
+    # encoded region was actually created.
+    if not tmp_image_path.is_file():
+        logger.error(
+            "GDAL unable to create tile %s. Does not exist!",
+            absolute_tile_path,
+        )
+        if isinstance(metrics, MetricsLogger):
+            metrics.put_metric(MetricLabels.ERRORS, 1, str(Unit.COUNT.value))
+        return None
+    else:
+        logger.info(
+            "Created %s size %s",
+            absolute_tile_path,
+            sizeof_fmt(tmp_image_path.stat().st_size),
+        )
+
+    return absolute_tile_path
 
 
 def sizeof_fmt(num: float, suffix: str = "B") -> str:

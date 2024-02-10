@@ -73,16 +73,21 @@ class SMDetector(Detector):
         logger.info("Invoking Model: {}".format(self.endpoint))
         if isinstance(metrics, MetricsLogger):
             metrics.set_dimensions()
-            metrics.put_dimensions({"ModelName": self.endpoint})
+            metrics.put_dimensions(
+                {
+                    MetricLabels.OPERATION_DIMENSION: MetricLabels.MODEL_INVOCATION_OPERATION,
+                    MetricLabels.MODEL_NAME_DIMENSION: self.endpoint,
+                }
+            )
 
         try:
             self.request_count += 1
             if isinstance(metrics, MetricsLogger):
-                metrics.put_metric(MetricLabels.MODEL_INVOCATION, 1, str(Unit.COUNT.value))
+                metrics.put_metric(MetricLabels.INVOCATIONS, 1, str(Unit.COUNT.value))
 
             with Timer(
                 task_str="Invoke SM Endpoint",
-                metric_name=MetricLabels.ENDPOINT_LATENCY,
+                metric_name=MetricLabels.DURATION,
                 logger=logger,
                 metrics_logger=metrics,
             ):
@@ -98,7 +103,7 @@ class SMDetector(Detector):
                     model_response = self.sm_client.invoke_endpoint(EndpointName=self.endpoint, Body=payload)
                     retry_count = model_response.get("ResponseMetadata", {}).get("RetryAttempts", 0)
                     if isinstance(metrics, MetricsLogger):
-                        metrics.put_metric(MetricLabels.ENDPOINT_RETRY_COUNT, retry_count, str(Unit.COUNT.value))
+                        metrics.put_metric(MetricLabels.RETRIES, retry_count, str(Unit.COUNT.value))
 
                     # We are expecting the body of the message to contain a geojson FeatureCollection
                     return geojson.loads(model_response.get("Body").read())
@@ -108,7 +113,7 @@ class SMDetector(Detector):
             error_code = ce.response.get("Error", {}).get("Code")
             http_status_code = ce.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
             if isinstance(metrics, MetricsLogger):
-                metrics.put_metric(MetricLabels.MODEL_ERROR, 1, str(Unit.COUNT.value))
+                metrics.put_metric(MetricLabels.ERRORS, 1, str(Unit.COUNT.value))
             logger.error(
                 "Unable to get detections from model - HTTP Status Code: {}, Error Code: {}".format(
                     http_status_code, error_code
@@ -119,8 +124,7 @@ class SMDetector(Detector):
         except JSONDecodeError as de:
             self.error_count += 1
             if isinstance(metrics, MetricsLogger):
-                metrics.put_metric(MetricLabels.FEATURE_DECODE, 1, str(Unit.COUNT.value))
-                metrics.put_metric(MetricLabels.MODEL_ERROR, 1, str(Unit.COUNT.value))
+                metrics.put_metric(MetricLabels.ERRORS, 1, str(Unit.COUNT.value))
             logger.error("Unable to decode response from model.")
             logger.exception(de)
 
