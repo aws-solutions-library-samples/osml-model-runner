@@ -66,7 +66,7 @@ from .status import StatusMonitor
 from .tile_worker import generate_crops, process_tiles, setup_tile_workers
 
 # Set up metrics configuration
-Config = build_embedded_metrics_config()
+build_embedded_metrics_config()
 
 # Set up logging configuration
 logger = logging.getLogger(__name__)
@@ -126,8 +126,7 @@ class ModelRunner:
 
         return None
 
-    @metric_scope
-    def monitor_work_queues(self, metrics: MetricsLogger = None) -> None:
+    def monitor_work_queues(self) -> None:
         """
         Monitors SQS queues for ImageRequest and RegionRequest The region work queue is checked first and will wait for
         up to 10 seconds to start work. Only if no regions need to be processed in that time will this worker check to
@@ -163,6 +162,7 @@ class ModelRunner:
 
                         # Load the image into a GDAL dataset
                         raster_dataset, sensor_model = load_gdal_dataset(image_path)
+                        image_format = str(raster_dataset.GetDriver().ShortName).upper()
 
                         # Get RegionRequestItem if not create new RegionRequestItem
                         region_request_item = self.region_request_table.get_region_request(
@@ -191,7 +191,7 @@ class ModelRunner:
                         # Check if the image is complete
                         if self.job_table.is_image_request_complete(image_request_item):
                             # If so complete the image request
-                            self.complete_image_request(region_request)
+                            self.complete_image_request(region_request, image_format)
 
                         # Update the queue
                         self.region_request_queue.finish_request(receipt_handle)
@@ -241,14 +241,13 @@ class ModelRunner:
                                 job_arn=min_job_arn,
                                 processing_time=Decimal(0),
                             )
-                            self.fail_image_request_send_messages(minimal_job_item, err, metrics)
+                            self.fail_image_request_send_messages(minimal_job_item, err)
                             self.image_request_queue.finish_request(receipt_handle)
         finally:
             # If we stop monitoring the queue set run state to false
             self.running = False
 
-    @metric_scope
-    def process_image_request(self, image_request: ImageRequest, metrics: MetricsLogger = None) -> None:
+    def process_image_request(self, image_request: ImageRequest) -> None:
         """
         Processes ImageRequest objects that are picked up from  queue. Loads the specified image into memory to be
         chipped apart into regions and sent downstream for processing via RegionRequest. This will also process the
@@ -257,12 +256,9 @@ class ModelRunner:
         other workers in this cluster.
 
         :param image_request: ImageRequest = the image request derived from the ImageRequest SQS message
-        :param metrics: MetricsLogger = the metrics logger to use to report metrics.
 
         :return: None
         """
-        if isinstance(metrics, MetricsLogger):
-            metrics.set_dimensions()
         image_request_item = None
         try:
             if ServiceConfig.self_throttling:
@@ -298,11 +294,11 @@ class ModelRunner:
             self.status_monitor.process_event(image_request_item, ImageRequestStatus.STARTED, "Started image request")
 
             # Check we have a valid image request, throws if not
-            self.validate_model_hosting(image_request_item, metrics)
+            self.validate_model_hosting(image_request_item)
 
             # Load the relevant image meta data into memory
             image_extension, raster_dataset, sensor_model, all_regions = self.load_image_request(
-                image_request_item, image_request.roi, metrics
+                image_request_item, image_request.roi
             )
 
             if sensor_model is None:
@@ -345,7 +341,7 @@ class ModelRunner:
         except Exception as err:
             # We failed try and gracefully update our image request
             if image_request_item:
-                self.fail_image_request(image_request_item, err, metrics)
+                self.fail_image_request(image_request_item, err)
             else:
                 minimal_job_item = JobItem(
                     image_id=image_request.image_id,
@@ -353,7 +349,7 @@ class ModelRunner:
                     job_arn=image_request.job_arn,
                     processing_time=Decimal(0),
                 )
-                self.fail_image_request(minimal_job_item, err, metrics)
+                self.fail_image_request(minimal_job_item, err)
 
             # Let the application know that we failed to process image
             raise ProcessImageException("Failed to process image region!") from err
@@ -440,7 +436,8 @@ class ModelRunner:
 
         # If the image is finished then complete it
         if self.job_table.is_image_request_complete(image_request_item):
-            self.complete_image_request(first_region_request)
+            image_format = str(raster_dataset.GetDriver().ShortName).upper()
+            self.complete_image_request(first_region_request, image_format)
 
     @metric_scope
     def process_region_request(
@@ -469,13 +466,17 @@ class ModelRunner:
 
         if not region_request.is_valid():
             logger.error("Invalid Region Request! {}".format(region_request.__dict__))
-            if isinstance(metrics, MetricsLogger):
-                metrics.put_metric(MetricLabels.INVALID_REQUEST, 1, str(Unit.COUNT.value))
-                metrics.put_metric(MetricLabels.REGION_PROCESSING_ERROR, 1, str(Unit.COUNT.value))
             raise ValueError("Invalid Region Request")
 
         if isinstance(metrics, MetricsLogger):
-            metrics.put_dimensions({"ImageFormat": region_request.image_extension})
+            image_format = str(raster_dataset.GetDriver().ShortName).upper()
+            metrics.put_dimensions(
+                {
+                    MetricLabels.OPERATION_DIMENSION: MetricLabels.REGION_PROCESSING_OPERATION,
+                    MetricLabels.MODEL_NAME_DIMENSION: region_request.model_name,
+                    MetricLabels.INPUT_FORMAT_DIMENSION: image_format,
+                }
+            )
 
         if ServiceConfig.self_throttling:
             max_regions = self.endpoint_utils.calculate_max_regions(
@@ -487,7 +488,7 @@ class ModelRunner:
 
             if in_progress >= max_regions:
                 if isinstance(metrics, MetricsLogger):
-                    metrics.put_metric(MetricLabels.REGIONS_SELF_THROTTLED, 1, str(Unit.COUNT.value))
+                    metrics.put_metric(MetricLabels.THROTTLES, 1, str(Unit.COUNT.value))
                 logger.info("Throttling region request. (Max: {} In-progress: {}".format(max_regions, in_progress))
                 raise SelfThrottledRegionException
 
@@ -497,16 +498,16 @@ class ModelRunner:
         try:
             with Timer(
                 task_str="Processing region {} {}".format(region_request.image_url, region_request.region_bounds),
-                metric_name=MetricLabels.REGION_LATENCY,
+                metric_name=MetricLabels.DURATION,
                 logger=logger,
                 metrics_logger=metrics,
             ):
                 # Set up our threaded tile worker pool
-                tile_queue, tile_workers = setup_tile_workers(region_request, sensor_model, self.elevation_model, metrics)
+                tile_queue, tile_workers = setup_tile_workers(region_request, sensor_model, self.elevation_model)
 
                 # Process all our tiles
                 total_tile_count, tile_error_count = process_tiles(
-                    region_request, tile_queue, tile_workers, raster_dataset, metrics, sensor_model
+                    region_request, tile_queue, tile_workers, raster_dataset, sensor_model
                 )
 
                 # Update table w/ total tile counts
@@ -523,8 +524,8 @@ class ModelRunner:
 
             # Write CloudWatch Metrics to the Logs
             if isinstance(metrics, MetricsLogger):
-                metrics.put_metric(MetricLabels.REGIONS_PROCESSED, 1, str(Unit.COUNT.value))
-                metrics.put_metric(MetricLabels.TILES_PROCESSED, total_tile_count, str(Unit.COUNT.value))
+                # TODO: Consider adding the +1 invocation to timer
+                metrics.put_metric(MetricLabels.INVOCATIONS, 1, str(Unit.COUNT.value))
 
             # Return the updated item
             return image_request_item
@@ -544,7 +545,6 @@ class ModelRunner:
     def load_image_request(
         image_request_item: JobItem,
         roi: shapely.geometry.base.BaseGeometry,
-        metrics: MetricsLogger = None,
     ) -> Tuple[str, Dataset, Optional[SensorModel], List[ImageRegion]]:
         """
         Loads the required image file metadata into memory to be chipped apart into regions and
@@ -552,7 +552,6 @@ class ModelRunner:
 
         :param image_request_item: JobItem = the region request to update.
         :param roi: BaseGeometry = the region of interest shape
-        :param metrics: MetricsLogger = the metrics logger to use to report metrics.
 
         :return: Tuple[Queue, List[TileWorker]: A list of tile workers and the queue that manages them
         """
@@ -569,9 +568,6 @@ class ModelRunner:
         with GDALConfigEnv().with_aws_credentials(assumed_credentials):
             # Use GDAL to access the dataset and geo positioning metadata
             if not image_request_item.image_url:
-                if isinstance(metrics, MetricsLogger):
-                    metrics.put_metric(MetricLabels.NO_IMAGE_URL, 1, str(Unit.COUNT.value))
-                    metrics.put_metric(MetricLabels.IMAGE_PROCESSING_ERROR, 1, str(Unit.COUNT.value))
                 raise InvalidImageURLException("No image URL specified. Image URL is required.")
 
             # If the image request has a valid s3 image url, otherwise this is a local file
@@ -585,18 +581,13 @@ class ModelRunner:
 
             # Use gdal to load the image url we were given
             raster_dataset, sensor_model = load_gdal_dataset(image_path)
-            if isinstance(metrics, MetricsLogger):
-                image_extension = get_image_extension(image_path)
-                metrics.put_dimensions({"ImageFormat": image_extension})
+            image_extension = get_image_extension(image_path)
 
             # Determine how much of this image should be processed.
             # Bounds are: UL corner (row, column) , dimensions (w, h)
             processing_bounds = calculate_processing_bounds(raster_dataset, roi, sensor_model)
             if not processing_bounds:
                 logger.info("Requested ROI does not intersect image. Nothing to do")
-                if isinstance(metrics, MetricsLogger):
-                    metrics.put_metric(MetricLabels.INVALID_ROI, 1, str(Unit.COUNT.value))
-                    metrics.put_metric(MetricLabels.IMAGE_PROCESSING_ERROR, 1, str(Unit.COUNT.value))
                 raise LoadImageException("Failed to create processing bounds for image!")
             else:
                 # Calculate a set of ML engine-sized regions that we need to process for this image
@@ -612,49 +603,37 @@ class ModelRunner:
 
         return image_extension, raster_dataset, sensor_model, all_regions
 
-    def fail_image_request(self, image_request_item: JobItem, err: Exception, metrics: MetricsLogger = None) -> None:
+    def fail_image_request(self, image_request_item: JobItem, err: Exception) -> None:
         """
         Handles failure events/exceptions for image requests and tries to update the status monitor accordingly
 
         :param image_request_item: JobItem = the image request that failed.
         :param err: Exception = the exception that caused the failure
-        :param metrics: MetricsLogger = the metrics logger to use to report metrics.
 
         :return: None
         """
-        self.fail_image_request_send_messages(image_request_item, err, metrics)
+        self.fail_image_request_send_messages(image_request_item, err)
         self.job_table.end_image_request(image_request_item.image_id)
 
-    def fail_image_request_send_messages(
-        self, image_request_item: JobItem, err: Exception, metrics: MetricsLogger = None
-    ) -> None:
+    def fail_image_request_send_messages(self, image_request_item: JobItem, err: Exception) -> None:
         """
         Updates failed metrics and update the status monitor accordingly
 
         :param image_request_item: JobItem = the image request that failed.
         :param err: Exception = the exception that caused the failure
-        :param metrics: MetricsLogger = the metrics logger to use to report metrics.
 
         :return: None
         """
         logger.exception("Failed to start image processing!: {}".format(err))
-        if isinstance(metrics, MetricsLogger):
-            metrics.put_metric(MetricLabels.PROCESSING_FAILURE, 1, str(Unit.COUNT.value))
-            metrics.put_metric(MetricLabels.IMAGE_PROCESSING_ERROR, 1, str(Unit.COUNT.value))
         self.status_monitor.process_event(image_request_item, ImageRequestStatus.FAILED, str(err))
 
-    def complete_image_request(
-        self,
-        region_request: RegionRequest,
-        metrics: MetricsLogger = None,
-    ) -> None:
+    def complete_image_request(self, region_request: RegionRequest, image_format: str) -> None:
         """
         Runs after every region has completed processing to check if that was the last region and run required
         completion logic for the associated ImageRequest.
 
         :param region_request: RegionRequest = the region request to update.
-        :param metrics: MetricsLogger = the metrics logger to use to report metrics.
-
+        :param image_format: the format of the image
         :return: None
         """
         try:
@@ -677,28 +656,52 @@ class ModelRunner:
                     "Failed to write features to S3 or Kinesis! Please check the " "log..."
                 )
 
-            if isinstance(metrics, MetricsLogger):
-                # Record model used for this image
-                metrics.set_dimensions()
-                metrics.put_dimensions({"ModelName": image_request_item.model_name})
-
             # Put our end time on our image_request_item
             completed_image_request_item = self.job_table.end_image_request(image_request_item.image_id)
 
             # Ensure we have a valid start time for our record
+            # TODO: Figure out why we wouldn't have a valid start time?!?!
             if completed_image_request_item.processing_time is not None:
                 image_request_status = self.status_monitor.get_image_request_status(completed_image_request_item)
                 self.status_monitor.process_event(
                     completed_image_request_item, image_request_status, "Completed image processing"
                 )
-                if isinstance(metrics, MetricsLogger):
-                    processing_time = float(completed_image_request_item.processing_time)
-                    metrics.put_metric(MetricLabels.IMAGE_LATENCY, processing_time, str(Unit.SECONDS.value))
+                self.generate_image_processing_metrics(completed_image_request_item, image_format)
             else:
                 raise InvalidImageRequestException("ImageRequest has no start time")
 
         except Exception as err:
             raise AggregateFeaturesException("Failed to aggregate features for region!") from err
+
+    @metric_scope
+    def generate_image_processing_metrics(
+        self, image_request_item: JobItem, image_format: str, metrics: MetricsLogger = None
+    ) -> None:
+        """
+        Output the metrics for the full image processing timeline.
+
+        :param image_request_item: the completed image request item that tracks the duration and error counts
+        :param image_format: the input image format
+        :param metrics: the current metric scope
+        """
+        if not metrics:
+            logger.warning("Unable to generate image processing metrics. Metrics logger is None!")
+            return
+
+        if isinstance(metrics, MetricsLogger):
+            metrics.set_dimensions()
+            metrics.put_dimensions(
+                {
+                    MetricLabels.OPERATION_DIMENSION: MetricLabels.IMAGE_PROCESSING_OPERATION,
+                    MetricLabels.MODEL_NAME_DIMENSION: image_request_item.model_name,
+                    MetricLabels.INPUT_FORMAT_DIMENSION: image_format,
+                }
+            )
+
+            metrics.put_metric(MetricLabels.DURATION, float(image_request_item.processing_time), str(Unit.SECONDS.value))
+            metrics.put_metric(MetricLabels.INVOCATIONS, 1, str(Unit.COUNT.value))
+            if image_request_item.region_error > 0:
+                metrics.put_metric(MetricLabels.ERRORS, 1, str(Unit.COUNT.value))
 
     def fail_region_request(
         self,
@@ -715,8 +718,7 @@ class ModelRunner:
         :return: None
         """
         if isinstance(metrics, MetricsLogger):
-            metrics.put_metric(MetricLabels.PROCESSING_FAILURE, 1, str(Unit.COUNT.value))
-            metrics.put_metric(MetricLabels.REGION_PROCESSING_ERROR, 1, str(Unit.COUNT.value))
+            metrics.put_metric(MetricLabels.ERRORS, 1, str(Unit.COUNT.value))
         try:
             region_request_item = self.region_request_table.complete_region_request(
                 region_request_item, RegionRequestStatus.FAILED
@@ -727,12 +729,11 @@ class ModelRunner:
             logger.exception(status_error)
         raise ProcessRegionException("Failed to process image region!")
 
-    def validate_model_hosting(self, image_request: JobItem, metrics: MetricsLogger = None):
+    def validate_model_hosting(self, image_request: JobItem):
         """
         Validates that the image request is valid. If not, raises an exception.
 
         :param image_request: JobItem = the image request
-        :param metrics: MetricsLogger = the metrics logger to use to report metrics.
 
         :return: None
         """
@@ -743,15 +744,12 @@ class ModelRunner:
                 ImageRequestStatus.FAILED,
                 error,
             )
-            if isinstance(metrics, MetricsLogger):
-                metrics.put_metric(MetricLabels.UNSUPPORTED_MODEL_HOST, 1, str(Unit.COUNT.value))
-                metrics.put_metric(MetricLabels.IMAGE_PROCESSING_ERROR, 1, str(Unit.COUNT.value))
             raise UnsupportedModelException(error)
 
     @staticmethod
+    @metric_scope
     def aggregate_features(
-        image_request_item: JobItem,
-        feature_table: FeatureTable,
+        image_request_item: JobItem, feature_table: FeatureTable, metrics: MetricsLogger = None
     ) -> List[Feature]:
         """
         For a given image processing job - aggregate all the features that were collected for it and
@@ -759,16 +757,24 @@ class ModelRunner:
 
         :param image_request_item: JobItem = the image request
         :param feature_table: FeatureTable = the table storing features from all completed regions
+        :param metrics: the current metrics scope
 
         :return: List[geojson.Feature] = the list of features
         """
-        # Ensure we are given a validate tile size and overlap
-        if image_request_item.tile_size and image_request_item.tile_overlap:
-            # Read all the features from DDB.
+        if isinstance(metrics, MetricsLogger):
+            metrics.set_dimensions()
+            metrics.put_dimensions(
+                {
+                    MetricLabels.OPERATION_DIMENSION: MetricLabels.FEATURE_AGG_OPERATION,
+                }
+            )
+
+        with Timer(
+            task_str="Aggregating Features", metric_name=MetricLabels.DURATION, logger=logger, metrics_logger=metrics
+        ):
             features = feature_table.get_features(image_request_item.image_id)
             logger.info(f"Total features aggregated: {len(features)}")
-        else:
-            raise AggregateFeaturesException("Tile size and overlap must be provided for feature aggregation")
+
         return features
 
     @staticmethod
@@ -856,9 +862,16 @@ class ModelRunner:
         """
         if isinstance(metrics, MetricsLogger):
             metrics.set_dimensions()
+            metrics.put_dimensions(
+                {
+                    MetricLabels.OPERATION_DIMENSION: MetricLabels.FEATURE_SELECTION_OPERATION,
+                }
+            )
+            metrics.put_metric(MetricLabels.INVOCATIONS, 1, str(Unit.COUNT.value))
+
         with Timer(
             task_str="Select (deduplicate) image features",
-            metric_name=MetricLabels.FEATURE_SELECTION_LATENCY,
+            metric_name=MetricLabels.DURATION,
             logger=logger,
             metrics_logger=metrics,
         ):
@@ -904,44 +917,62 @@ class ModelRunner:
             return deduped_features
 
     @staticmethod
-    def sync_features(image_request_item: JobItem, features: List[Feature]) -> bool:
+    @metric_scope
+    def sync_features(image_request_item: JobItem, features: List[Feature], metrics: MetricsLogger = None) -> bool:
         """
         Writing the features output to S3 and/or Kinesis Stream
 
         :param image_request_item: JobItem = the job table item for an image request
         :param features: List[Features] = the list of features to update
+        :param metrics: the current metrics scope
 
         :return: bool = if it has successfully written to an output sync
         """
-        tracking_output_sinks = {
-            "S3": False,
-            "Kinesis": False,
-        }  # format: job_id = {"s3": true, "kinesis": true}
 
-        # Ensure we have outputs defined for where to dump our features
-        if image_request_item.outputs:
-            logging.info("Writing aggregate feature for job '{}'".format(image_request_item.job_id))
-            for sink in SinkFactory.outputs_to_sinks(json.loads(image_request_item.outputs)):
-                if sink.mode == SinkMode.AGGREGATE and image_request_item.job_id:
-                    is_write_output_succeeded = sink.write(image_request_item.job_id, features)
-                    tracking_output_sinks[sink.name()] = is_write_output_succeeded
+        if isinstance(metrics, MetricsLogger):
+            metrics.set_dimensions()
+            metrics.put_dimensions(
+                {
+                    MetricLabels.OPERATION_DIMENSION: MetricLabels.FEATURE_DISSEMINATE_OPERATION,
+                }
+            )
+            metrics.put_metric(MetricLabels.INVOCATIONS, 1, str(Unit.COUNT.value))
 
-            # Log them let them know if both written to both outputs (S3 and Kinesis) or one in another
-            # If both couldn't write to either stream because both were down, return False. Otherwise True
-            if tracking_output_sinks["S3"] and not tracking_output_sinks["Kinesis"]:
-                logging.info("OSMLModelRunner was able to write the features to S3 but not Kinesis. Continuing...")
-                return True
-            elif not tracking_output_sinks["S3"] and tracking_output_sinks["Kinesis"]:
-                logging.info("OSMLModelRunner was able to write the features to Kinesis but not S3. Continuing...")
-                return True
-            elif tracking_output_sinks["S3"] and tracking_output_sinks["Kinesis"]:
-                logging.info("OSMLModelRunner was able to write the features to both S3 and Kinesis. Continuing...")
-                return True
+        with Timer(
+            task_str="Sink image features",
+            metric_name=MetricLabels.DURATION,
+            logger=logger,
+            metrics_logger=metrics,
+        ):
+            tracking_output_sinks = {
+                "S3": False,
+                "Kinesis": False,
+            }  # format: job_id = {"s3": true, "kinesis": true}
+
+            # Ensure we have outputs defined for where to dump our features
+            if image_request_item.outputs:
+                logging.info("Writing aggregate feature for job '{}'".format(image_request_item.job_id))
+                for sink in SinkFactory.outputs_to_sinks(json.loads(image_request_item.outputs)):
+                    if sink.mode == SinkMode.AGGREGATE and image_request_item.job_id:
+                        is_write_output_succeeded = sink.write(image_request_item.job_id, features)
+                        tracking_output_sinks[sink.name()] = is_write_output_succeeded
+
+                # Log them let them know if both written to both outputs (S3 and Kinesis) or one in another
+                # If both couldn't write to either stream because both were down, return False. Otherwise True
+                if tracking_output_sinks["S3"] and not tracking_output_sinks["Kinesis"]:
+                    logging.info("OSMLModelRunner was able to write the features to S3 but not Kinesis. Continuing...")
+                    return True
+                elif not tracking_output_sinks["S3"] and tracking_output_sinks["Kinesis"]:
+                    logging.info("OSMLModelRunner was able to write the features to Kinesis but not S3. Continuing...")
+                    return True
+                elif tracking_output_sinks["S3"] and tracking_output_sinks["Kinesis"]:
+                    logging.info("OSMLModelRunner was able to write the features to both S3 and Kinesis. Continuing...")
+                    return True
+                else:
+                    logging.error("OSMLModelRunner was not able to write the features to either S3 or Kinesis. Failing...")
+                    return False
             else:
-                logging.error("OSMLModelRunner was not able to write the features to either S3 or Kinesis. Failing...")
-                return False
-        else:
-            raise InvalidImageRequestException("No output destinations were defined for this image request!")
+                raise InvalidImageRequestException("No output destinations were defined for this image request!")
 
     def add_properties_to_features(self, image_request_item: JobItem, features: List[Feature]) -> List[Feature]:
         """

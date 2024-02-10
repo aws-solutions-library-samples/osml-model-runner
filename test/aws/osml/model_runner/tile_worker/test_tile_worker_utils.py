@@ -30,10 +30,7 @@ class TestTileWorkerUtils(TestCase):
         )
         mock_sensor_model = None
         mock_elevation_model = None
-        mock_metrics = None
-        work_queue, tile_worker_list = setup_tile_workers(
-            mock_region_request, mock_sensor_model, mock_elevation_model, mock_metrics
-        )
+        work_queue, tile_worker_list = setup_tile_workers(mock_region_request, mock_sensor_model, mock_elevation_model)
         assert len(tile_worker_list) == mock_num_tile_workers
 
     @patch("aws.osml.model_runner.tile_worker.tile_worker_utils.FeatureTable", autospec=True)
@@ -62,10 +59,9 @@ class TestTileWorkerUtils(TestCase):
         )
         mock_sensor_model = None
         mock_elevation_model = None
-        mock_metrics = None
         with self.assertRaises(SetupTileWorkersException):
             # with self.assertRaises(ValueError):
-            setup_tile_workers(mock_region_request, mock_sensor_model, mock_elevation_model, mock_metrics)
+            setup_tile_workers(mock_region_request, mock_sensor_model, mock_elevation_model)
 
     def test_chip_generator(self):
         from aws.osml.model_runner.tile_worker.tile_worker_utils import generate_crops

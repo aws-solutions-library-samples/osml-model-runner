@@ -89,32 +89,28 @@ class MetricLabels(str, Enum):
     Enumeration defining the metric labels used by OSML
     """
 
-    ENDPOINT_LATENCY = "EndpointLatency"
-    ENDPOINT_RETRY_COUNT = "EndpointRetryCount"
-    FEATURE_AGG_LATENCY = "FeatureAggLatency"
-    FEATURE_SELECTION_LATENCY = "FeatureSelectionLatency"
-    FEATURE_ERROR = "FeatureError"
-    FEATURE_STORE_LATENCY = "FeatureStoreLatency"
-    IMAGE_PROCESSING_ERROR = "ImageProcessingError"
-    METADATA_LATENCY = "MetadataLatency"
-    MODEL_INVOCATION = "ModelInvocation"
-    MODEL_ERROR = "ModelError"
-    REGION_LATENCY = "RegionLatency"
-    REGION_PROCESSING_ERROR = "RegionProcessingError"
-    REGIONS_PROCESSED = "RegionsProcessed"
-    REGIONS_SELF_THROTTLED = "RegionsSelfThrottled"
-    TILING_LATENCY = "TilingLatency"
-    TILES_PROCESSED = "TilesProcessed"
-    IMAGE_LATENCY = ("ImageLatency",)
-    FEATURE_DECODE = "FeatureDecodeError"
-    FEATURE_MISSING_GEO = "FeatureMissingGeometry"
-    FEATURE_TO_SHAPE = "FeatureToShapeConversion"
-    FEATURE_UPDATE = "FeatureUpdateFailure"
-    FEATURE_UPDATE_EXCEPTION = "FeatureUpdateException"
-    INVALID_REQUEST = "InvalidRequest"
-    INVALID_ROI = "InvalidROI"
-    NO_IMAGE_URL = "NoImageURL"
-    PROCESSING_FAILURE = "ProcessingFailure"
-    TILE_PROCESSING_ERROR = "TileProcessingError"
-    TILE_CREATION_FAILURE = "TileCreationFailure"
-    UNSUPPORTED_MODEL_HOST = "UnsupportedModelHost"
+    # These are based on common metric names used by a variety of AWS services (e.g. Lambda)
+    DURATION = "Duration"
+    INVOCATIONS = "Invocations"
+    ERRORS = "Errors"
+    THROTTLES = "Throttles"
+    RETRIES = "Retries"
+
+    # These dimensions allow us to limit the scope of a metric value to a particular portion of the
+    # ModelRunner application, a data type, or input format.
+    OPERATION_DIMENSION = "Operation"
+    MODEL_NAME_DIMENSION = "ModelName"
+    INPUT_FORMAT_DIMENSION = "InputFormat"
+
+    # These operation names can be used along with the Operation dimension to restrict the scope
+    # of the common metrics to a specific portion of the ModelRunner application.
+    IMAGE_PROCESSING_OPERATION = "ImageProcessing"
+    REGION_PROCESSING_OPERATION = "RegionProcessing"
+    TILE_GENERATION_OPERATION = "TileGeneration"
+    TILE_PROCESSING_OPERATION = "TileProcessing"
+    MODEL_INVOCATION_OPERATION = "ModelInvocation"
+    FEATURE_REFINEMENT_OPERATION = "FeatureRefinement"
+    FEATURE_STORAGE_OPERATION = "FeatureStorage"
+    FEATURE_AGG_OPERATION = "FeatureAggregation"
+    FEATURE_SELECTION_OPERATION = "FeatureSelection"
+    FEATURE_DISSEMINATE_OPERATION = "FeatureDissemination"
