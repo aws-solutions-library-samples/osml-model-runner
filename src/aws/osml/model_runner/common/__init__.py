@@ -8,6 +8,7 @@ from .auto_string_enum import AutoStringEnum
 from .credentials_utils import get_credentials_for_assumed_role
 from .endpoint_utils import EndpointUtils
 from .exceptions import InvalidAssumedRoleException, InvalidClassificationException
+from .log_context import ThreadingLocalContextFilter
 from .metrics_utils import build_embedded_metrics_config
 from .mr_post_processing import (
     FeatureDistillationAlgorithm,

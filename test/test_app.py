@@ -1,15 +1,15 @@
-#  Copyright 2023 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+
 import os
-import unittest
 from importlib import reload
 from queue import Queue
+from unittest import TestCase, main
+from unittest.mock import Mock, patch
 
 import boto3
 import geojson
-import mock
 from botocore.exceptions import ClientError
-from mock import Mock
-from moto import mock_dynamodb, mock_ec2, mock_kinesis, mock_s3, mock_sagemaker, mock_sns, mock_sqs
+from moto import mock_aws
 from osgeo import gdal
 
 TEST_MOCK_PUT_EXCEPTION = Mock(side_effect=ClientError({"Error": {"Code": 500, "Message": "ClientError"}}, "put_item"))
@@ -80,14 +80,8 @@ class RegionRequestMatcher:
             return other["region"] == self.region_request["region"] and other["image_id"] == self.region_request["image_id"]
 
 
-@mock_dynamodb
-@mock_ec2
-@mock_s3
-@mock_sagemaker
-@mock_sqs
-@mock_sns
-@mock_kinesis
-class TestModelRunner(unittest.TestCase):
+@mock_aws
+class TestModelRunner(TestCase):
     def setUp(self):
         """
         Set up virtual AWS resources for use by our unit tests
@@ -414,8 +408,8 @@ class TestModelRunner(unittest.TestCase):
     # Remember that with multiple patch decorators the order of the mocks in the parameter list is
     # reversed (i.e. the first mock parameter is the last decorator defined). Also note that the
     # pytest fixtures must come at the end.
-    @mock.patch("aws.osml.model_runner.app.setup_tile_workers")
-    @mock.patch("aws.osml.model_runner.app.process_tiles")
+    @patch("aws.osml.model_runner.app.setup_tile_workers")
+    @patch("aws.osml.model_runner.app.process_tiles")
     def test_process_region_request(
         self,
         mock_process_tiles,
@@ -452,8 +446,8 @@ class TestModelRunner(unittest.TestCase):
         self.model_runner.endpoint_statistics_table.increment_region_count.assert_called_once_with(TEST_MODEL_ENDPOINT)
         self.model_runner.endpoint_statistics_table.decrement_region_count.assert_called_once_with(TEST_MODEL_ENDPOINT)
 
-    @mock.patch("aws.osml.model_runner.app.setup_tile_workers")
-    @mock.patch("aws.osml.model_runner.app.process_tiles")
+    @patch("aws.osml.model_runner.app.setup_tile_workers")
+    @patch("aws.osml.model_runner.app.process_tiles")
     def test_process_region_request_exception(
         self,
         mock_process_tiles,
@@ -489,8 +483,8 @@ class TestModelRunner(unittest.TestCase):
         self.model_runner.endpoint_statistics_table.increment_region_count.assert_called_once_with(TEST_MODEL_ENDPOINT)
         self.model_runner.endpoint_statistics_table.decrement_region_count.assert_called_once_with(TEST_MODEL_ENDPOINT)
 
-    @mock.patch("aws.osml.model_runner.app.setup_tile_workers")
-    @mock.patch("aws.osml.model_runner.app.process_tiles")
+    @patch("aws.osml.model_runner.app.setup_tile_workers")
+    @patch("aws.osml.model_runner.app.process_tiles")
     def test_process_region_request_invalid(
         self,
         mock_process_tiles,
@@ -539,10 +533,10 @@ class TestModelRunner(unittest.TestCase):
         self.model_runner.endpoint_statistics_table.increment_region_count.assert_not_called()
         self.model_runner.endpoint_statistics_table.decrement_region_count.assert_not_called()
 
-    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.FeatureDetectorFactory", autospec=True)
-    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.FeatureTable", autospec=True)
-    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.TileWorker", autospec=True)
-    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.Queue", autospec=True)
+    @patch("aws.osml.model_runner.tile_worker.tile_worker_utils.FeatureDetectorFactory", autospec=True)
+    @patch("aws.osml.model_runner.tile_worker.tile_worker_utils.FeatureTable", autospec=True)
+    @patch("aws.osml.model_runner.tile_worker.tile_worker_utils.TileWorker", autospec=True)
+    @patch("aws.osml.model_runner.tile_worker.tile_worker_utils.Queue", autospec=True)
     def test_process_region_request_throttled(
         self,
         mock_queue,
@@ -553,8 +547,12 @@ class TestModelRunner(unittest.TestCase):
         from aws.osml.gdal.gdal_utils import load_gdal_dataset
         from aws.osml.model_runner.database.endpoint_statistics_table import EndpointStatisticsTable
         from aws.osml.model_runner.database.job_table import JobTable
-        from aws.osml.model_runner.database.region_request_table import RegionRequestTable
+        from aws.osml.model_runner.database.region_request_table import RegionRequestItem, RegionRequestTable
         from aws.osml.model_runner.exceptions import SelfThrottledRegionException
+
+        region_request_item = RegionRequestItem(
+            image_id=TEST_IMAGE_ID, region_id="test-region-id", region_pixel_bounds="(0, 0)(50, 50)"
+        )
 
         # Load up our test image
         raster_dataset, sensor_model = load_gdal_dataset(self.region_request.image_url)
@@ -565,7 +563,7 @@ class TestModelRunner(unittest.TestCase):
         self.model_runner.endpoint_statistics_table.current_in_progress_regions.return_value = 10000
 
         with self.assertRaises(SelfThrottledRegionException):
-            self.model_runner.process_region_request(self.region_request, raster_dataset, sensor_model)
+            self.model_runner.process_region_request(self.region_request, region_request_item, raster_dataset, sensor_model)
 
         self.model_runner.endpoint_statistics_table.increment_region_count.assert_not_called()
         self.model_runner.endpoint_statistics_table.decrement_region_count.assert_not_called()
@@ -577,7 +575,7 @@ class TestModelRunner(unittest.TestCase):
         # Check to make sure a queue was created and populated with appropriate region requests
         mock_queue.assert_not_called()
 
-    @mock.patch.dict("os.environ", values={"ELEVATION_DATA_LOCATION": TEST_ELEVATION_DATA_LOCATION})
+    @patch.dict("os.environ", values={"ELEVATION_DATA_LOCATION": TEST_ELEVATION_DATA_LOCATION})
     def test_create_elevation_model(self):
         # These imports/reloads are necessary to force the ServiceConfig instance used by model runner
         # to have the patched environment variables
@@ -654,4 +652,4 @@ class TestModelRunner(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    main()

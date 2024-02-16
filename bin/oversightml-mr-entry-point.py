@@ -9,8 +9,10 @@ from types import FrameType
 from typing import Optional
 
 from codeguru_profiler_agent import Profiler
+from pythonjsonlogger import jsonlogger
 
 from aws.osml.model_runner.app import ModelRunner
+from aws.osml.model_runner.common import ThreadingLocalContextFilter
 
 
 def handler_stop_signals(signal_num: int, frame: Optional[FrameType], model_runner: ModelRunner) -> None:
@@ -18,6 +20,12 @@ def handler_stop_signals(signal_num: int, frame: Optional[FrameType], model_runn
 
 
 def configure_logging(verbose: bool) -> None:
+    """
+    This function configures the Python logging module to use a JSON formatter with and thread local context
+    variables.
+
+    :param verbose: if true the logging level will be set to DEBUG, otherwise it will be set to INFO.
+    """
     logging_level = logging.INFO
     if verbose:
         logging_level = logging.DEBUG
@@ -27,7 +35,10 @@ def configure_logging(verbose: bool) -> None:
 
     ch = logging.StreamHandler()
     ch.setLevel(logging_level)
-    formatter = logging.Formatter("%(levelname)-8s %(message)s")
+    ch.addFilter(ThreadingLocalContextFilter(["job_id", "image_id"]))
+    formatter = jsonlogger.JsonFormatter(
+        fmt="%(levelname)s %(message)s %(job_id)s %(image_id)s", datefmt="%Y-%m-%dT%H:%M:%S"
+    )
     ch.setFormatter(formatter)
 
     root_logger.addHandler(ch)

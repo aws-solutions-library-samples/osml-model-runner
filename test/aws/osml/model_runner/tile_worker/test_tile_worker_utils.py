@@ -1,14 +1,14 @@
 #  Copyright 2023 Amazon.com, Inc. or its affiliates.
 
-from unittest import TestCase, main, mock
+from unittest import TestCase, main
+from unittest.mock import Mock, patch
 
 import pytest
-from mock import Mock
 
 
 class TestTileWorkerUtils(TestCase):
-    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.TileWorker", autospec=True)
-    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.ServiceConfig", autospec=True)
+    @patch("aws.osml.model_runner.tile_worker.tile_worker_utils.TileWorker", autospec=True)
+    @patch("aws.osml.model_runner.tile_worker.tile_worker_utils.ServiceConfig", autospec=True)
     def test_setup_tile_workers(self, mock_service_config, mock_tile_worker):
         from aws.osml.model_runner.api import RegionRequest
         from aws.osml.model_runner.tile_worker.tile_worker_utils import setup_tile_workers
@@ -30,15 +30,12 @@ class TestTileWorkerUtils(TestCase):
         )
         mock_sensor_model = None
         mock_elevation_model = None
-        mock_metrics = None
-        work_queue, tile_worker_list = setup_tile_workers(
-            mock_region_request, mock_sensor_model, mock_elevation_model, mock_metrics
-        )
+        work_queue, tile_worker_list = setup_tile_workers(mock_region_request, mock_sensor_model, mock_elevation_model)
         assert len(tile_worker_list) == mock_num_tile_workers
 
-    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.FeatureTable", autospec=True)
-    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.TileWorker", autospec=True)
-    @mock.patch("aws.osml.model_runner.tile_worker.tile_worker_utils.ServiceConfig", autospec=True)
+    @patch("aws.osml.model_runner.tile_worker.tile_worker_utils.FeatureTable", autospec=True)
+    @patch("aws.osml.model_runner.tile_worker.tile_worker_utils.TileWorker", autospec=True)
+    @patch("aws.osml.model_runner.tile_worker.tile_worker_utils.ServiceConfig", autospec=True)
     def test_setup_tile_workers_exception(self, mock_service_config, mock_tile_worker, mock_feature_table):
         from aws.osml.model_runner.api import RegionRequest
         from aws.osml.model_runner.tile_worker.exceptions import SetupTileWorkersException
@@ -62,10 +59,9 @@ class TestTileWorkerUtils(TestCase):
         )
         mock_sensor_model = None
         mock_elevation_model = None
-        mock_metrics = None
         with self.assertRaises(SetupTileWorkersException):
             # with self.assertRaises(ValueError):
-            setup_tile_workers(mock_region_request, mock_sensor_model, mock_elevation_model, mock_metrics)
+            setup_tile_workers(mock_region_request, mock_sensor_model, mock_elevation_model)
 
     def test_chip_generator(self):
         from aws.osml.model_runner.tile_worker.tile_worker_utils import generate_crops

@@ -6,11 +6,10 @@ from decimal import Decimal
 from unittest import TestCase
 
 import boto3
-from moto import mock_sns, mock_sqs
+from moto import mock_aws
 
 
-@mock_sqs
-@mock_sns
+@mock_aws
 class TestStatusMonitor(TestCase):
     def setUp(self) -> None:
         from aws.osml.model_runner.app_config import BotoConfig

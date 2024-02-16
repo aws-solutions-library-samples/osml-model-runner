@@ -33,8 +33,14 @@ class StatusMonitor:
             and image_request_item.processing_time is not None
         ):
             try:
-                status_message = f"StatusMonitor update: {status} {image_request_item.job_id}: {message}"
-                logging.info(status_message)
+                logging.info(
+                    "StatusMonitorUpdate",
+                    extra={
+                        "reason": message,
+                        "status": status,
+                        "request": image_request_item.__dict__,
+                    },
+                )
 
                 sns_message_attributes = ImageRequestStatusMessage(
                     image_status=status,
@@ -44,6 +50,7 @@ class StatusMonitor:
                     processing_duration=image_request_item.processing_time,
                 )
 
+                status_message = f"StatusMonitor update: {status} {image_request_item.job_id}: {message}"
                 self.image_status_sns.publish_message(
                     status_message,
                     sns_message_attributes.asdict_str_values(),

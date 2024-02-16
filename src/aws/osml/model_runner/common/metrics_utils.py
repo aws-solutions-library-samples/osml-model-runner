@@ -10,5 +10,5 @@ def build_embedded_metrics_config():
     metrics_config = get_config()
     metrics_config.service_name = "OSML"
     metrics_config.log_group_name = "/aws/OSML/MRService"
-    metrics_config.namespace = "OSML"
+    metrics_config.namespace = "OSML/ModelRunner"
     metrics_config.environment = "local"

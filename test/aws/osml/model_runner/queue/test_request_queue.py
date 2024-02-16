@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 import boto3
 from botocore.exceptions import ClientError
-from moto import mock_sqs
+from moto import mock_aws
 
 TEST_MOCK_MESSAGE = {
     "Type": "Notification",
@@ -32,7 +32,7 @@ TEST_MOCK_CLIENT_EXCEPTION = Mock(
 )
 
 
-@mock_sqs
+@mock_aws
 class TestRequestQueue(unittest.TestCase):
     def setUp(self):
         from aws.osml.model_runner.app_config import BotoConfig

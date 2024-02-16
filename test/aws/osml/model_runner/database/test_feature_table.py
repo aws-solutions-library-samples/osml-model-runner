@@ -8,7 +8,7 @@ import boto3
 import geojson
 from botocore.exceptions import ClientError
 from botocore.stub import ANY, Stubber
-from moto import mock_dynamodb
+from moto import mock_aws
 
 image_id = (
     "7db12549-3bcb-49c8-acba-25d46ef5cbf3:s3://spacenet-dataset/AOIs/AOI_1_Rio/srcData/mosaic_3band/013022223131.tif"  # noqa
@@ -62,7 +62,7 @@ TEST_MOCK_BATCH_WRITE_EXCEPTION = Mock(
 )
 
 
-@mock_dynamodb
+@mock_aws
 class TestFeatureTable(unittest.TestCase):
     def setUp(self):
         """

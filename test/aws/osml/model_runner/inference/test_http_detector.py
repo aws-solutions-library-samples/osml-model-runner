@@ -1,7 +1,7 @@
 import json
 from unittest import TestCase
+from unittest.mock import patch
 
-import mock
 from urllib3.response import HTTPResponse
 
 MOCK_RESPONSE = HTTPResponse(
@@ -30,7 +30,7 @@ MOCK_BAD_JSON_RESPONSE = HTTPResponse(body="Not a json string".encode(), status=
 
 
 class TestSMDetector(TestCase):
-    @mock.patch("aws.osml.model_runner.inference.http_detector.urllib3.PoolManager", autospec=True)
+    @patch("aws.osml.model_runner.inference.http_detector.urllib3.PoolManager", autospec=True)
     def test_find_features(self, mock_pool_manager):
         from aws.osml.model_runner.inference import HTTPDetector
 
@@ -46,7 +46,7 @@ class TestSMDetector(TestCase):
             assert feature_collection["type"] == "FeatureCollection"
             assert len(feature_collection["features"]) == 1
 
-    @mock.patch("aws.osml.model_runner.inference.http_detector.urllib3.PoolManager", autospec=True)
+    @patch("aws.osml.model_runner.inference.http_detector.urllib3.PoolManager", autospec=True)
     def test_find_features_RetryError(self, mock_pool_manager):
         from requests.exceptions import RetryError
 
@@ -61,7 +61,7 @@ class TestSMDetector(TestCase):
             feature_detector.find_features(image_file)
             assert feature_detector.error_count == 1
 
-    @mock.patch("aws.osml.model_runner.inference.http_detector.urllib3.PoolManager", autospec=True)
+    @patch("aws.osml.model_runner.inference.http_detector.urllib3.PoolManager", autospec=True)
     def test_find_features_MaxRetryError(self, mock_pool_manager):
         from urllib3.exceptions import MaxRetryError
 
@@ -76,7 +76,7 @@ class TestSMDetector(TestCase):
             feature_detector.find_features(image_file)
             assert feature_detector.error_count == 1
 
-    @mock.patch("aws.osml.model_runner.inference.http_detector.urllib3.PoolManager", autospec=True)
+    @patch("aws.osml.model_runner.inference.http_detector.urllib3.PoolManager", autospec=True)
     def test_find_features_JSONDecodeError(self, mock_pool_manager):
         from aws.osml.model_runner.inference import HTTPDetector
 
