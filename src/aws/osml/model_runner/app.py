@@ -6,7 +6,6 @@ import json
 import logging
 import math
 from dataclasses import asdict
-from datetime import datetime
 from decimal import Decimal
 from json import dumps
 from math import degrees
@@ -44,6 +43,7 @@ from .common import (
     Timer,
     build_embedded_metrics_config,
     get_credentials_for_assumed_role,
+    get_feature_image_bounds,
     mr_post_processing_options_factory,
 )
 from .database import EndpointStatisticsTable, FeatureTable, JobItem, JobTable, RegionRequestItem, RegionRequestTable
@@ -323,7 +323,7 @@ class ModelRunner:
 
                 # If we can get a valid source metadata from the source image - attach it to features
                 # else, just pass in whatever custom features if they were provided
-                source_metadata = get_source_property(image_extension, raster_dataset)
+                source_metadata = get_source_property(image_request_item.image_url, image_extension, raster_dataset)
                 if isinstance(source_metadata, dict):
                     feature_properties.append(source_metadata)
 
@@ -792,7 +792,7 @@ class ModelRunner:
 
         :return: a tuple: minx, maxx, miny, maxy that identifies any overlap.
         """
-        bbox = feature["properties"][GeojsonDetectionField.BOUNDS]
+        bbox = get_feature_image_bounds(feature)
 
         # If an offset origin was supplied adjust the bbox so the key is relative to the origin.
         bbox = (bbox[0] - origin[0], bbox[1] - origin[1], bbox[2] - origin[0], bbox[3] - origin[1])
@@ -1000,6 +1000,8 @@ class ModelRunner:
                     del feature["properties"]["inferenceTime"]
                 if feature.get("properties", {}).get(GeojsonDetectionField.BOUNDS):
                     del feature["properties"][GeojsonDetectionField.BOUNDS]
+                if feature.get("properties", {}).get(GeojsonDetectionField.GEOM):
+                    del feature["properties"][GeojsonDetectionField.GEOM]
                 if feature.get("properties", {}).get("detection_score"):
                     del feature["properties"]["detection_score"]
                 if feature.get("properties", {}).get("feature_types"):
@@ -1024,15 +1026,10 @@ class ModelRunner:
 
         :return: Dict[str, Any] = an inference metadata dictionary property to attach to features
         """
-        seconds = float(image_request_item.start_time) / 1000.0
-        receive_time = datetime.fromtimestamp(seconds).isoformat()
         inference_metadata_property = {
             "inferenceMetadata": {
                 "jobId": image_request_item.job_id,
-                "filePath": image_request_item.image_url,
-                "receiveTime": receive_time,
-                "inferenceTime": inference_time,
-                "tileOverlapFeatureSelection": image_request_item.feature_distillation_option,
+                "inferenceDT": inference_time,
             }
         }
         return inference_metadata_property

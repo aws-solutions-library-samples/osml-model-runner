@@ -113,15 +113,12 @@ class TestModelRunner(TestCase):
         # This is the expected results for the source property derived from the small test image
         self.test_feature_source_property = [
             {
-                "fileType": "NITF",
-                "info": {
-                    "imageCategory": "VIS",
-                    "metadata": {
-                        "sourceId": "Checks an uncompressed 1024x1024 8 bit mono image with GEOcentric data. Airfield",
-                        "sourceDt": "1996-12-17T10:26:30",
-                        "classification": "UNCLASSIFIED",
-                    },
-                },
+                "location": TEST_IMAGE_FILE,
+                "format": "NITF",
+                "category": "VIS",
+                "sourceId": "Checks an uncompressed 1024x1024 8 bit mono image with GEOcentric data. Airfield",
+                "sourceDT": "1996-12-17T10:26:30Z",
+                "classification": "UNCLASSIFIED",
             }
         ]
 
@@ -337,7 +334,7 @@ class TestModelRunner(TestCase):
         assert results_features[0]["properties"]["modelMetadata"] == self.test_custom_feature_properties.get("modelMetadata")
 
         # Check we got the correct source data for the small.ntf file
-        assert results_features[0]["properties"]["source"] == self.test_feature_source_property
+        assert results_features[0]["properties"]["sourceMetadata"] == self.test_feature_source_property
 
         # Check that we calculated the max in progress regions
         # Test instance type is set to m5.12xl with 48 vcpus. Default
@@ -397,7 +394,7 @@ class TestModelRunner(TestCase):
         assert results_features[0]["properties"]["modelMetadata"] == self.test_custom_feature_properties.get("modelMetadata")
 
         # Check we got the correct source data for the small.ntf file
-        assert results_features[0]["properties"]["source"] == self.test_feature_source_property
+        assert results_features[0]["properties"]["sourceMetadata"] == self.test_feature_source_property
 
         # Check that we calculated the max in progress regions
         # Test instance type is set to m5.12xl with 48 vcpus. Default
