@@ -18,7 +18,7 @@ from dacite import from_dict
 from geojson import Feature
 
 from aws.osml.model_runner.app_config import MetricLabels, ServiceConfig
-from aws.osml.model_runner.common import GeojsonDetectionField, ImageDimensions, Timer
+from aws.osml.model_runner.common import ImageDimensions, Timer, get_feature_image_bounds
 
 from .ddb_helper import DDBHelper, DDBItem, DDBKey
 from .exceptions import AddFeaturesException
@@ -246,7 +246,7 @@ class FeatureTable(DDBHelper):
         :param feature: Properties of a feature
         :return: The tile key associated with this list of features.
         """
-        bbox = feature["properties"][GeojsonDetectionField.BOUNDS]
+        bbox = get_feature_image_bounds(feature)
 
         # This is the size of the unique pixels in each tile
         stride_x = self.tile_size[0] - self.overlap[0]

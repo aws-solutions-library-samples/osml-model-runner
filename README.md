@@ -10,8 +10,8 @@ across instances to process images as quickly as possible.
 * [Getting Started](#getting-started)
   * [Key Design Concepts](#key-design-concepts)
     * [Image Tiling](#image-tiling)
-    * [Lazy IO & Encoding Formats with Internal Tiles](#lazy-io--encoding-formats-with-internal-tiles)
-    * [Tile Overlap and Merging Results](#tile-overlap-and-merging-results)
+    * [Geolocation](#geolocation)
+    * [Merging Results from Overlap Regions](#merging-results-from-overlap-regions)
   * [Package Layout](#package-layout)
   * [Prerequisites](prerequisites)
   * [Development Environment](#development-environment)
@@ -26,14 +26,11 @@ across instances to process images as quickly as possible.
 
 ## Getting Started
 
-This application currently offers one build options:
-
-1.) Build on an Amazon Linux 2 container (see provided Dockerfile):
-* OS=amazonlinux:latest
-* Python=3.10
-* Miniconda=Miniconda3-latest-Linux-x86_64
-
 ### Key Design Concepts
+
+The [Guidance for Model Developers](./GUIDE_FOR_MODEL_DEVELOPERS.md) document contains details of how the
+OversightML ModelRunner applications interacts with containerized computer vision (CV) models and examples of the
+GeoJSON formatted inputs it expects and generates. At a high level this application provides the following functions:
 
 #### Image Tiling
 
@@ -44,16 +41,21 @@ application breaks the full image up into pieces that are small enough for a sin
 the first are placed on a second queue so other model runners can start processing those regions in parallel. The second
 tiling phase is to break each region up into individual chunks that will be sent to the ML models. Many ML model
 containers are configured to process images that are between 512 and 2048 pixels in size so the full processing of a
-large 200,000 x 200,000 satellite image can result in >10,000 requests.
-
-#### Lazy IO & Encoding Formats with Internal Tiles
+large 200,000 x 200,000 satellite image can result in >10,000 requests to those model endpoints.
 
 The images themselves are assumed to reside in S3 and are assumed to be compressed and encoded in such a way as to
 facilitate piecewise access to tiles without downloading the entire image. The GDAL library, a frequently used open
 source implementation of GIS data tools, has the ability to read images directly from S3 making use of partial range
 reads to only download the part of the overall image necessary to process the region.
 
-#### Tile Overlap and Merging Results
+#### Geolocation
+
+Most ML models do not contain the photogrammetry libraries needed to geolocate objects detected in an
+image. ModelRunner will convert these detections into geospatial features by using sensor models described
+in an image metadata. The details of the photogrammetry operations are in the
+[osml-imagery-toolkit](https://github.com/aws-solutions-library-samples/osml-imagery-toolkit) library.
+
+#### Merging Results from Overlap Regions
 
 Many of the ML algorithms we expect to run will involve object detection or feature extraction. It is possible that
 features of interest would fall on the tile boundaries and therefore be missed by the ML models because they are only
@@ -114,7 +116,7 @@ Sample ImageRequest:
 #### S3
 When configuring S3 buckets for images and results, be sure to follow [S3 Security Best Practices](https://docs.aws.amazon.com/AmazonS3/latest/userguide/security-best-practices.html).
 
-### Documentation
+### Code Documentation
 
 You can find documentation for this library in the `./doc` directory. Sphinx is used to construct a searchable HTML
 version of the API documents.

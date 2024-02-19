@@ -9,7 +9,7 @@ from geojson import Feature
 from aws.osml.model_runner.common import (
     FeatureDistillationAlgorithm,
     FeatureDistillationAlgorithmType,
-    GeojsonDetectionField,
+    get_feature_image_bounds,
 )
 from aws.osml.model_runner.inference.exceptions import FeatureDistillationException
 
@@ -24,12 +24,17 @@ class FeatureSelector:
 
     def __init__(self, options: FeatureDistillationAlgorithm = None) -> None:
         """
+        Constructor for FeatureSelector class that selects an algorithm (e.g. NMS, Soft NMS, etc.) and sets parameters
+        specific to each algorithm (e.g. IoU threshold).
+
         :param options: FeatureSelectionOptions = options to use to set the algorithm, thresholds, and parameters.
         """
         self.options = options
 
     def select_features(self, feature_list: List[Feature]) -> List[Feature]:
         """
+        Selects a subset of features from a larger set of features using an algorithm such as NMS or Soft NMS.
+
         :param feature_list: a list of geojson features with a property of bounds_imcoords
         :return: the filtered list of features
         """
@@ -58,7 +63,12 @@ class FeatureSelector:
 
     def _get_lists_from_features(self, feature_list: List[Feature]) -> Tuple[List, List, List]:
         """
-        :param feature_list:
+        This function converts the GeoJSON features into lists of normalized bounding boxes, scores, and label IDs
+        needed by the selection algorithm implementations. As a side effect of this function various class attributes
+        are set to support the inverse mapping of algorithm primitives to the full features. See
+        _get_features_from_lists for the inverse function.
+
+        :param feature_list: the input set of GeoJSON features to preprocess
         :return: tuple of lists - bounding boxes, confidence scores, category labels
         """
 
@@ -68,9 +78,10 @@ class FeatureSelector:
         self.extents = [None, None, None, None]  # [min_x, min_y, max_x, max_y]
         self.feature_id_map = OrderedDict()
         self.labels_map = dict()
+
         for feature in feature_list:
-            # imcoords: [x1, y1, x2, y2]
-            bounds_imcoords = feature.get("properties", {}).get(GeojsonDetectionField.BOUNDS)
+            # [min_x, min_y, max_x, max_y]
+            bounds_imcoords = get_feature_image_bounds(feature)
             category, score = self._get_category_and_score_from_feature(feature)
             boxes.append(bounds_imcoords)
             categories.append(category)
@@ -96,6 +107,15 @@ class FeatureSelector:
         return normalized_boxes, scores, labels_indexes
 
     def _normalize_boxes(self, boxes: List[List[int]]) -> List[List[float]]:
+        """
+        This function normalizes the bounding boxes by subtracting the minimum x and y coordinates from each
+        coordinate and dividing by the range of x and y coordinates. That means that all bounding boxes coordinates
+        will be in the range of [0.0, 1.0] where 0.0 is the minimum of the extent and 1.0 is the maximum. See
+        _denormalize_boxes() to convert back to bboxes in pixel coordinates.
+
+        :param boxes: the list of bounding boxes to normalize
+        :return: the normalized list of bounding boxes
+        """
         # boxes: [x1, y1, x2, y2]
         min_x = self.extents[0]
         min_y = self.extents[1]
@@ -112,18 +132,30 @@ class FeatureSelector:
 
     @staticmethod
     def _get_category_and_score_from_feature(feature: Feature) -> Tuple[str, float]:
-        feature_dict = feature.get("properties", {}).get("feature_types")
-        if feature_dict:
-            return max(feature_dict.items(), key=lambda x: x[1])
-        else:
-            return "", 1.0
+        """
+        Get the feature class with the highest score from the featureClasses property.
+
+        :return: tuple of feature class and highest score
+        """
+        max_score = -1.0
+        max_class = ""
+        for feature_class in feature.get("properties", {}).get("featureClasses", []):
+            if feature_class.get("score") > max_score:
+                max_score = feature_class.get("score")
+                max_class = feature_class.get("iri")
+        return max_class, max_score
 
     def _get_features_from_lists(self, boxes: List, scores: List, labels: List) -> List[Feature]:
         """
-        :param boxes:
-        :param scores:
-        :param labels:
-        :return:
+        This function consolidates the lists of bounding boxes, scores, and labels into the GeoJSON features.
+        This happens by finding the feature with a matching bounding box and category in the original feature list
+        and updating the score if necessary. Any features that were in the original feature list that were not
+        in the input lists end up filtered out of the result.
+
+        :param boxes: the normalized bounding boxes for the features
+        :param scores: the updated scores for each bounding box
+        :param labels: the labels for each bounding box
+        :return: the refined list of GeoJSON features
         """
         features = []
         im_boxes = self._denormalize_boxes(boxes)
@@ -132,22 +164,23 @@ class FeatureSelector:
             feature_hash_id = hash(str(box) + category)
             feature = self.feature_id_map.get(feature_hash_id)
             if feature:
-                if self.options.algorithm_type == FeatureDistillationAlgorithmType.SOFT_NMS and score != feature.get(
-                    "properties", {}
-                ).get("detection_score"):
-                    feature["properties"]["adjusted_feature_types"] = {category: score}
-                    feature_ontology_list = feature.get("properties", {}).get("detection", {}).get("ontology")
-                    if feature_ontology_list:
-                        adjusted_feature_ontology_list = []
-                        for iri in feature_ontology_list:
-                            if iri.get("iri") == category:
-                                iri["adjustedDetectionScore"] = score
-                            adjusted_feature_ontology_list.append(iri)
-                        feature["properties"]["detection"]["ontology"] = adjusted_feature_ontology_list
+                if self.options.algorithm_type == FeatureDistillationAlgorithmType.SOFT_NMS:
+                    for feature_class in feature.get("properties", {}).get("featureClasses", []):
+                        if feature_class.get("iri") == category:
+                            feature_class["rawScore"] = feature_class.get("score")
+                            feature_class["score"] = score
                 features.append(feature)
         return features
 
     def _denormalize_boxes(self, boxes: List[List[float]]) -> List[List[int]]:
+        """
+        This function denormalizes the bounding boxes by multiplying each coordinate by the width or height
+        of the extent and then adding in the extent minimums. That puts all bounding boxes back into the
+        image coordinate space. This is the inverse of _normalize_boxes().
+
+        :param boxes: the list of bounding boxes to denormalize
+        :return: the denormalized list of bounding boxes
+        """
         # boxes: [x1, y1, x2, y2]
         min_x = self.extents[0]
         min_y = self.extents[1]
