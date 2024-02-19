@@ -20,25 +20,30 @@
         ],
         "geom_imcoords": [
           [
-            646,
-            1649
+            429,
+            553
           ],
           [
-            646,
-            1658
+            429,
+            561
           ],
           [
-            654,
-            1658
+            440,
+            561
           ],
           [
-            654,
-            646
+            440,
+            553
+          ],
+          [
+            429,
+            553
           ]
         ],
-        "feature_types": {
-          "ground_motor_passenger_vehicle": 0.2961518168449402
-        },
+        "featureClasses": [{
+          "iri": "ground_motor_passenger_vehicle",
+          "score": 0.2961518168449402
+        }],
         "detection_score": 0.2961518168449402,
         "image_id": "7db12549-3bcb-49c8-acba-25d46ef5cbf3:s3://spacenet-dataset/AOIs/AOI_1_Rio/srcData/mosaic_3band/013022223131.tif"
       }
@@ -62,25 +67,30 @@
         ],
         "geom_imcoords": [
           [
-            646,
-            1649
+            414,
+            505
           ],
           [
-            646,
-            1658
+            414,
+            515
           ],
           [
-            654,
-            1658
+            423,
+            515
           ],
           [
-            654,
-            646
+            423,
+            505
+          ],
+          [
+            414,
+            505
           ]
         ],
-        "feature_types": {
-          "ground_motor_passenger_vehicle": 0.2887502908706665
-        },
+        "featureClasses": [{
+          "iri": "ground_motor_passenger_vehicle",
+          "score": 0.2887502908706665
+        }],
         "detection_score": 0.2887502908706665,
         "image_id": "7db12549-3bcb-49c8-acba-25d46ef5cbf3:s3://spacenet-dataset/AOIs/AOI_1_Rio/srcData/mosaic_3band/013022223131.tif"
       }
@@ -104,25 +114,30 @@
         ],
         "geom_imcoords": [
           [
-            646,
-            1649
+            664,
+            597
           ],
           [
-            646,
-            1658
+            664,
+            607
           ],
           [
-            654,
-            1658
+            674,
+            607
           ],
           [
-            654,
-            646
+            674,
+            597
+          ],
+          [
+            664,
+            597
           ]
         ],
-        "feature_types": {
-          "ground_motor_passenger_vehicle": 0.2716290056705475
-        },
+        "featureClasses": [{
+          "iri": "ground_motor_passenger_vehicle",
+          "score": 0.2716290056705475
+        }],
         "detection_score": 0.2716290056705475,
         "image_id": "7db12549-3bcb-49c8-acba-25d46ef5cbf3:s3://spacenet-dataset/AOIs/AOI_1_Rio/srcData/mosaic_3band/013022223131.tif"
       }
@@ -159,12 +174,17 @@
           ],
           [
             654,
-            646
+            1649
+          ],
+          [
+            646,
+            1649
           ]
         ],
-        "feature_types": {
-          "ground_motor_passenger_vehicle": 0.25180017948150635
-        },
+        "featureClasses": [{
+          "iri": "ground_motor_passenger_vehicle",
+          "score": 0.25180017948150635
+        }],
         "detection_score": 0.25180017948150635,
         "image_id": "7db12549-3bcb-49c8-acba-25d46ef5cbf3:s3://spacenet-dataset/AOIs/AOI_1_Rio/srcData/mosaic_3band/013022223131.tif"
       }
