@@ -12,13 +12,14 @@ from aws_embedded_metrics.metric_scope import metric_scope
 from aws_embedded_metrics.unit import Unit
 from osgeo import gdal
 
+from aws.osml.features import Geolocator, ImagedFeaturePropertyAccessor
 from aws.osml.gdal import GDALConfigEnv
 from aws.osml.image_processing.gdal_tile_factory import GDALTileFactory
 from aws.osml.model_runner.api import RegionRequest
 from aws.osml.model_runner.app_config import MetricLabels, ServiceConfig
 from aws.osml.model_runner.common import ImageDimensions, ImageRegion, Timer, get_credentials_for_assumed_role
 from aws.osml.model_runner.database import FeatureTable
-from aws.osml.model_runner.tile_worker import FeatureRefinery, TileWorker
+from aws.osml.model_runner.tile_worker import TileWorker
 from aws.osml.photogrammetry import ElevationModel, SensorModel
 
 from ..inference.endpoint_factory import FeatureDetectorFactory
@@ -66,11 +67,11 @@ def setup_tile_workers(
                 assumed_credentials=model_invocation_credentials,
             ).build()
 
-            feature_refinery = None
+            geolocator = None
             if sensor_model is not None:
-                feature_refinery = FeatureRefinery(sensor_model, elevation_model=elevation_model)
+                geolocator = Geolocator(ImagedFeaturePropertyAccessor(), sensor_model, elevation_model=elevation_model)
 
-            worker = TileWorker(tile_queue, feature_detector, feature_refinery, feature_table)
+            worker = TileWorker(tile_queue, feature_detector, geolocator, feature_table)
             worker.start()
             tile_workers.append(worker)
 

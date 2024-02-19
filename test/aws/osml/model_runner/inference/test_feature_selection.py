@@ -169,7 +169,7 @@ class TestFeatureSelection(TestCase):
                 geometry=Point((0, 0)),
                 properties={
                     "bounds_imcoords": [50, 50, 100, 100],
-                    "feature_types": {"ground_motor_passenger_vehicle": 0.45},
+                    "featureClasses": [{"iri": "ground_motor_passenger_vehicle", "score": 0.45}],
                 },
             ),
             Feature(
@@ -177,7 +177,7 @@ class TestFeatureSelection(TestCase):
                 geometry=Point((0, 0)),
                 properties={
                     "bounds_imcoords": [45, 45, 101, 101],
-                    "feature_types": {"boat": 0.57},
+                    "featureClasses": [{"iri": "boat", "score": 0.57}],
                 },
             ),
             Feature(
@@ -185,7 +185,7 @@ class TestFeatureSelection(TestCase):
                 geometry=Point((0, 0)),
                 properties={
                     "bounds_imcoords": [250, 250, 300, 275],
-                    "feature_types": {"ground_motor_passenger_vehicle": 0.80},
+                    "featureClasses": [{"iri": "ground_motor_passenger_vehicle", "score": 0.80}],
                 },
             ),
         ]
@@ -206,10 +206,7 @@ class TestFeatureSelection(TestCase):
                 geometry=Point((0, 0)),
                 properties={
                     "bounds_imcoords": [50, 50, 100, 100],
-                    "feature_types": {"boat": 0.85},
-                    "detection": {
-                        "ontology": [{"detectionScore": 0.85, "iri": "boat"}],
-                    },
+                    "featureClasses": [{"iri": "boat", "score": 0.85}],
                 },
             ),
             Feature(
@@ -217,10 +214,7 @@ class TestFeatureSelection(TestCase):
                 geometry=Point((0, 0)),
                 properties={
                     "bounds_imcoords": [45, 45, 101, 101],
-                    "feature_types": {"boat": 0.93},
-                    "detection": {
-                        "ontology": [{"detectionScore": 0.93, "iri": "boat"}],
-                    },
+                    "featureClasses": [{"iri": "boat", "score": 0.93}],
                 },
             ),
             Feature(
@@ -228,10 +222,7 @@ class TestFeatureSelection(TestCase):
                 geometry=Point((0, 0)),
                 properties={
                     "bounds_imcoords": [250, 255, 300, 275],
-                    "feature_types": {"boat": 0.80},
-                    "detection": {
-                        "ontology": [{"detectionScore": 0.80, "iri": "boat"}],
-                    },
+                    "featureClasses": [{"iri": "boat", "score": 0.80}],
                 },
             ),
         ]
@@ -241,27 +232,21 @@ class TestFeatureSelection(TestCase):
         expected_properties = [
             {
                 "bounds_imcoords": [45, 45, 101, 101],
-                "feature_types": {"boat": 0.93},
-                "adjusted_feature_types": {"boat": 0.93},
-                "detection": {
-                    "ontology": [{"detectionScore": 0.93, "iri": "boat", "adjustedDetectionScore": 0.93}],
-                },
+                "featureClasses": [{"iri": "boat", "score": 0.93, "rawScore": 0.93}],
             },
             {
                 "bounds_imcoords": [250, 255, 300, 275],
-                "feature_types": {"boat": 0.80},
-                "adjusted_feature_types": {"boat": 0.80},
-                "detection": {
-                    "ontology": [{"detectionScore": 0.80, "iri": "boat", "adjustedDetectionScore": 0.80}],
-                },
+                "featureClasses": [{"iri": "boat", "score": 0.80, "rawScore": 0.80}],
             },
             {
                 "bounds_imcoords": [50, 50, 100, 100],
-                "feature_types": {"boat": 0.85},
-                "adjusted_feature_types": {"boat": 0.85},
-                "detection": {
-                    "ontology": [{"detectionScore": 0.85, "iri": "boat", "adjustedDetectionScore": 0.85}],
-                },
+                "featureClasses": [
+                    {
+                        "iri": "boat",
+                        "score": 0.85,
+                        "rawScore": 0.85,
+                    }
+                ],
             },
         ]
         assert processed_properties == expected_properties

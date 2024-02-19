@@ -209,14 +209,15 @@ def calculate_processing_bounds(
     return processing_bounds
 
 
-def get_source_property(image_extension: str, dataset: gdal.Dataset) -> Optional[Dict]:
+def get_source_property(image_location: str, image_extension: str, dataset: gdal.Dataset) -> Optional[Dict]:
     """
     Get the source property from NITF image
 
-    :param image_extension: str = the file extension type of the source image
-    :param dataset: gdal.Dataset = the GDAL dataset to probe for source data
+    :param image_location: the location of the source image
+    :param image_extension: the file extension type of the source image
+    :param dataset: the GDAL dataset to probe for source data
 
-    :return: Optional[Dict] = the source dictionary property to attach to features
+    :return: the source dictionary property to attach to features
     """
     # Currently we only support deriving source metadata from NITF images
     if image_extension == "NITF":
@@ -227,7 +228,7 @@ def get_source_property(image_extension: str, dataset: gdal.Dataset) -> Optional
             source_id = metadata.get("NITF_FTITLE", None)
             # Format of datetime string follows 14 digit spec in MIL-STD-2500C for NITFs
             source_dt = (
-                datetime.strptime(metadata.get("NITF_IDATIM"), "%Y%m%d%H%M%S").isoformat()
+                datetime.strptime(metadata.get("NITF_IDATIM"), "%Y%m%d%H%M%S").isoformat(timespec="seconds") + "Z"
                 if metadata.get("NITF_IDATIM")
                 else None
             )
@@ -239,17 +240,14 @@ def get_source_property(image_extension: str, dataset: gdal.Dataset) -> Optional
 
             # Build a source property for features
             source_property = {
-                "source": [
+                "sourceMetadata": [
                     {
-                        "fileType": "NITF",
-                        "info": {
-                            "imageCategory": data_type,
-                            "metadata": {
-                                "sourceId": source_id,
-                                "sourceDt": source_dt,
-                                "classification": source_classification_str,
-                            },
-                        },
+                        "location": image_location,
+                        "format": "NITF",
+                        "category": data_type,
+                        "sourceId": source_id,
+                        "sourceDT": source_dt,
+                        "classification": source_classification_str,
                     }
                 ]
             }
