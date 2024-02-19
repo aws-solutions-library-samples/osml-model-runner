@@ -8,11 +8,12 @@ permissions:
 
 jobs:
   docs:
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
       - name: Install dependencies
         run: |
           pip install sphinx
@@ -23,6 +24,7 @@ jobs:
         run: |
           tox -e docs
       - name: Deploy
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: peaceiris/actions-gh-pages@v3.9.3
         with:
           publish_branch: gh-pages
