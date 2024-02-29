@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.app &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=eafc0fe6" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.app</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.model_runner.app</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">ast</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">asdict</span>
+<span class="kn">from</span> <span class="nn">decimal</span> <span class="kn">import</span> <span class="n">Decimal</span>
+<span class="kn">from</span> <span class="nn">json</span> <span class="kn">import</span> <span class="n">dumps</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">degrees</span>
+<span class="kn">from</span> <span class="nn">secrets</span> <span class="kn">import</span> <span class="n">token_hex</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">shapely.geometry.base</span>
+<span class="kn">from</span> <span class="nn">aws_embedded_metrics.logger.metrics_logger</span> <span class="kn">import</span> <span class="n">MetricsLogger</span>
+<span class="kn">from</span> <span class="nn">aws_embedded_metrics.metric_scope</span> <span class="kn">import</span> <span class="n">metric_scope</span>
+<span class="kn">from</span> <span class="nn">aws_embedded_metrics.unit</span> <span class="kn">import</span> <span class="n">Unit</span>
+<span class="kn">from</span> <span class="nn">geojson</span> <span class="kn">import</span> <span class="n">Feature</span>
+<span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">gdal</span>
+<span class="kn">from</span> <span class="nn">osgeo.gdal</span> <span class="kn">import</span> <span class="n">Dataset</span>
+
+<span class="kn">from</span> <span class="nn">aws.osml.gdal</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">GDALConfigEnv</span><span class="p">,</span>
+    <span class="n">GDALDigitalElevationModelTileFactory</span><span class="p">,</span>
+    <span class="n">get_image_extension</span><span class="p">,</span>
+    <span class="n">load_gdal_dataset</span><span class="p">,</span>
+    <span class="n">set_gdal_default_configuration</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">aws.osml.photogrammetry</span> <span class="kn">import</span> <span class="n">DigitalElevationModel</span><span class="p">,</span> <span class="n">ElevationModel</span><span class="p">,</span> <span class="n">ImageCoordinate</span><span class="p">,</span> <span class="n">SensorModel</span><span class="p">,</span> <span class="n">SRTMTileSet</span>
+
+<span class="kn">from</span> <span class="nn">.api</span> <span class="kn">import</span> <span class="n">VALID_MODEL_HOSTING_OPTIONS</span><span class="p">,</span> <span class="n">ImageRequest</span><span class="p">,</span> <span class="n">InvalidImageRequestException</span><span class="p">,</span> <span class="n">RegionRequest</span><span class="p">,</span> <span class="n">SinkMode</span>
+<span class="kn">from</span> <span class="nn">.app_config</span> <span class="kn">import</span> <span class="n">MetricLabels</span><span class="p">,</span> <span class="n">ServiceConfig</span>
+<span class="kn">from</span> <span class="nn">.common</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">EndpointUtils</span><span class="p">,</span>
+    <span class="n">FeatureDistillationDeserializer</span><span class="p">,</span>
+    <span class="n">GeojsonDetectionField</span><span class="p">,</span>
+    <span class="n">ImageDimensions</span><span class="p">,</span>
+    <span class="n">ImageRegion</span><span class="p">,</span>
+    <span class="n">ImageRequestStatus</span><span class="p">,</span>
+    <span class="n">RegionRequestStatus</span><span class="p">,</span>
+    <span class="n">ThreadingLocalContextFilter</span><span class="p">,</span>
+    <span class="n">Timer</span><span class="p">,</span>
+    <span class="n">build_embedded_metrics_config</span><span class="p">,</span>
+    <span class="n">get_credentials_for_assumed_role</span><span class="p">,</span>
+    <span class="n">get_feature_image_bounds</span><span class="p">,</span>
+    <span class="n">mr_post_processing_options_factory</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.database</span> <span class="kn">import</span> <span class="n">EndpointStatisticsTable</span><span class="p">,</span> <span class="n">FeatureTable</span><span class="p">,</span> <span class="n">JobItem</span><span class="p">,</span> <span class="n">JobTable</span><span class="p">,</span> <span class="n">RegionRequestItem</span><span class="p">,</span> <span class="n">RegionRequestTable</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AggregateFeaturesException</span><span class="p">,</span>
+    <span class="n">AggregateOutputFeaturesException</span><span class="p">,</span>
+    <span class="n">InvalidFeaturePropertiesException</span><span class="p">,</span>
+    <span class="n">InvalidImageURLException</span><span class="p">,</span>
+    <span class="n">LoadImageException</span><span class="p">,</span>
+    <span class="n">ProcessImageException</span><span class="p">,</span>
+    <span class="n">ProcessRegionException</span><span class="p">,</span>
+    <span class="n">RetryableJobException</span><span class="p">,</span>
+    <span class="n">SelfThrottledRegionException</span><span class="p">,</span>
+    <span class="n">UnsupportedModelException</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.inference</span> <span class="kn">import</span> <span class="n">FeatureSelector</span><span class="p">,</span> <span class="n">calculate_processing_bounds</span><span class="p">,</span> <span class="n">get_source_property</span>
+<span class="kn">from</span> <span class="nn">.queue</span> <span class="kn">import</span> <span class="n">RequestQueue</span>
+<span class="kn">from</span> <span class="nn">.sink</span> <span class="kn">import</span> <span class="n">SinkFactory</span>
+<span class="kn">from</span> <span class="nn">.status</span> <span class="kn">import</span> <span class="n">StatusMonitor</span>
+<span class="kn">from</span> <span class="nn">.tile_worker</span> <span class="kn">import</span> <span class="n">generate_crops</span><span class="p">,</span> <span class="n">process_tiles</span><span class="p">,</span> <span class="n">setup_tile_workers</span>
+
+<span class="c1"># Set up metrics configuration</span>
+<span class="n">build_embedded_metrics_config</span><span class="p">()</span>
+
+<span class="c1"># Set up logging configuration</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ModelRunner">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner">[docs]</a>
+<span class="k">class</span> <span class="nc">ModelRunner</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Main class for operating the ModelRunner application. It monitors input queues for processing requests,</span>
+<span class="sd">    decomposes the image into a set of smaller regions and tiles, invokes an ML model endpoint with each tile, and</span>
+<span class="sd">    finally aggregates all the results into a single output which can be deposited into the desired output sinks.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_request_queue</span> <span class="o">=</span> <span class="n">RequestQueue</span><span class="p">(</span><span class="n">ServiceConfig</span><span class="o">.</span><span class="n">image_queue</span><span class="p">,</span> <span class="n">wait_seconds</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_requests_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_request_queue</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">job_table</span> <span class="o">=</span> <span class="n">JobTable</span><span class="p">(</span><span class="n">ServiceConfig</span><span class="o">.</span><span class="n">job_table</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">region_request_table</span> <span class="o">=</span> <span class="n">RegionRequestTable</span><span class="p">(</span><span class="n">ServiceConfig</span><span class="o">.</span><span class="n">region_request_table</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">endpoint_statistics_table</span> <span class="o">=</span> <span class="n">EndpointStatisticsTable</span><span class="p">(</span><span class="n">ServiceConfig</span><span class="o">.</span><span class="n">endpoint_statistics_table</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">region_request_queue</span> <span class="o">=</span> <span class="n">RequestQueue</span><span class="p">(</span><span class="n">ServiceConfig</span><span class="o">.</span><span class="n">region_queue</span><span class="p">,</span> <span class="n">wait_seconds</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">region_requests_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">region_request_queue</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status_monitor</span> <span class="o">=</span> <span class="n">StatusMonitor</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elevation_model</span> <span class="o">=</span> <span class="n">ModelRunner</span><span class="o">.</span><span class="n">create_elevation_model</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">endpoint_utils</span> <span class="o">=</span> <span class="n">EndpointUtils</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="ModelRunner.run">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.run">[docs]</a>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Starts ModelRunner in a loop that continuously monitors the image work queue and region work queue.</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">monitor_work_queues</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.stop">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.stop">[docs]</a>
+    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stops ModelRunner by setting the global run variable to False.</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.create_elevation_model">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.create_elevation_model">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">create_elevation_model</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ElevationModel</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an elevation model if the relevant options are set in the service configuration.</span>
+
+<span class="sd">        :return: Optional[ElevationModel] = the elevation model or None if not configured</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ServiceConfig</span><span class="o">.</span><span class="n">elevation_data_location</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">DigitalElevationModel</span><span class="p">(</span>
+                <span class="n">SRTMTileSet</span><span class="p">(</span>
+                    <span class="n">version</span><span class="o">=</span><span class="n">ServiceConfig</span><span class="o">.</span><span class="n">elevation_data_version</span><span class="p">,</span>
+                    <span class="n">format_extension</span><span class="o">=</span><span class="n">ServiceConfig</span><span class="o">.</span><span class="n">elevation_data_extension</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">GDALDigitalElevationModelTileFactory</span><span class="p">(</span><span class="n">ServiceConfig</span><span class="o">.</span><span class="n">elevation_data_location</span><span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.monitor_work_queues">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.monitor_work_queues">[docs]</a>
+    <span class="k">def</span> <span class="nf">monitor_work_queues</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Monitors SQS queues for ImageRequest and RegionRequest The region work queue is checked first and will wait for</span>
+<span class="sd">        up to 10 seconds to start work. Only if no regions need to be processed in that time will this worker check to</span>
+<span class="sd">        see if a new image can be started. Ultimately this setup is intended to ensure that all the regions for an image</span>
+<span class="sd">        are completed by the cluster before work begins on more images.</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Set the running state to True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Set up the GDAL configuration options that should remain unchanged for the life of this execution</span>
+        <span class="n">set_gdal_default_configuration</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">running</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Checking work queue for regions to process ...&quot;</span><span class="p">)</span>
+                <span class="p">(</span><span class="n">receipt_handle</span><span class="p">,</span> <span class="n">region_request_attributes</span><span class="p">)</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">region_requests_iter</span><span class="p">)</span>
+                <span class="n">ThreadingLocalContextFilter</span><span class="o">.</span><span class="n">set_context</span><span class="p">(</span><span class="n">region_request_attributes</span><span class="p">)</span>
+
+                <span class="c1"># If we found a region request on the queue</span>
+                <span class="k">if</span> <span class="n">region_request_attributes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="c1"># Parse the message into a working RegionRequest</span>
+                        <span class="n">region_request</span> <span class="o">=</span> <span class="n">RegionRequest</span><span class="p">(</span><span class="n">region_request_attributes</span><span class="p">)</span>
+
+                        <span class="c1"># If the image request has a s3 url lets augment its path for virtual hosting</span>
+                        <span class="k">if</span> <span class="s2">&quot;s3:/&quot;</span> <span class="ow">in</span> <span class="n">region_request</span><span class="o">.</span><span class="n">image_url</span><span class="p">:</span>
+                            <span class="c1"># Validate that image exists in S3</span>
+                            <span class="n">ImageRequest</span><span class="o">.</span><span class="n">validate_image_path</span><span class="p">(</span><span class="n">region_request</span><span class="o">.</span><span class="n">image_url</span><span class="p">,</span> <span class="n">region_request</span><span class="o">.</span><span class="n">image_read_role</span><span class="p">)</span>
+                            <span class="n">image_path</span> <span class="o">=</span> <span class="n">region_request</span><span class="o">.</span><span class="n">image_url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;s3:/&quot;</span><span class="p">,</span> <span class="s2">&quot;/vsis3&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">image_path</span> <span class="o">=</span> <span class="n">region_request</span><span class="o">.</span><span class="n">image_url</span>
+
+                        <span class="c1"># Load the image into a GDAL dataset</span>
+                        <span class="n">raster_dataset</span><span class="p">,</span> <span class="n">sensor_model</span> <span class="o">=</span> <span class="n">load_gdal_dataset</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
+                        <span class="n">image_format</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">raster_dataset</span><span class="o">.</span><span class="n">GetDriver</span><span class="p">()</span><span class="o">.</span><span class="n">ShortName</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+
+                        <span class="c1"># Get RegionRequestItem if not create new RegionRequestItem</span>
+                        <span class="n">region_request_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">region_request_table</span><span class="o">.</span><span class="n">get_region_request</span><span class="p">(</span>
+                            <span class="n">region_request</span><span class="o">.</span><span class="n">region_id</span><span class="p">,</span> <span class="n">region_request</span><span class="o">.</span><span class="n">image_id</span>
+                        <span class="p">)</span>
+                        <span class="k">if</span> <span class="n">region_request_item</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="n">region_pixel_bounds</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">region_request</span><span class="o">.</span><span class="n">region_bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}{</span><span class="n">region_request</span><span class="o">.</span><span class="n">region_bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                            <span class="n">region_request_item</span> <span class="o">=</span> <span class="n">RegionRequestItem</span><span class="p">(</span>
+                                <span class="n">image_id</span><span class="o">=</span><span class="n">region_request</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span>
+                                <span class="n">job_id</span><span class="o">=</span><span class="n">region_request</span><span class="o">.</span><span class="n">job_id</span><span class="p">,</span>
+                                <span class="n">region_pixel_bounds</span><span class="o">=</span><span class="n">region_pixel_bounds</span><span class="p">,</span>
+                                <span class="n">region_id</span><span class="o">=</span><span class="n">region_request</span><span class="o">.</span><span class="n">region_id</span><span class="p">,</span>
+                            <span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">region_request_table</span><span class="o">.</span><span class="n">start_region_request</span><span class="p">(</span><span class="n">region_request_item</span><span class="p">)</span>
+                            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                                <span class="s2">&quot;Adding region request: imageid: </span><span class="si">{0}</span><span class="s2"> - regionid: </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                    <span class="n">region_request_item</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span> <span class="n">region_request_item</span><span class="o">.</span><span class="n">region_id</span>
+                                <span class="p">)</span>
+                            <span class="p">)</span>
+
+                        <span class="c1"># Process our region request</span>
+                        <span class="n">image_request_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_region_request</span><span class="p">(</span>
+                            <span class="n">region_request</span><span class="p">,</span> <span class="n">region_request_item</span><span class="p">,</span> <span class="n">raster_dataset</span><span class="p">,</span> <span class="n">sensor_model</span>
+                        <span class="p">)</span>
+
+                        <span class="c1"># Check if the image is complete</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_table</span><span class="o">.</span><span class="n">is_image_request_complete</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">):</span>
+                            <span class="c1"># If so complete the image request</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">complete_image_request</span><span class="p">(</span><span class="n">region_request</span><span class="p">,</span> <span class="n">image_format</span><span class="p">)</span>
+
+                        <span class="c1"># Update the queue</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">region_request_queue</span><span class="o">.</span><span class="n">finish_request</span><span class="p">(</span><span class="n">receipt_handle</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="n">RetryableJobException</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">region_request_queue</span><span class="o">.</span><span class="n">reset_request</span><span class="p">(</span><span class="n">receipt_handle</span><span class="p">,</span> <span class="n">visibility_timeout</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="n">SelfThrottledRegionException</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">region_request_queue</span><span class="o">.</span><span class="n">reset_request</span><span class="p">(</span>
+                            <span class="n">receipt_handle</span><span class="p">,</span>
+                            <span class="n">visibility_timeout</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">ServiceConfig</span><span class="o">.</span><span class="n">throttling_retry_timeout</span><span class="p">),</span>
+                        <span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;There was a problem processing the region request: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">region_request_queue</span><span class="o">.</span><span class="n">finish_request</span><span class="p">(</span><span class="n">receipt_handle</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Checking work queue for images to process ...&quot;</span><span class="p">)</span>
+                    <span class="p">(</span><span class="n">receipt_handle</span><span class="p">,</span> <span class="n">image_request_message</span><span class="p">)</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_requests_iter</span><span class="p">)</span>
+
+                    <span class="c1"># If we found a request on the queue</span>
+                    <span class="k">if</span> <span class="n">image_request_message</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">image_request</span> <span class="o">=</span> <span class="kc">None</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="c1"># Parse the message into a working ImageRequest</span>
+                            <span class="n">image_request</span> <span class="o">=</span> <span class="n">ImageRequest</span><span class="o">.</span><span class="n">from_external_message</span><span class="p">(</span><span class="n">image_request_message</span><span class="p">)</span>
+                            <span class="n">ThreadingLocalContextFilter</span><span class="o">.</span><span class="n">set_context</span><span class="p">(</span><span class="n">image_request</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+
+                            <span class="c1"># Check that our image request looks good</span>
+                            <span class="k">if</span> <span class="ow">not</span> <span class="n">image_request</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+                                <span class="n">error</span> <span class="o">=</span> <span class="s2">&quot;Invalid image request: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">image_request_message</span><span class="p">)</span>
+                                <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+                                <span class="k">raise</span> <span class="n">InvalidImageRequestException</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+
+                            <span class="c1"># Process the request</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">process_image_request</span><span class="p">(</span><span class="n">image_request</span><span class="p">)</span>
+
+                            <span class="c1"># Update the queue</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">image_request_queue</span><span class="o">.</span><span class="n">finish_request</span><span class="p">(</span><span class="n">receipt_handle</span><span class="p">)</span>
+                        <span class="k">except</span> <span class="n">RetryableJobException</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">image_request_queue</span><span class="o">.</span><span class="n">reset_request</span><span class="p">(</span><span class="n">receipt_handle</span><span class="p">,</span> <span class="n">visibility_timeout</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;There was a problem processing the image request: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+                            <span class="n">min_image_id</span> <span class="o">=</span> <span class="n">image_request</span><span class="o">.</span><span class="n">image_id</span> <span class="k">if</span> <span class="n">image_request</span> <span class="ow">and</span> <span class="n">image_request</span><span class="o">.</span><span class="n">image_id</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+                            <span class="n">min_job_id</span> <span class="o">=</span> <span class="n">image_request</span><span class="o">.</span><span class="n">job_id</span> <span class="k">if</span> <span class="n">image_request</span> <span class="ow">and</span> <span class="n">image_request</span><span class="o">.</span><span class="n">job_id</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+                            <span class="n">min_job_arn</span> <span class="o">=</span> <span class="n">image_request</span><span class="o">.</span><span class="n">job_arn</span> <span class="k">if</span> <span class="n">image_request</span> <span class="ow">and</span> <span class="n">image_request</span><span class="o">.</span><span class="n">job_arn</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+                            <span class="n">minimal_job_item</span> <span class="o">=</span> <span class="n">JobItem</span><span class="p">(</span>
+                                <span class="n">image_id</span><span class="o">=</span><span class="n">min_image_id</span><span class="p">,</span>
+                                <span class="n">job_id</span><span class="o">=</span><span class="n">min_job_id</span><span class="p">,</span>
+                                <span class="n">job_arn</span><span class="o">=</span><span class="n">min_job_arn</span><span class="p">,</span>
+                                <span class="n">processing_time</span><span class="o">=</span><span class="n">Decimal</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+                            <span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">fail_image_request_send_messages</span><span class="p">(</span><span class="n">minimal_job_item</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">image_request_queue</span><span class="o">.</span><span class="n">finish_request</span><span class="p">(</span><span class="n">receipt_handle</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="c1"># If we stop monitoring the queue set run state to false</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.process_image_request">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.process_image_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">process_image_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_request</span><span class="p">:</span> <span class="n">ImageRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Processes ImageRequest objects that are picked up from  queue. Loads the specified image into memory to be</span>
+<span class="sd">        chipped apart into regions and sent downstream for processing via RegionRequest. This will also process the</span>
+<span class="sd">        first region chipped from the image. # This worker will process the first region of this image since it has</span>
+<span class="sd">        already loaded the dataset from S3 and is ready to go. Any additional regions will be queued for processing by</span>
+<span class="sd">        other workers in this cluster.</span>
+
+<span class="sd">        :param image_request: ImageRequest = the image request derived from the ImageRequest SQS message</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">image_request_item</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ServiceConfig</span><span class="o">.</span><span class="n">self_throttling</span><span class="p">:</span>
+                <span class="n">max_regions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">endpoint_utils</span><span class="o">.</span><span class="n">calculate_max_regions</span><span class="p">(</span>
+                    <span class="n">image_request</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span> <span class="n">image_request</span><span class="o">.</span><span class="n">model_invocation_role</span>
+                <span class="p">)</span>
+                <span class="c1"># Add entry to the endpoint statistics table</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">endpoint_statistics_table</span><span class="o">.</span><span class="n">upsert_endpoint</span><span class="p">(</span><span class="n">image_request</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span> <span class="n">max_regions</span><span class="p">)</span>
+
+            <span class="c1"># Update the image status to started and include relevant image meta-data</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting processing of </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">image_request</span><span class="o">.</span><span class="n">image_url</span><span class="p">))</span>
+            <span class="n">image_request_item</span> <span class="o">=</span> <span class="n">JobItem</span><span class="p">(</span>
+                <span class="n">image_id</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span>
+                <span class="n">job_id</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">job_id</span><span class="p">,</span>
+                <span class="n">job_arn</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">job_arn</span><span class="p">,</span>
+                <span class="n">tile_size</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">image_request</span><span class="o">.</span><span class="n">tile_size</span><span class="p">),</span>
+                <span class="n">tile_overlap</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">image_request</span><span class="o">.</span><span class="n">tile_overlap</span><span class="p">),</span>
+                <span class="n">model_name</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>
+                <span class="n">model_invoke_mode</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">model_invoke_mode</span><span class="p">,</span>
+                <span class="n">outputs</span><span class="o">=</span><span class="n">dumps</span><span class="p">(</span><span class="n">image_request</span><span class="o">.</span><span class="n">outputs</span><span class="p">),</span>
+                <span class="n">image_url</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">image_url</span><span class="p">,</span>
+                <span class="n">image_read_role</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">image_read_role</span><span class="p">,</span>
+                <span class="n">feature_properties</span><span class="o">=</span><span class="n">dumps</span><span class="p">(</span><span class="n">image_request</span><span class="o">.</span><span class="n">feature_properties</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">feature_distillation_option_list</span> <span class="o">=</span> <span class="n">image_request</span><span class="o">.</span><span class="n">get_feature_distillation_option</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">feature_distillation_option_list</span><span class="p">:</span>
+                <span class="n">image_request_item</span><span class="o">.</span><span class="n">feature_distillation_option</span> <span class="o">=</span> <span class="n">dumps</span><span class="p">(</span>
+                    <span class="n">asdict</span><span class="p">(</span><span class="n">feature_distillation_option_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dict_factory</span><span class="o">=</span><span class="n">mr_post_processing_options_factory</span><span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Start the image processing</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">job_table</span><span class="o">.</span><span class="n">start_image_request</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status_monitor</span><span class="o">.</span><span class="n">process_event</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">,</span> <span class="n">ImageRequestStatus</span><span class="o">.</span><span class="n">STARTED</span><span class="p">,</span> <span class="s2">&quot;Started image request&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Check we have a valid image request, throws if not</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validate_model_hosting</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">)</span>
+
+            <span class="c1"># Load the relevant image meta data into memory</span>
+            <span class="n">image_extension</span><span class="p">,</span> <span class="n">raster_dataset</span><span class="p">,</span> <span class="n">sensor_model</span><span class="p">,</span> <span class="n">all_regions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_image_request</span><span class="p">(</span>
+                <span class="n">image_request_item</span><span class="p">,</span> <span class="n">image_request</span><span class="o">.</span><span class="n">roi</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">sensor_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Dataset </span><span class="si">{}</span><span class="s2"> did not have a geo transform. Results are not geo-referenced.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">image_request_item</span><span class="o">.</span><span class="n">image_id</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="c1"># If we got valid outputs</span>
+            <span class="k">if</span> <span class="n">raster_dataset</span> <span class="ow">and</span> <span class="n">all_regions</span> <span class="ow">and</span> <span class="n">image_extension</span><span class="p">:</span>
+                <span class="n">image_request_item</span><span class="o">.</span><span class="n">region_count</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">all_regions</span><span class="p">))</span>
+                <span class="n">image_request_item</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="n">raster_dataset</span><span class="o">.</span><span class="n">RasterXSize</span><span class="p">)</span>
+                <span class="n">image_request_item</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="n">raster_dataset</span><span class="o">.</span><span class="n">RasterYSize</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">image_request_item</span><span class="o">.</span><span class="n">extents</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">ModelRunner</span><span class="o">.</span><span class="n">get_extents</span><span class="p">(</span><span class="n">raster_dataset</span><span class="p">,</span> <span class="n">sensor_model</span><span class="p">))</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not get extents for image: </span><span class="si">{</span><span class="n">image_request_item</span><span class="o">.</span><span class="n">image_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+                <span class="n">feature_properties</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">image_request_item</span><span class="o">.</span><span class="n">feature_properties</span><span class="p">)</span>
+
+                <span class="c1"># If we can get a valid source metadata from the source image - attach it to features</span>
+                <span class="c1"># else, just pass in whatever custom features if they were provided</span>
+                <span class="n">source_metadata</span> <span class="o">=</span> <span class="n">get_source_property</span><span class="p">(</span><span class="n">image_request_item</span><span class="o">.</span><span class="n">image_url</span><span class="p">,</span> <span class="n">image_extension</span><span class="p">,</span> <span class="n">raster_dataset</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_metadata</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="n">feature_properties</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">source_metadata</span><span class="p">)</span>
+
+                <span class="c1"># Update the feature properties</span>
+                <span class="n">image_request_item</span><span class="o">.</span><span class="n">feature_properties</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">feature_properties</span><span class="p">)</span>
+
+                <span class="c1"># Update the image request job to have new derived image data</span>
+                <span class="n">image_request_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_table</span><span class="o">.</span><span class="n">update_image_request</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">status_monitor</span><span class="o">.</span><span class="n">process_event</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">,</span> <span class="n">ImageRequestStatus</span><span class="o">.</span><span class="n">IN_PROGRESS</span><span class="p">,</span> <span class="s2">&quot;Processing regions&quot;</span><span class="p">)</span>
+
+                <span class="c1"># Place the resulting region requests on the appropriate work queue</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">queue_region_request</span><span class="p">(</span><span class="n">all_regions</span><span class="p">,</span> <span class="n">image_request</span><span class="p">,</span> <span class="n">raster_dataset</span><span class="p">,</span> <span class="n">sensor_model</span><span class="p">,</span> <span class="n">image_extension</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="c1"># We failed try and gracefully update our image request</span>
+            <span class="k">if</span> <span class="n">image_request_item</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fail_image_request</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">minimal_job_item</span> <span class="o">=</span> <span class="n">JobItem</span><span class="p">(</span>
+                    <span class="n">image_id</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span>
+                    <span class="n">job_id</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">job_id</span><span class="p">,</span>
+                    <span class="n">job_arn</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">job_arn</span><span class="p">,</span>
+                    <span class="n">processing_time</span><span class="o">=</span><span class="n">Decimal</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fail_image_request</span><span class="p">(</span><span class="n">minimal_job_item</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+
+            <span class="c1"># Let the application know that we failed to process image</span>
+            <span class="k">raise</span> <span class="n">ProcessImageException</span><span class="p">(</span><span class="s2">&quot;Failed to process image region!&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.queue_region_request">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.queue_region_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">queue_region_request</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">all_regions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ImageRegion</span><span class="p">],</span>
+        <span class="n">image_request</span><span class="p">:</span> <span class="n">ImageRequest</span><span class="p">,</span>
+        <span class="n">raster_dataset</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">,</span>
+        <span class="n">sensor_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SensorModel</span><span class="p">],</span>
+        <span class="n">image_extension</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loads the list of regions into the queue. First it will create a RequestRequestItem and creates</span>
+<span class="sd">        an entry into the RegionRequestTable for traceability. Then process the region request. Once it&#39;s completed,</span>
+<span class="sd">        it will update an entry in the RegionRequestTable.</span>
+
+<span class="sd">        :param image_extension: = the GDAL derived image extension</span>
+<span class="sd">        :param all_regions: List[ImageRegion] = the list of image regions</span>
+<span class="sd">        :param image_request: ImageRequest = the image request</span>
+<span class="sd">        :param raster_dataset: Dataset = the raster dataset containing the region</span>
+<span class="sd">        :param sensor_model: Optional[SensorModel] = the sensor model for this raster dataset</span>
+
+<span class="sd">        :return None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Set aside the first region</span>
+        <span class="n">first_region</span> <span class="o">=</span> <span class="n">all_regions</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="n">all_regions</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Queueing region: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">region</span><span class="p">))</span>
+
+            <span class="n">region_pixel_bounds</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">region</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}{</span><span class="n">region</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">region_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">region_pixel_bounds</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">token_hex</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">region_request</span> <span class="o">=</span> <span class="n">RegionRequest</span><span class="p">(</span>
+                <span class="n">image_request</span><span class="o">.</span><span class="n">get_shared_values</span><span class="p">(),</span> <span class="n">region_bounds</span><span class="o">=</span><span class="n">region</span><span class="p">,</span> <span class="n">region_id</span><span class="o">=</span><span class="n">region_id</span><span class="p">,</span> <span class="n">image_extension</span><span class="o">=</span><span class="n">image_extension</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Create a new entry to the region request being started</span>
+            <span class="n">region_request_item</span> <span class="o">=</span> <span class="n">RegionRequestItem</span><span class="p">(</span>
+                <span class="n">image_id</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span>
+                <span class="n">job_id</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">job_id</span><span class="p">,</span>
+                <span class="n">region_pixel_bounds</span><span class="o">=</span><span class="n">region_pixel_bounds</span><span class="p">,</span>
+                <span class="n">region_id</span><span class="o">=</span><span class="n">region_id</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">region_request_table</span><span class="o">.</span><span class="n">start_region_request</span><span class="p">(</span><span class="n">region_request_item</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Adding region request: imageid: </span><span class="si">{0}</span><span class="s2"> - regionid: </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">region_request_item</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span> <span class="n">region_request_item</span><span class="o">.</span><span class="n">region_id</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Send the attributes of the region request as the message.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">region_request_queue</span><span class="o">.</span><span class="n">send_request</span><span class="p">(</span><span class="n">region_request</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+
+        <span class="c1"># Go ahead and process the first region</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Processing first region </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">first_region</span><span class="p">))</span>
+
+        <span class="n">region_pixel_bounds</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">first_region</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}{</span><span class="n">first_region</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">region_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">region_pixel_bounds</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">token_hex</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">first_region_request</span> <span class="o">=</span> <span class="n">RegionRequest</span><span class="p">(</span>
+            <span class="n">image_request</span><span class="o">.</span><span class="n">get_shared_values</span><span class="p">(),</span>
+            <span class="n">region_bounds</span><span class="o">=</span><span class="n">first_region</span><span class="p">,</span>
+            <span class="n">region_id</span><span class="o">=</span><span class="n">region_id</span><span class="p">,</span>
+            <span class="n">image_extension</span><span class="o">=</span><span class="n">image_extension</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Add item to RegionRequestTable</span>
+        <span class="n">region_request_item</span> <span class="o">=</span> <span class="n">RegionRequestItem</span><span class="p">(</span>
+            <span class="n">image_id</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span>
+            <span class="n">job_id</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">job_id</span><span class="p">,</span>
+            <span class="n">region_pixel_bounds</span><span class="o">=</span><span class="n">region_pixel_bounds</span><span class="p">,</span>
+            <span class="n">region_id</span><span class="o">=</span><span class="n">region_id</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">region_request_table</span><span class="o">.</span><span class="n">start_region_request</span><span class="p">(</span><span class="n">region_request_item</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Adding region request: imageid: </span><span class="si">{0}</span><span class="s2"> - regionid: </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">region_request_item</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span> <span class="n">region_request_item</span><span class="o">.</span><span class="n">region_id</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Processes our region request and return the updated item</span>
+        <span class="n">image_request_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_region_request</span><span class="p">(</span>
+            <span class="n">first_region_request</span><span class="p">,</span> <span class="n">region_request_item</span><span class="p">,</span> <span class="n">raster_dataset</span><span class="p">,</span> <span class="n">sensor_model</span>
+        <span class="p">)</span>
+
+        <span class="c1"># If the image is finished then complete it</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_table</span><span class="o">.</span><span class="n">is_image_request_complete</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">):</span>
+            <span class="n">image_format</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">raster_dataset</span><span class="o">.</span><span class="n">GetDriver</span><span class="p">()</span><span class="o">.</span><span class="n">ShortName</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">complete_image_request</span><span class="p">(</span><span class="n">first_region_request</span><span class="p">,</span> <span class="n">image_format</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.process_region_request">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.process_region_request">[docs]</a>
+    <span class="nd">@metric_scope</span>
+    <span class="k">def</span> <span class="nf">process_region_request</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">region_request</span><span class="p">:</span> <span class="n">RegionRequest</span><span class="p">,</span>
+        <span class="n">region_request_item</span><span class="p">:</span> <span class="n">RegionRequestItem</span><span class="p">,</span>
+        <span class="n">raster_dataset</span><span class="p">:</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span>
+        <span class="n">sensor_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SensorModel</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">metrics</span><span class="p">:</span> <span class="n">MetricsLogger</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JobItem</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Processes RegionRequest objects that are delegated for processing. Loads the specified region of an image into</span>
+<span class="sd">        memory to be processed by tile-workers. If a raster_dataset is not provided directly it will poll the image</span>
+<span class="sd">        from the region request.</span>
+
+<span class="sd">        :param region_request: RegionRequest = the region request</span>
+<span class="sd">        :param region_request_item: RegionRequestItem = the region request to update</span>
+<span class="sd">        :param raster_dataset: gdal.Dataset = the raster dataset containing the region</span>
+<span class="sd">        :param sensor_model: Optional[SensorModel] = the sensor model for this raster dataset</span>
+<span class="sd">        :param metrics: MetricsLogger = the metrics logger to use to report metrics.</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">set_dimensions</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">region_request</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Invalid Region Request! </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">region_request</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid Region Request&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+            <span class="n">image_format</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">raster_dataset</span><span class="o">.</span><span class="n">GetDriver</span><span class="p">()</span><span class="o">.</span><span class="n">ShortName</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_dimensions</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">OPERATION_DIMENSION</span><span class="p">:</span> <span class="n">MetricLabels</span><span class="o">.</span><span class="n">REGION_PROCESSING_OPERATION</span><span class="p">,</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">MODEL_NAME_DIMENSION</span><span class="p">:</span> <span class="n">region_request</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">INPUT_FORMAT_DIMENSION</span><span class="p">:</span> <span class="n">image_format</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ServiceConfig</span><span class="o">.</span><span class="n">self_throttling</span><span class="p">:</span>
+            <span class="n">max_regions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">endpoint_utils</span><span class="o">.</span><span class="n">calculate_max_regions</span><span class="p">(</span>
+                <span class="n">region_request</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span> <span class="n">region_request</span><span class="o">.</span><span class="n">model_invocation_role</span>
+            <span class="p">)</span>
+            <span class="c1"># Add entry to the endpoint statistics table</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">endpoint_statistics_table</span><span class="o">.</span><span class="n">upsert_endpoint</span><span class="p">(</span><span class="n">region_request</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span> <span class="n">max_regions</span><span class="p">)</span>
+            <span class="n">in_progress</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">endpoint_statistics_table</span><span class="o">.</span><span class="n">current_in_progress_regions</span><span class="p">(</span><span class="n">region_request</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">in_progress</span> <span class="o">&gt;=</span> <span class="n">max_regions</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+                    <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">THROTTLES</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Throttling region request. (Max: </span><span class="si">{}</span><span class="s2"> In-progress: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">max_regions</span><span class="p">,</span> <span class="n">in_progress</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="n">SelfThrottledRegionException</span>
+
+            <span class="c1"># Increment the endpoint region counter</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">endpoint_statistics_table</span><span class="o">.</span><span class="n">increment_region_count</span><span class="p">(</span><span class="n">region_request</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">Timer</span><span class="p">(</span>
+                <span class="n">task_str</span><span class="o">=</span><span class="s2">&quot;Processing region </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">region_request</span><span class="o">.</span><span class="n">image_url</span><span class="p">,</span> <span class="n">region_request</span><span class="o">.</span><span class="n">region_bounds</span><span class="p">),</span>
+                <span class="n">metric_name</span><span class="o">=</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">DURATION</span><span class="p">,</span>
+                <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span>
+                <span class="n">metrics_logger</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="c1"># Set up our threaded tile worker pool</span>
+                <span class="n">tile_queue</span><span class="p">,</span> <span class="n">tile_workers</span> <span class="o">=</span> <span class="n">setup_tile_workers</span><span class="p">(</span><span class="n">region_request</span><span class="p">,</span> <span class="n">sensor_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">elevation_model</span><span class="p">)</span>
+
+                <span class="c1"># Process all our tiles</span>
+                <span class="n">total_tile_count</span><span class="p">,</span> <span class="n">tile_error_count</span> <span class="o">=</span> <span class="n">process_tiles</span><span class="p">(</span>
+                    <span class="n">region_request</span><span class="p">,</span> <span class="n">tile_queue</span><span class="p">,</span> <span class="n">tile_workers</span><span class="p">,</span> <span class="n">raster_dataset</span><span class="p">,</span> <span class="n">sensor_model</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Update table w/ total tile counts</span>
+                <span class="n">region_request_item</span><span class="o">.</span><span class="n">total_tiles</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="n">total_tile_count</span><span class="p">)</span>
+                <span class="n">region_request_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">region_request_table</span><span class="o">.</span><span class="n">update_region_request</span><span class="p">(</span><span class="n">region_request_item</span><span class="p">)</span>
+
+            <span class="c1"># Update the image request to complete this region</span>
+            <span class="n">image_request_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_table</span><span class="o">.</span><span class="n">complete_region_request</span><span class="p">(</span><span class="n">region_request</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span> <span class="nb">bool</span><span class="p">(</span><span class="n">tile_error_count</span><span class="p">))</span>
+
+            <span class="c1"># Update region request table if that region succeeded</span>
+            <span class="n">region_request_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">region_request_table</span><span class="o">.</span><span class="n">complete_region_request</span><span class="p">(</span>
+                <span class="n">region_request_item</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_region_status</span><span class="p">(</span><span class="n">total_tile_count</span><span class="p">,</span> <span class="n">tile_error_count</span><span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Write CloudWatch Metrics to the Logs</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+                <span class="c1"># TODO: Consider adding the +1 invocation to timer</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">INVOCATIONS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+
+            <span class="c1"># Return the updated item</span>
+            <span class="k">return</span> <span class="n">image_request_item</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Failed to process image region: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+            <span class="c1"># update the table to take in that exception</span>
+            <span class="n">region_request_item</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Failed to process image region: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fail_region_request</span><span class="p">(</span><span class="n">region_request_item</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span>
+
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="c1"># Decrement the endpoint region counter</span>
+            <span class="k">if</span> <span class="n">ServiceConfig</span><span class="o">.</span><span class="n">self_throttling</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">endpoint_statistics_table</span><span class="o">.</span><span class="n">decrement_region_count</span><span class="p">(</span><span class="n">region_request</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.load_image_request">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.load_image_request">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">load_image_request</span><span class="p">(</span>
+        <span class="n">image_request_item</span><span class="p">:</span> <span class="n">JobItem</span><span class="p">,</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">shapely</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">BaseGeometry</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SensorModel</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">ImageRegion</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loads the required image file metadata into memory to be chipped apart into regions and</span>
+<span class="sd">        distributed for region processing.</span>
+
+<span class="sd">        :param image_request_item: JobItem = the region request to update.</span>
+<span class="sd">        :param roi: BaseGeometry = the region of interest shape</span>
+
+<span class="sd">        :return: Tuple[Queue, List[TileWorker]: A list of tile workers and the queue that manages them</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># If this request contains an execution role retrieve credentials that will be used to</span>
+        <span class="c1"># access data</span>
+        <span class="n">assumed_credentials</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">image_request_item</span><span class="o">.</span><span class="n">image_read_role</span><span class="p">:</span>
+            <span class="n">assumed_credentials</span> <span class="o">=</span> <span class="n">get_credentials_for_assumed_role</span><span class="p">(</span><span class="n">image_request_item</span><span class="o">.</span><span class="n">image_read_role</span><span class="p">)</span>
+
+        <span class="c1"># This will update the GDAL configuration options to use the security credentials for this</span>
+        <span class="c1"># request. Any GDAL managed AWS calls (i.e. incrementally fetching pixels from a dataset</span>
+        <span class="c1"># stored in S3) within this &quot;with&quot; statement will be made using customer credentials. At</span>
+        <span class="c1"># the end of the &quot;with&quot; scope the credentials will be removed.</span>
+        <span class="k">with</span> <span class="n">GDALConfigEnv</span><span class="p">()</span><span class="o">.</span><span class="n">with_aws_credentials</span><span class="p">(</span><span class="n">assumed_credentials</span><span class="p">):</span>
+            <span class="c1"># Use GDAL to access the dataset and geo positioning metadata</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">image_request_item</span><span class="o">.</span><span class="n">image_url</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">InvalidImageURLException</span><span class="p">(</span><span class="s2">&quot;No image URL specified. Image URL is required.&quot;</span><span class="p">)</span>
+
+            <span class="c1"># If the image request has a valid s3 image url, otherwise this is a local file</span>
+            <span class="k">if</span> <span class="s2">&quot;s3:/&quot;</span> <span class="ow">in</span> <span class="n">image_request_item</span><span class="o">.</span><span class="n">image_url</span><span class="p">:</span>
+                <span class="c1"># Validate that image exists in S3</span>
+                <span class="n">ImageRequest</span><span class="o">.</span><span class="n">validate_image_path</span><span class="p">(</span><span class="n">image_request_item</span><span class="o">.</span><span class="n">image_url</span><span class="p">,</span> <span class="n">image_request_item</span><span class="o">.</span><span class="n">image_read_role</span><span class="p">)</span>
+
+                <span class="n">image_path</span> <span class="o">=</span> <span class="n">image_request_item</span><span class="o">.</span><span class="n">image_url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;s3:/&quot;</span><span class="p">,</span> <span class="s2">&quot;/vsis3&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">image_path</span> <span class="o">=</span> <span class="n">image_request_item</span><span class="o">.</span><span class="n">image_url</span>
+
+            <span class="c1"># Use gdal to load the image url we were given</span>
+            <span class="n">raster_dataset</span><span class="p">,</span> <span class="n">sensor_model</span> <span class="o">=</span> <span class="n">load_gdal_dataset</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
+            <span class="n">image_extension</span> <span class="o">=</span> <span class="n">get_image_extension</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
+
+            <span class="c1"># Determine how much of this image should be processed.</span>
+            <span class="c1"># Bounds are: UL corner (row, column) , dimensions (w, h)</span>
+            <span class="n">processing_bounds</span> <span class="o">=</span> <span class="n">calculate_processing_bounds</span><span class="p">(</span><span class="n">raster_dataset</span><span class="p">,</span> <span class="n">roi</span><span class="p">,</span> <span class="n">sensor_model</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">processing_bounds</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Requested ROI does not intersect image. Nothing to do&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">LoadImageException</span><span class="p">(</span><span class="s2">&quot;Failed to create processing bounds for image!&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Calculate a set of ML engine-sized regions that we need to process for this image</span>
+                <span class="c1"># Region size chosen to break large images into pieces that can be handled by a</span>
+                <span class="c1"># single tile worker</span>
+                <span class="n">region_size</span><span class="p">:</span> <span class="n">ImageDimensions</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">ServiceConfig</span><span class="o">.</span><span class="n">region_size</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">image_request_item</span><span class="o">.</span><span class="n">tile_overlap</span><span class="p">:</span>
+                    <span class="n">region_overlap</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">region_overlap</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">image_request_item</span><span class="o">.</span><span class="n">tile_overlap</span><span class="p">)</span>
+
+                <span class="n">all_regions</span> <span class="o">=</span> <span class="n">generate_crops</span><span class="p">(</span><span class="n">processing_bounds</span><span class="p">,</span> <span class="n">region_size</span><span class="p">,</span> <span class="n">region_overlap</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">image_extension</span><span class="p">,</span> <span class="n">raster_dataset</span><span class="p">,</span> <span class="n">sensor_model</span><span class="p">,</span> <span class="n">all_regions</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.fail_image_request">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.fail_image_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">fail_image_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_request_item</span><span class="p">:</span> <span class="n">JobItem</span><span class="p">,</span> <span class="n">err</span><span class="p">:</span> <span class="ne">Exception</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handles failure events/exceptions for image requests and tries to update the status monitor accordingly</span>
+
+<span class="sd">        :param image_request_item: JobItem = the image request that failed.</span>
+<span class="sd">        :param err: Exception = the exception that caused the failure</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fail_image_request_send_messages</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">job_table</span><span class="o">.</span><span class="n">end_image_request</span><span class="p">(</span><span class="n">image_request_item</span><span class="o">.</span><span class="n">image_id</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.fail_image_request_send_messages">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.fail_image_request_send_messages">[docs]</a>
+    <span class="k">def</span> <span class="nf">fail_image_request_send_messages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_request_item</span><span class="p">:</span> <span class="n">JobItem</span><span class="p">,</span> <span class="n">err</span><span class="p">:</span> <span class="ne">Exception</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Updates failed metrics and update the status monitor accordingly</span>
+
+<span class="sd">        :param image_request_item: JobItem = the image request that failed.</span>
+<span class="sd">        :param err: Exception = the exception that caused the failure</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;Failed to start image processing!: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status_monitor</span><span class="o">.</span><span class="n">process_event</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">,</span> <span class="n">ImageRequestStatus</span><span class="o">.</span><span class="n">FAILED</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.complete_image_request">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.complete_image_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">complete_image_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region_request</span><span class="p">:</span> <span class="n">RegionRequest</span><span class="p">,</span> <span class="n">image_format</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs after every region has completed processing to check if that was the last region and run required</span>
+<span class="sd">        completion logic for the associated ImageRequest.</span>
+
+<span class="sd">        :param region_request: RegionRequest = the region request to update.</span>
+<span class="sd">        :param image_format: the format of the image</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Grab the full image request item from the table</span>
+            <span class="n">image_request_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_table</span><span class="o">.</span><span class="n">get_image_request</span><span class="p">(</span><span class="n">region_request</span><span class="o">.</span><span class="n">image_id</span><span class="p">)</span>
+
+            <span class="c1"># Check if the image request is finished</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Last region of image request was completed, aggregating features for image!&quot;</span><span class="p">)</span>
+            <span class="c1"># Set up our feature table to work with the region quest</span>
+            <span class="n">feature_table</span> <span class="o">=</span> <span class="n">FeatureTable</span><span class="p">(</span><span class="n">ServiceConfig</span><span class="o">.</span><span class="n">feature_table</span><span class="p">,</span> <span class="n">region_request</span><span class="o">.</span><span class="n">tile_size</span><span class="p">,</span> <span class="n">region_request</span><span class="o">.</span><span class="n">tile_overlap</span><span class="p">)</span>
+            <span class="c1"># Aggregate all the features from our job</span>
+            <span class="n">features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregate_features</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">,</span> <span class="n">feature_table</span><span class="p">)</span>
+            <span class="n">features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">select_features</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">,</span> <span class="n">features</span><span class="p">)</span>
+            <span class="n">features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_properties_to_features</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">,</span> <span class="n">features</span><span class="p">)</span>
+
+            <span class="c1"># Sink the features into the right outputs</span>
+            <span class="n">is_write_succeeded</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sync_features</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">,</span> <span class="n">features</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_write_succeeded</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">AggregateOutputFeaturesException</span><span class="p">(</span>
+                    <span class="s2">&quot;Failed to write features to S3 or Kinesis! Please check the &quot;</span> <span class="s2">&quot;log...&quot;</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Put our end time on our image_request_item</span>
+            <span class="n">completed_image_request_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_table</span><span class="o">.</span><span class="n">end_image_request</span><span class="p">(</span><span class="n">image_request_item</span><span class="o">.</span><span class="n">image_id</span><span class="p">)</span>
+
+            <span class="c1"># Ensure we have a valid start time for our record</span>
+            <span class="c1"># TODO: Figure out why we wouldn&#39;t have a valid start time?!?!</span>
+            <span class="k">if</span> <span class="n">completed_image_request_item</span><span class="o">.</span><span class="n">processing_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">image_request_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">status_monitor</span><span class="o">.</span><span class="n">get_image_request_status</span><span class="p">(</span><span class="n">completed_image_request_item</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">status_monitor</span><span class="o">.</span><span class="n">process_event</span><span class="p">(</span>
+                    <span class="n">completed_image_request_item</span><span class="p">,</span> <span class="n">image_request_status</span><span class="p">,</span> <span class="s2">&quot;Completed image processing&quot;</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">generate_image_processing_metrics</span><span class="p">(</span><span class="n">completed_image_request_item</span><span class="p">,</span> <span class="n">image_format</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">InvalidImageRequestException</span><span class="p">(</span><span class="s2">&quot;ImageRequest has no start time&quot;</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">AggregateFeaturesException</span><span class="p">(</span><span class="s2">&quot;Failed to aggregate features for region!&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.generate_image_processing_metrics">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.generate_image_processing_metrics">[docs]</a>
+    <span class="nd">@metric_scope</span>
+    <span class="k">def</span> <span class="nf">generate_image_processing_metrics</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">image_request_item</span><span class="p">:</span> <span class="n">JobItem</span><span class="p">,</span> <span class="n">image_format</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">MetricsLogger</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Output the metrics for the full image processing timeline.</span>
+
+<span class="sd">        :param image_request_item: the completed image request item that tracks the duration and error counts</span>
+<span class="sd">        :param image_format: the input image format</span>
+<span class="sd">        :param metrics: the current metric scope</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">metrics</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Unable to generate image processing metrics. Metrics logger is None!&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">set_dimensions</span><span class="p">()</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_dimensions</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">OPERATION_DIMENSION</span><span class="p">:</span> <span class="n">MetricLabels</span><span class="o">.</span><span class="n">IMAGE_PROCESSING_OPERATION</span><span class="p">,</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">MODEL_NAME_DIMENSION</span><span class="p">:</span> <span class="n">image_request_item</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">INPUT_FORMAT_DIMENSION</span><span class="p">:</span> <span class="n">image_format</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">DURATION</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">image_request_item</span><span class="o">.</span><span class="n">processing_time</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">SECONDS</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">INVOCATIONS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">image_request_item</span><span class="o">.</span><span class="n">region_error</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">ERRORS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.fail_region_request">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.fail_region_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">fail_region_request</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">region_request_item</span><span class="p">:</span> <span class="n">RegionRequestItem</span><span class="p">,</span>
+        <span class="n">metrics</span><span class="p">:</span> <span class="n">MetricsLogger</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JobItem</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fails a region if it failed to process successfully and updates the table accordingly before</span>
+<span class="sd">        raising an exception</span>
+
+<span class="sd">        :param region_request_item: RegionRequestItem = the region request to update</span>
+<span class="sd">        :param metrics: MetricsLogger = the metrics logger to use to report metrics.</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">ERRORS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">region_request_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">region_request_table</span><span class="o">.</span><span class="n">complete_region_request</span><span class="p">(</span>
+                <span class="n">region_request_item</span><span class="p">,</span> <span class="n">RegionRequestStatus</span><span class="o">.</span><span class="n">FAILED</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_table</span><span class="o">.</span><span class="n">complete_region_request</span><span class="p">(</span><span class="n">region_request_item</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">status_error</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Unable to update region status in job table&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">status_error</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">ProcessRegionException</span><span class="p">(</span><span class="s2">&quot;Failed to process image region!&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.validate_model_hosting">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.validate_model_hosting">[docs]</a>
+    <span class="k">def</span> <span class="nf">validate_model_hosting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_request</span><span class="p">:</span> <span class="n">JobItem</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validates that the image request is valid. If not, raises an exception.</span>
+
+<span class="sd">        :param image_request: JobItem = the image request</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">image_request</span><span class="o">.</span><span class="n">model_invoke_mode</span> <span class="ow">or</span> <span class="n">image_request</span><span class="o">.</span><span class="n">model_invoke_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">VALID_MODEL_HOSTING_OPTIONS</span><span class="p">:</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Application only supports $</span><span class="si">{</span><span class="n">VALID_MODEL_HOSTING_OPTIONS</span><span class="si">}</span><span class="s2"> Endpoints&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status_monitor</span><span class="o">.</span><span class="n">process_event</span><span class="p">(</span>
+                <span class="n">image_request</span><span class="p">,</span>
+                <span class="n">ImageRequestStatus</span><span class="o">.</span><span class="n">FAILED</span><span class="p">,</span>
+                <span class="n">error</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="n">UnsupportedModelException</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.aggregate_features">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.aggregate_features">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@metric_scope</span>
+    <span class="k">def</span> <span class="nf">aggregate_features</span><span class="p">(</span>
+        <span class="n">image_request_item</span><span class="p">:</span> <span class="n">JobItem</span><span class="p">,</span> <span class="n">feature_table</span><span class="p">:</span> <span class="n">FeatureTable</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">MetricsLogger</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For a given image processing job - aggregate all the features that were collected for it and</span>
+<span class="sd">        put them in the correct output sync locations.</span>
+
+<span class="sd">        :param image_request_item: JobItem = the image request</span>
+<span class="sd">        :param feature_table: FeatureTable = the table storing features from all completed regions</span>
+<span class="sd">        :param metrics: the current metrics scope</span>
+
+<span class="sd">        :return: List[geojson.Feature] = the list of features</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">set_dimensions</span><span class="p">()</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_dimensions</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">OPERATION_DIMENSION</span><span class="p">:</span> <span class="n">MetricLabels</span><span class="o">.</span><span class="n">FEATURE_AGG_OPERATION</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">Timer</span><span class="p">(</span>
+            <span class="n">task_str</span><span class="o">=</span><span class="s2">&quot;Aggregating Features&quot;</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">DURATION</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span> <span class="n">metrics_logger</span><span class="o">=</span><span class="n">metrics</span>
+        <span class="p">):</span>
+            <span class="n">features</span> <span class="o">=</span> <span class="n">feature_table</span><span class="o">.</span><span class="n">get_features</span><span class="p">(</span><span class="n">image_request_item</span><span class="o">.</span><span class="n">image_id</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total features aggregated: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">features</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">features</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.identify_overlap">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.identify_overlap">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">identify_overlap</span><span class="p">(</span>
+        <span class="n">feature</span><span class="p">:</span> <span class="n">Feature</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">overlap</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">origin</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a tuple that contains the min and max indexes of adjacent tiles or regions for a given feature. If</span>
+<span class="sd">        the min and max values for both x and y are the same then this feature does not touch an overlap region.</span>
+
+<span class="sd">        :param feature: the geojson Feature that must contain properties to identify its location in an image</span>
+<span class="sd">        :param shape: the width, height of the area in pixels</span>
+<span class="sd">        :param overlap: the x, y overlap between areas in pixels</span>
+<span class="sd">        :param origin: the x, y coordinate of the area in relation to the full image</span>
+
+<span class="sd">        :return: a tuple: minx, maxx, miny, maxy that identifies any overlap.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bbox</span> <span class="o">=</span> <span class="n">get_feature_image_bounds</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+
+        <span class="c1"># If an offset origin was supplied adjust the bbox so the key is relative to the origin.</span>
+        <span class="n">bbox</span> <span class="o">=</span> <span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">origin</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">origin</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">origin</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">origin</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">stride_x</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">stride_y</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">max_x_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">stride_x</span><span class="p">)</span>
+        <span class="n">max_y_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="n">stride_y</span><span class="p">)</span>
+
+        <span class="n">min_x_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">stride_x</span><span class="p">)</span>
+        <span class="n">min_y_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">stride_y</span><span class="p">)</span>
+        <span class="n">min_x_offset</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">%</span> <span class="n">stride_x</span>
+        <span class="n">min_y_offset</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">%</span> <span class="n">stride_y</span>
+
+        <span class="k">if</span> <span class="n">min_x_offset</span> <span class="o">&lt;</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">min_x_index</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">min_x_index</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">min_y_offset</span> <span class="o">&lt;</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">min_y_index</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">min_y_index</span> <span class="o">-=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">min_x_index</span><span class="p">,</span> <span class="n">max_x_index</span><span class="p">,</span> <span class="n">min_y_index</span><span class="p">,</span> <span class="n">max_y_index</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.group_features_by_overlap">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.group_features_by_overlap">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">group_features_by_overlap</span><span class="p">(</span>
+        <span class="n">features</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">],</span> <span class="n">shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">overlap</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">origin</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Group all the feature items by tile id</span>
+
+<span class="sd">        :param features: List[FeatureItem] = the list of feature items</span>
+<span class="sd">        :param shape: the width, height of the area in pixels</span>
+<span class="sd">        :param overlap: the x, y overlap between areas in pixels</span>
+<span class="sd">        :param origin: the x, y coordinate of the area in relation to the full image</span>
+
+<span class="sd">        :return: a mapping of overlap id to a list of features that intersect that overlap region</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">grouped_features</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">features</span><span class="p">:</span>
+            <span class="n">overlap_key</span> <span class="o">=</span> <span class="n">ModelRunner</span><span class="o">.</span><span class="n">identify_overlap</span><span class="p">(</span><span class="n">feature</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">overlap</span><span class="p">,</span> <span class="n">origin</span><span class="p">)</span>
+            <span class="n">grouped_features</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">overlap_key</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">grouped_features</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.select_features">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.select_features">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@metric_scope</span>
+    <span class="k">def</span> <span class="nf">select_features</span><span class="p">(</span>
+        <span class="n">image_request_item</span><span class="p">:</span> <span class="n">JobItem</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">],</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">MetricsLogger</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Selects the desired features using the options in the JobItem (NMS, SOFT_NMS, etc.).</span>
+<span class="sd">        This code applies a feature selector only to the features that came from regions of the image</span>
+<span class="sd">        that were processed multiple times. First features are grouped based on the region they were</span>
+<span class="sd">        processed in. Any features found in the overlap area between regions are run through the</span>
+<span class="sd">        FeatureSelector. If they were not part of an overlap area between regions, they will be grouped</span>
+<span class="sd">        based on tile boundaries. Any features that fall into the overlap of adjacent tiles are filtered</span>
+<span class="sd">        by the FeatureSelector. All other features should not be duplicates; they are added to the result</span>
+<span class="sd">        without additional filtering.</span>
+
+<span class="sd">        Computationally, this implements two critical factors that lower the overall processing time for the</span>
+<span class="sd">        O(N^2) selection algorithms. First, it will filter out the majority of features that couldn&#39;t possibly</span>
+<span class="sd">        have duplicates generated by our tiled image processing; Second, it runs the selection algorithms</span>
+<span class="sd">        incrementally on much smaller groups of features.</span>
+
+<span class="sd">        :param image_request_item: JobItem = the image request</span>
+<span class="sd">        :param features: List[Feature] = the list of geojson features to process</span>
+<span class="sd">        :param metrics: MetricsLogger = the metrics logger to use to report metrics.</span>
+<span class="sd">        :return: List[Feature] = the list of geojson features after processing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">set_dimensions</span><span class="p">()</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_dimensions</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">OPERATION_DIMENSION</span><span class="p">:</span> <span class="n">MetricLabels</span><span class="o">.</span><span class="n">FEATURE_SELECTION_OPERATION</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">INVOCATIONS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+
+        <span class="k">with</span> <span class="n">Timer</span><span class="p">(</span>
+            <span class="n">task_str</span><span class="o">=</span><span class="s2">&quot;Select (deduplicate) image features&quot;</span><span class="p">,</span>
+            <span class="n">metric_name</span><span class="o">=</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">DURATION</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span>
+            <span class="n">metrics_logger</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="n">feature_distillation_option_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">image_request_item</span><span class="o">.</span><span class="n">feature_distillation_option</span><span class="p">)</span>
+            <span class="n">feature_distillation_option</span> <span class="o">=</span> <span class="n">FeatureDistillationDeserializer</span><span class="p">()</span><span class="o">.</span><span class="n">deserialize</span><span class="p">(</span><span class="n">feature_distillation_option_dict</span><span class="p">)</span>
+            <span class="n">feature_selector</span> <span class="o">=</span> <span class="n">FeatureSelector</span><span class="p">(</span><span class="n">feature_distillation_option</span><span class="p">)</span>
+
+            <span class="n">region_size</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">ServiceConfig</span><span class="o">.</span><span class="n">region_size</span><span class="p">)</span>
+            <span class="n">tile_size</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">image_request_item</span><span class="o">.</span><span class="n">tile_size</span><span class="p">)</span>
+            <span class="n">overlap</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">image_request_item</span><span class="o">.</span><span class="n">tile_overlap</span><span class="p">)</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;FeatureSelection: Starting overlap-aware deduplication of features.&quot;</span><span class="p">)</span>
+            <span class="n">total_skipped</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">deduped_features</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">features_grouped_by_region</span> <span class="o">=</span> <span class="n">ModelRunner</span><span class="o">.</span><span class="n">group_features_by_overlap</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">region_size</span><span class="p">,</span> <span class="n">overlap</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">region_key</span><span class="p">,</span> <span class="n">region_features</span> <span class="ow">in</span> <span class="n">features_grouped_by_region</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">region_stride</span> <span class="o">=</span> <span class="p">(</span><span class="n">region_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">region_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">region_origin</span> <span class="o">=</span> <span class="p">(</span><span class="n">region_stride</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">region_key</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">region_stride</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">region_key</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+                <span class="k">if</span> <span class="n">region_key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">region_key</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="n">region_key</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="n">region_key</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+                    <span class="c1"># The Group contains contributions from multiple regions, run selection on the entire group</span>
+                    <span class="n">deduped_features</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">feature_selector</span><span class="o">.</span><span class="n">select_features</span><span class="p">(</span><span class="n">region_features</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Not an overlap between regions group these features using tile size to identify overlaps</span>
+                    <span class="n">features_grouped_by_tile</span> <span class="o">=</span> <span class="n">ModelRunner</span><span class="o">.</span><span class="n">group_features_by_overlap</span><span class="p">(</span>
+                        <span class="n">region_features</span><span class="p">,</span> <span class="n">tile_size</span><span class="p">,</span> <span class="n">overlap</span><span class="p">,</span> <span class="n">region_origin</span>
+                    <span class="p">)</span>
+
+                    <span class="k">for</span> <span class="n">tile_key</span><span class="p">,</span> <span class="n">tile_features</span> <span class="ow">in</span> <span class="n">features_grouped_by_tile</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="k">if</span> <span class="n">tile_key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">tile_key</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="n">tile_key</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="n">tile_key</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+                            <span class="c1"># Group contains contributions from multiple tiles, run selection</span>
+                            <span class="n">deduped_features</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">feature_selector</span><span class="o">.</span><span class="n">select_features</span><span class="p">(</span><span class="n">tile_features</span><span class="p">))</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="c1"># No overlap between tiles, features can be added directly to the result</span>
+                            <span class="n">total_skipped</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tile_features</span><span class="p">)</span>
+                            <span class="n">deduped_features</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tile_features</span><span class="p">)</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;FeatureSelection: Skipped processing of </span><span class="si">{</span><span class="n">total_skipped</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">features</span><span class="p">)</span><span class="si">}</span><span class="s2"> features. &quot;</span>
+                <span class="s2">&quot;They were not inside an overlap region.&quot;</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">deduped_features</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.sync_features">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.sync_features">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@metric_scope</span>
+    <span class="k">def</span> <span class="nf">sync_features</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">:</span> <span class="n">JobItem</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">],</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">MetricsLogger</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Writing the features output to S3 and/or Kinesis Stream</span>
+
+<span class="sd">        :param image_request_item: JobItem = the job table item for an image request</span>
+<span class="sd">        :param features: List[Features] = the list of features to update</span>
+<span class="sd">        :param metrics: the current metrics scope</span>
+
+<span class="sd">        :return: bool = if it has successfully written to an output sync</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">set_dimensions</span><span class="p">()</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_dimensions</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">OPERATION_DIMENSION</span><span class="p">:</span> <span class="n">MetricLabels</span><span class="o">.</span><span class="n">FEATURE_DISSEMINATE_OPERATION</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">INVOCATIONS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+
+        <span class="k">with</span> <span class="n">Timer</span><span class="p">(</span>
+            <span class="n">task_str</span><span class="o">=</span><span class="s2">&quot;Sink image features&quot;</span><span class="p">,</span>
+            <span class="n">metric_name</span><span class="o">=</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">DURATION</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span>
+            <span class="n">metrics_logger</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="n">tracking_output_sinks</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;S3&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;Kinesis&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="p">}</span>  <span class="c1"># format: job_id = {&quot;s3&quot;: true, &quot;kinesis&quot;: true}</span>
+
+            <span class="c1"># Ensure we have outputs defined for where to dump our features</span>
+            <span class="k">if</span> <span class="n">image_request_item</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Writing aggregate feature for job &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">image_request_item</span><span class="o">.</span><span class="n">job_id</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">sink</span> <span class="ow">in</span> <span class="n">SinkFactory</span><span class="o">.</span><span class="n">outputs_to_sinks</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">image_request_item</span><span class="o">.</span><span class="n">outputs</span><span class="p">)):</span>
+                    <span class="k">if</span> <span class="n">sink</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="n">SinkMode</span><span class="o">.</span><span class="n">AGGREGATE</span> <span class="ow">and</span> <span class="n">image_request_item</span><span class="o">.</span><span class="n">job_id</span><span class="p">:</span>
+                        <span class="n">is_write_output_succeeded</span> <span class="o">=</span> <span class="n">sink</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">image_request_item</span><span class="o">.</span><span class="n">job_id</span><span class="p">,</span> <span class="n">features</span><span class="p">)</span>
+                        <span class="n">tracking_output_sinks</span><span class="p">[</span><span class="n">sink</span><span class="o">.</span><span class="n">name</span><span class="p">()]</span> <span class="o">=</span> <span class="n">is_write_output_succeeded</span>
+
+                <span class="c1"># Log them let them know if both written to both outputs (S3 and Kinesis) or one in another</span>
+                <span class="c1"># If both couldn&#39;t write to either stream because both were down, return False. Otherwise True</span>
+                <span class="k">if</span> <span class="n">tracking_output_sinks</span><span class="p">[</span><span class="s2">&quot;S3&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">tracking_output_sinks</span><span class="p">[</span><span class="s2">&quot;Kinesis&quot;</span><span class="p">]:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;OSMLModelRunner was able to write the features to S3 but not Kinesis. Continuing...&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="n">tracking_output_sinks</span><span class="p">[</span><span class="s2">&quot;S3&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">tracking_output_sinks</span><span class="p">[</span><span class="s2">&quot;Kinesis&quot;</span><span class="p">]:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;OSMLModelRunner was able to write the features to Kinesis but not S3. Continuing...&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+                <span class="k">elif</span> <span class="n">tracking_output_sinks</span><span class="p">[</span><span class="s2">&quot;S3&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">tracking_output_sinks</span><span class="p">[</span><span class="s2">&quot;Kinesis&quot;</span><span class="p">]:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;OSMLModelRunner was able to write the features to both S3 and Kinesis. Continuing...&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;OSMLModelRunner was not able to write the features to either S3 or Kinesis. Failing...&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">InvalidImageRequestException</span><span class="p">(</span><span class="s2">&quot;No output destinations were defined for this image request!&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.add_properties_to_features">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.add_properties_to_features">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_properties_to_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_request_item</span><span class="p">:</span> <span class="n">JobItem</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add arbitrary and controlled property dictionaries to geojson feature properties</span>
+
+<span class="sd">        :param image_request_item: JobItem = the job table item for an image request</span>
+<span class="sd">        :param features: List[geojson.Feature] = the list of features to update</span>
+
+<span class="sd">        :return: List[geojson.Feature] = updated list of features</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">feature_properties</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">image_request_item</span><span class="o">.</span><span class="n">feature_properties</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">features</span><span class="p">:</span>
+                <span class="c1"># Update the features with their inference metadata</span>
+                <span class="n">feature</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">get_inference_metadata_property</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">,</span> <span class="n">feature</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span><span class="s2">&quot;inferenceTime&quot;</span><span class="p">])</span>
+                <span class="p">)</span>
+
+                <span class="c1"># For the custom provided feature properties, update</span>
+                <span class="k">for</span> <span class="n">feature_property</span> <span class="ow">in</span> <span class="n">feature_properties</span><span class="p">:</span>
+                    <span class="n">feature</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">feature_property</span><span class="p">)</span>
+
+                <span class="c1"># Remove unneeded feature properties if they are present</span>
+                <span class="k">if</span> <span class="n">feature</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;properties&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inferenceTime&quot;</span><span class="p">):</span>
+                    <span class="k">del</span> <span class="n">feature</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span><span class="s2">&quot;inferenceTime&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">feature</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;properties&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">GeojsonDetectionField</span><span class="o">.</span><span class="n">BOUNDS</span><span class="p">):</span>
+                    <span class="k">del</span> <span class="n">feature</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span><span class="n">GeojsonDetectionField</span><span class="o">.</span><span class="n">BOUNDS</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">feature</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;properties&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">GeojsonDetectionField</span><span class="o">.</span><span class="n">GEOM</span><span class="p">):</span>
+                    <span class="k">del</span> <span class="n">feature</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span><span class="n">GeojsonDetectionField</span><span class="o">.</span><span class="n">GEOM</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">feature</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;properties&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;detection_score&quot;</span><span class="p">):</span>
+                    <span class="k">del</span> <span class="n">feature</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span><span class="s2">&quot;detection_score&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">feature</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;properties&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;feature_types&quot;</span><span class="p">):</span>
+                    <span class="k">del</span> <span class="n">feature</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span><span class="s2">&quot;feature_types&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">feature</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;properties&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;image_id&quot;</span><span class="p">):</span>
+                    <span class="k">del</span> <span class="n">feature</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span><span class="s2">&quot;image_id&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">feature</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;properties&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;adjusted_feature_types&quot;</span><span class="p">):</span>
+                    <span class="k">del</span> <span class="n">feature</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span><span class="s2">&quot;adjusted_feature_types&quot;</span><span class="p">]</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InvalidFeaturePropertiesException</span><span class="p">(</span><span class="s2">&quot;Could not apply custom properties to features!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">features</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.get_inference_metadata_property">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.get_inference_metadata_property">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_inference_metadata_property</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">:</span> <span class="n">JobItem</span><span class="p">,</span> <span class="n">inference_time</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an inference dictionary property to append to geojson features</span>
+
+<span class="sd">        :param image_request_item: JobItem = the job table item for an image request</span>
+<span class="sd">        :param inference_time: str = the time the inference was made in epoch millisec</span>
+
+<span class="sd">        :return: Dict[str, Any] = an inference metadata dictionary property to attach to features</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">inference_metadata_property</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;inferenceMetadata&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;jobId&quot;</span><span class="p">:</span> <span class="n">image_request_item</span><span class="o">.</span><span class="n">job_id</span><span class="p">,</span>
+                <span class="s2">&quot;inferenceDT&quot;</span><span class="p">:</span> <span class="n">inference_time</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">inference_metadata_property</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.get_extents">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.get_extents">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_extents</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">sm</span><span class="p">:</span> <span class="n">SensorModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the geographic extents of the given GDAL dataset.</span>
+
+<span class="sd">        :param ds: GDAL dataset.</span>
+<span class="sd">        :param sm: OSML Sensor Model imputed for dataset</span>
+<span class="sd">        :return: Dictionary with keys &#39;north&#39;, &#39;south&#39;, &#39;east&#39;, &#39;west&#39; representing the extents.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Compute WGS-84 world coordinates for each image corners to impute the extents for visualizations</span>
+            <span class="n">image_corners</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">ds</span><span class="o">.</span><span class="n">RasterXSize</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">ds</span><span class="o">.</span><span class="n">RasterXSize</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">RasterYSize</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">RasterYSize</span><span class="p">]]</span>
+            <span class="n">geo_image_corners</span> <span class="o">=</span> <span class="p">[</span><span class="n">sm</span><span class="o">.</span><span class="n">image_to_world</span><span class="p">(</span><span class="n">ImageCoordinate</span><span class="p">(</span><span class="n">corner</span><span class="p">))</span> <span class="k">for</span> <span class="n">corner</span> <span class="ow">in</span> <span class="n">image_corners</span><span class="p">]</span>
+            <span class="n">locations</span> <span class="o">=</span> <span class="p">[(</span><span class="n">degrees</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">latitude</span><span class="p">),</span> <span class="n">degrees</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">longitude</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">geo_image_corners</span><span class="p">]</span>
+            <span class="n">feature_bounds</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">prev</span><span class="p">,</span> <span class="n">f</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="nb">min</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">prev</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                    <span class="nb">min</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">prev</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                    <span class="nb">max</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">prev</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span>
+                    <span class="nb">max</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">prev</span><span class="p">[</span><span class="mi">3</span><span class="p">]),</span>
+                <span class="p">],</span>
+                <span class="n">locations</span><span class="p">,</span>
+                <span class="p">[</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span><span class="p">],</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;north&quot;</span><span class="p">:</span> <span class="n">feature_bounds</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                <span class="s2">&quot;south&quot;</span><span class="p">:</span> <span class="n">feature_bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="s2">&quot;east&quot;</span><span class="p">:</span> <span class="n">feature_bounds</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+                <span class="s2">&quot;west&quot;</span><span class="p">:</span> <span class="n">feature_bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="p">}</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error in getting extents: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.calculate_region_status">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.calculate_region_status">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">calculate_region_status</span><span class="p">(</span><span class="n">total_tile_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">tile_error_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RegionRequestStatus</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the processing status of a region upon completion</span>
+<span class="sd">        :param total_tile_count: number of tiles that were processed</span>
+<span class="sd">        :param tile_error_count: number of tiles with errors</span>
+<span class="sd">        :return: RegionRequestStatus</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">region_status</span> <span class="o">=</span> <span class="n">RegionRequestStatus</span><span class="o">.</span><span class="n">SUCCESS</span>
+        <span class="k">if</span> <span class="n">total_tile_count</span> <span class="o">==</span> <span class="n">tile_error_count</span><span class="p">:</span>
+            <span class="n">region_status</span> <span class="o">=</span> <span class="n">RegionRequestStatus</span><span class="o">.</span><span class="n">FAILED</span>
+        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">tile_error_count</span> <span class="o">&lt;</span> <span class="n">total_tile_count</span><span class="p">:</span>
+            <span class="n">region_status</span> <span class="o">=</span> <span class="n">RegionRequestStatus</span><span class="o">.</span><span class="n">PARTIAL</span>
+        <span class="k">return</span> <span class="n">region_status</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

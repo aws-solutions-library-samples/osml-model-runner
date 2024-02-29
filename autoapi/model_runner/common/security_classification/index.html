@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>model_runner.common.security_classification &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=eafc0fe6" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="model_runner.common.timer" href="../timer/index.html" />
+    <link rel="prev" title="model_runner.common.mr_post_processing" href="../mr_post_processing/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner</span></code></a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../index.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../api/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.api</span></code></a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.common</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../database/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.database</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../inference/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.inference</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../queue/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.queue</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../sink/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.sink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../status/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.status</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../tile_worker/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.tile_worker</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../index.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner</span></code></a></li>
+          <li class="breadcrumb-item"><a href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.common</span></code></a></li>
+      <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.common.security_classification</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/autoapi/model_runner/common/security_classification/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-model_runner.common.security_classification">
+<span id="model-runner-common-security-classification"></span><h1><a class="reference internal" href="#module-model_runner.common.security_classification" title="model_runner.common.security_classification"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.common.security_classification</span></code></a><a class="headerlink" href="#module-model_runner.common.security_classification" title="Link to this heading"></a></h1>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<section id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.common.security_classification.ClassificationLevel" title="model_runner.common.security_classification.ClassificationLevel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ClassificationLevel</span></code></a></p></td>
+<td><p>Enum defining the 4 security classification levels.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#model_runner.common.security_classification.Classification" title="model_runner.common.security_classification.Classification"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Classification</span></code></a></p></td>
+<td><p>Dataclass for holding security classification information.  Level, caveats, and releasability are provided at</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.common.security_classification.classification_asdict_factory" title="model_runner.common.security_classification.classification_asdict_factory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">classification_asdict_factory</span></code></a>(→ Dict[str, Any])</p></td>
+<td><p>Factory method designed to be used with asdict(&lt;Classification object&gt;, dict_factory=classification_asdict_factory)</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#model_runner.common.security_classification.get_image_classification" title="model_runner.common.security_classification.get_image_classification"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_image_classification</span></code></a>(→ Optional[Classification])</p></td>
+<td><p>Get image classification from a provided dataset</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt class="sig sig-object py" id="model_runner.common.security_classification.classification_asdict_factory">
+<span class="sig-prename descclassname"><span class="pre">model_runner.common.security_classification.</span></span><span class="sig-name descname"><span class="pre">classification_asdict_factory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#model_runner.common.security_classification.classification_asdict_factory" title="Link to this definition"></a></dt>
+<dd><p>Factory method designed to be used with asdict(&lt;Classification object&gt;, dict_factory=classification_asdict_factory)
+Removes attributes with None values from the resulting dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>attributes</strong> – List[Tuple[str, Any]] = dataclass asdict object</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[str, Any] = asdict representation of object with None attributes removed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.common.security_classification.ClassificationLevel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.common.security_classification.</span></span><span class="sig-name descname"><span class="pre">ClassificationLevel</span></span><a class="headerlink" href="#model_runner.common.security_classification.ClassificationLevel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference internal" href="../auto_string_enum/index.html#model_runner.common.auto_string_enum.AutoStringEnum" title="model_runner.common.auto_string_enum.AutoStringEnum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_runner.common.auto_string_enum.AutoStringEnum</span></code></a></p>
+<p>Enum defining the 4 security classification levels.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.security_classification.ClassificationLevel.UNCLASSIFIED">
+<span class="sig-name descname"><span class="pre">UNCLASSIFIED</span></span><a class="headerlink" href="#model_runner.common.security_classification.ClassificationLevel.UNCLASSIFIED" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.security_classification.ClassificationLevel.CONFIDENTIAL">
+<span class="sig-name descname"><span class="pre">CONFIDENTIAL</span></span><a class="headerlink" href="#model_runner.common.security_classification.ClassificationLevel.CONFIDENTIAL" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.security_classification.ClassificationLevel.SECRET">
+<span class="sig-name descname"><span class="pre">SECRET</span></span><a class="headerlink" href="#model_runner.common.security_classification.ClassificationLevel.SECRET" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.security_classification.ClassificationLevel.TOP_SECRET">
+<span class="sig-name descname"><span class="pre">TOP_SECRET</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TOP</span> <span class="pre">SECRET'</span></em><a class="headerlink" href="#model_runner.common.security_classification.ClassificationLevel.TOP_SECRET" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.common.security_classification.Classification">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.common.security_classification.</span></span><span class="sig-name descname"><span class="pre">Classification</span></span><a class="headerlink" href="#model_runner.common.security_classification.Classification" title="Link to this definition"></a></dt>
+<dd><p>Dataclass for holding security classification information.  Level, caveats, and releasability are provided at
+init and the classification string is generated automatically.  If an invalid classification is provided an
+InvalidClassificationException will be thrown.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level</strong> – str enum = security classification level defined by enum</p></li>
+<li><p><strong>caveats</strong> – List[str] = list of security caveats</p></li>
+<li><p><strong>releasability</strong> – str = defining the releasability of the information</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.security_classification.Classification.classification">
+<span class="sig-name descname"><span class="pre">classification</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></em><a class="headerlink" href="#model_runner.common.security_classification.Classification.classification" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.security_classification.Classification.level">
+<span class="sig-name descname"><span class="pre">level</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#model_runner.common.security_classification.ClassificationLevel" title="model_runner.common.security_classification.ClassificationLevel"><span class="pre">ClassificationLevel</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></em><a class="headerlink" href="#model_runner.common.security_classification.Classification.level" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.security_classification.Classification.caveats">
+<span class="sig-name descname"><span class="pre">caveats</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></em><a class="headerlink" href="#model_runner.common.security_classification.Classification.caveats" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.security_classification.Classification.releasability">
+<span class="sig-name descname"><span class="pre">releasability</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></em><a class="headerlink" href="#model_runner.common.security_classification.Classification.releasability" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.common.security_classification.Classification.__post_init__">
+<span class="sig-name descname"><span class="pre">__post_init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_runner.common.security_classification.Classification.__post_init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.common.security_classification.Classification.from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_runner.common.security_classification.Classification.from_dict" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="model_runner.common.security_classification.get_image_classification">
+<span class="sig-prename descclassname"><span class="pre">model_runner.common.security_classification.</span></span><span class="sig-name descname"><span class="pre">get_image_classification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">osgeo.gdal.Dataset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#model_runner.common.security_classification.Classification" title="model_runner.common.security_classification.Classification"><span class="pre">Classification</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#model_runner.common.security_classification.get_image_classification" title="Link to this definition"></a></dt>
+<dd><p>Get image classification from a provided dataset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dataset</strong> – gdal.Dataset = the dataset containing the image/region</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[Classification] = classification type</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../mr_post_processing/index.html" class="btn btn-neutral float-left" title="model_runner.common.mr_post_processing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../timer/index.html" class="btn btn-neutral float-right" title="model_runner.common.timer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

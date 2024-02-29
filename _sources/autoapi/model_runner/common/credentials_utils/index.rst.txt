@@ -1,0 +1,40 @@
+:py:mod:`model_runner.common.credentials_utils`
+===============================================
+
+.. py:module:: model_runner.common.credentials_utils
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   model_runner.common.credentials_utils.get_credentials_for_assumed_role
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   model_runner.common.credentials_utils.sts_client
+
+
+.. py:data:: sts_client
+
+   
+
+.. py:function:: get_credentials_for_assumed_role(assumed_role: str) -> Dict[str, str]
+
+   Get the credential access based on the assumed role
+
+   :param assumed_role: str = containing a formatted arn role
+
+   :return: Dict[str, str] = a dict that contains access key id and various of credential info
+
+

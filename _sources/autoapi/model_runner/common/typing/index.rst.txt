@@ -1,0 +1,177 @@
+:py:mod:`model_runner.common.typing`
+====================================
+
+.. py:module:: model_runner.common.typing
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   model_runner.common.typing.ImageCompression
+   model_runner.common.typing.ImageFormats
+   model_runner.common.typing.ImageRequestStatus
+   model_runner.common.typing.RegionRequestStatus
+   model_runner.common.typing.GeojsonDetectionField
+
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   model_runner.common.typing.ImageCoord
+   model_runner.common.typing.ImageDimensions
+   model_runner.common.typing.ImageRegion
+   model_runner.common.typing.VALID_IMAGE_COMPRESSION
+   model_runner.common.typing.VALID_IMAGE_FORMATS
+
+
+.. py:data:: ImageCoord
+
+   
+
+.. py:data:: ImageDimensions
+
+   
+
+.. py:data:: ImageRegion
+
+   
+
+.. py:class:: ImageCompression
+
+
+   Bases: :py:obj:`str`, :py:obj:`aws.osml.model_runner.common.AutoStringEnum`
+
+   Enumeration defining compression algorithms for image.
+
+   .. py:attribute:: NONE
+
+      
+
+   .. py:attribute:: JPEG
+
+      
+
+   .. py:attribute:: J2K
+
+      
+
+   .. py:attribute:: LZW
+
+      
+
+
+.. py:class:: ImageFormats
+
+
+   Bases: :py:obj:`str`, :py:obj:`aws.osml.model_runner.common.AutoStringEnum`
+
+   Enumeration defining image encodings.
+
+   .. py:attribute:: NITF
+
+      
+
+   .. py:attribute:: JPEG
+
+      
+
+   .. py:attribute:: PNG
+
+      
+
+   .. py:attribute:: GTIFF
+
+      
+
+
+.. py:class:: ImageRequestStatus
+
+
+   Bases: :py:obj:`str`, :py:obj:`aws.osml.model_runner.common.AutoStringEnum`
+
+   Enumeration defining the image request status
+
+   .. py:attribute:: STARTED
+
+      
+
+   .. py:attribute:: IN_PROGRESS
+
+      
+
+   .. py:attribute:: PARTIAL
+
+      
+
+   .. py:attribute:: SUCCESS
+
+      
+
+   .. py:attribute:: FAILED
+
+      
+
+
+.. py:class:: RegionRequestStatus
+
+
+   Bases: :py:obj:`str`, :py:obj:`aws.osml.model_runner.common.AutoStringEnum`
+
+   Enumeration defining status for region
+
+   .. py:attribute:: STARTING
+
+      
+
+   .. py:attribute:: PARTIAL
+
+      
+
+   .. py:attribute:: IN_PROGRESS
+
+      
+
+   .. py:attribute:: SUCCESS
+
+      
+
+   .. py:attribute:: FAILED
+
+      
+
+
+.. py:class:: GeojsonDetectionField
+
+
+   Bases: :py:obj:`str`, :py:obj:`enum.Enum`
+
+   Enumeration defining the model geojson field to index depending on the shape
+
+   .. py:attribute:: BOUNDS
+      :value: 'bounds_imcoords'
+
+      
+
+   .. py:attribute:: GEOM
+      :value: 'geom_imcoords'
+
+      
+
+
+.. py:data:: VALID_IMAGE_COMPRESSION
+
+   
+
+.. py:data:: VALID_IMAGE_FORMATS
+
+   
+

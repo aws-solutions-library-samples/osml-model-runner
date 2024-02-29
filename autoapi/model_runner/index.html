@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>model_runner &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=eafc0fe6" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="model_runner.api" href="api/index.html" />
+    <link rel="prev" title="API Reference" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.api</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="common/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.common</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="database/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.database</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="inference/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.inference</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="queue/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.queue</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="sink/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.sink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="status/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.status</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tile_worker/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.tile_worker</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="app/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.app</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="app_config/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.app_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exceptions/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.exceptions</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">API Reference</a></li>
+      <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/autoapi/model_runner/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-model_runner">
+<span id="model-runner"></span><h1><a class="reference internal" href="#module-model_runner" title="model_runner"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner</span></code></a><a class="headerlink" href="#module-model_runner" title="Link to this heading"></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.api</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/exceptions/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.api.exceptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/image_request/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.api.image_request</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/inference/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.api.inference</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/region_request/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.api.region_request</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/request_utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.api.request_utils</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/sink/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.api.sink</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="common/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.common</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="common/auto_string_enum/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.common.auto_string_enum</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="common/credentials_utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.common.credentials_utils</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="common/endpoint_utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.common.endpoint_utils</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="common/exceptions/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.common.exceptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="common/feature_utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.common.feature_utils</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="common/log_context/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.common.log_context</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="common/metrics_utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.common.metrics_utils</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="common/mr_post_processing/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.common.mr_post_processing</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="common/security_classification/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.common.security_classification</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="common/timer/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.common.timer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="common/typing/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.common.typing</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="database/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.database</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="database/ddb_helper/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.database.ddb_helper</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="database/endpoint_statistics_table/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.database.endpoint_statistics_table</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="database/exceptions/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.database.exceptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="database/feature_table/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.database.feature_table</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="database/job_table/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.database.job_table</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="database/region_request_table/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.database.region_request_table</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="inference/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.inference</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="inference/detector/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.inference.detector</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="inference/endpoint_builder/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.inference.endpoint_builder</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="inference/endpoint_factory/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.inference.endpoint_factory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="inference/exceptions/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.inference.exceptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="inference/feature_selection/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.inference.feature_selection</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="inference/feature_utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.inference.feature_utils</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="inference/http_detector/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.inference.http_detector</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="inference/sm_detector/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.inference.sm_detector</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="queue/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.queue</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="queue/request_queue/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.queue.request_queue</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sink/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.sink</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sink/exceptions/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.sink.exceptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="sink/kinesis_sink/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.sink.kinesis_sink</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="sink/s3_sink/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.sink.s3_sink</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="sink/sink/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.sink.sink</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="sink/sink_factory/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.sink.sink_factory</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="status/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.status</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="status/exceptions/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.status.exceptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="status/image_request_status/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.status.image_request_status</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="status/sns_helper/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.status.sns_helper</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="status/status_monitor/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.status.status_monitor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tile_worker/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.tile_worker</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tile_worker/exceptions/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.tile_worker.exceptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tile_worker/tile_worker/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.tile_worker.tile_worker</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tile_worker/tile_worker_utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.tile_worker.tile_worker_utils</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="app/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.app</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="app_config/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.app_config</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">model_runner.exceptions</span></code></a></li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="API Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api/index.html" class="btn btn-neutral float-right" title="model_runner.api" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

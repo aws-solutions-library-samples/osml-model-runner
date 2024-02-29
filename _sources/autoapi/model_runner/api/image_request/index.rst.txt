@@ -1,0 +1,87 @@
+:py:mod:`model_runner.api.image_request`
+========================================
+
+.. py:module:: model_runner.api.image_request
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   model_runner.api.image_request.ImageRequest
+
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   model_runner.api.image_request.logger
+
+
+.. py:data:: logger
+
+   
+
+.. py:class:: ImageRequest(*initial_data: Dict[str, Any], **kwargs: Any)
+
+
+   Bases: :py:obj:`object`
+
+   Request for the Model Runner to process an image.
+
+   This class contains the attributes that make up an image processing request along with
+   constructors and factory methods used to create these requests from common constructs.
+
+   .. py:method:: from_external_message(image_request: Dict[str, Any])
+      :staticmethod:
+
+      This method is used to construct an ImageRequest given a dictionary reconstructed from the
+      JSON representation of a request that appears on the Image Job Queue. The structure of
+      that message is generally governed by AWS API best practices and may evolve over time as
+      the public APIs for this service mature.
+
+      :param image_request: Dict[str, Any] = dictionary of values from the decoded JSON request
+
+      :return: the ImageRequest
+
+
+   .. py:method:: is_valid() -> bool
+
+      Check to see if this request contains required attributes and meaningful values
+
+      :return: bool = True if the request contains all the mandatory attributes with acceptable values,
+               False otherwise
+
+
+   .. py:method:: get_shared_values() -> Dict[str, Any]
+
+      Returns a formatted dict that contains the properties of an image
+
+      :return: Dict[str, Any] = the properties of an image
+
+
+   .. py:method:: get_feature_distillation_option() -> List[aws.osml.model_runner.common.FeatureDistillationAlgorithm]
+
+      Parses the post-processing property and extracts the relevant feature distillation selection, if present
+      :return:
+
+
+   .. py:method:: validate_image_path(image_url: str, assumed_role: str) -> bool
+      :staticmethod:
+
+      Validate if an image exists in S3 bucket
+
+      :param image_url: str = formatted image path to S3 bucket
+      :param assumed_role: str = containing a formatted arn role
+
+      :return: bool
+
+
+

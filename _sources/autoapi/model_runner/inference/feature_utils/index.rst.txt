@@ -1,0 +1,77 @@
+:py:mod:`model_runner.inference.feature_utils`
+==============================================
+
+.. py:module:: model_runner.inference.feature_utils
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   model_runner.inference.feature_utils.features_to_image_shapes
+   model_runner.inference.feature_utils.convert_nested_coordinate_lists
+   model_runner.inference.feature_utils.create_mock_feature_collection
+   model_runner.inference.feature_utils.calculate_processing_bounds
+   model_runner.inference.feature_utils.get_source_property
+
+
+
+.. py:function:: features_to_image_shapes(sensor_model: aws.osml.photogrammetry.SensorModel, features: List[geojson.Feature]) -> List[shapely.geometry.base.BaseGeometry]
+
+   Convert geojson objects/shapes to shapely shapes
+
+   :param sensor_model: SensorModel = the model to use for the transform
+   :param features: List[geojson.Features] = the features to convert
+
+   :return: List[BaseGeometry] = a list of shapely shapes
+
+
+.. py:function:: convert_nested_coordinate_lists(coordinates_or_lists: List, conversion_function: Callable) -> Union[Tuple, List]
+
+   Convert a nested list of coordinates to 3D world GIS coordinates
+
+   :param coordinates_or_lists: List = a coordinate or list of coordinates to transform
+   :param conversion_function: Callable = the function to use for the GIS transform
+
+   :return: Union[Tuple, List] = the transformed list of coordinates
+
+
+.. py:function:: create_mock_feature_collection(payload: io.BufferedReader, geom=False) -> geojson.FeatureCollection
+
+   This function allows us to emulate what we would expect a model to return to MR, a geojson formatted
+   FeatureCollection. This allows us to bypass using a real model if the NOOP_MODEL_NAME is given as the
+   model name in the image request. This is the same logic used by our current default dummy model to select
+   detection points in our pipeline.
+
+   :param payload: BufferedReader = object that holds the data that will be  sent to the feature generator
+   :param geom: Bool = whether or not to return the geom_imcoords field in the geojson
+   :return: FeatureCollection = feature collection containing the center point of a tile given as a detection point
+
+
+.. py:function:: calculate_processing_bounds(ds: osgeo.gdal.Dataset, roi: Optional[shapely.geometry.base.BaseGeometry], sensor_model: Optional[aws.osml.photogrammetry.SensorModel]) -> Optional[Tuple[aws.osml.model_runner.common.ImageDimensions, aws.osml.model_runner.common.ImageDimensions]]
+
+   An area of interest converter
+
+   :param ds: gdal.Dataset = GDAL dataset
+   :param roi: Optional[BaseGeometry] = ROI shape
+   :param sensor_model: Optional[SensorModel] = Sensor model to use for transformations
+
+   :return: Optional[Tuple[ImageDimensions, ImageDimensions]] = Image dimensions associated with the ROI request
+
+
+.. py:function:: get_source_property(image_location: str, image_extension: str, dataset: osgeo.gdal.Dataset) -> Optional[Dict]
+
+   Get the source property from NITF image
+
+   :param image_location: the location of the source image
+   :param image_extension: the file extension type of the source image
+   :param dataset: the GDAL dataset to probe for source data
+
+   :return: the source dictionary property to attach to features
+
+

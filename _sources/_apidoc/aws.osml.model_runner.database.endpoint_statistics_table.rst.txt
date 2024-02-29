@@ -1,0 +1,7 @@
+aws.osml.model\_runner.database.endpoint\_statistics\_table module
+==================================================================
+
+.. automodule:: aws.osml.model_runner.database.endpoint_statistics_table
+   :members:
+   :undoc-members:
+   :show-inheritance:

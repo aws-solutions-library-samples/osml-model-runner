@@ -1,0 +1,132 @@
+:py:mod:`model_runner.tile_worker`
+==================================
+
+.. py:module:: model_runner.tile_worker
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   exceptions/index.rst
+   tile_worker/index.rst
+   tile_worker_utils/index.rst
+
+
+Package Contents
+----------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   model_runner.tile_worker.TileWorker
+
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   model_runner.tile_worker.generate_crops
+   model_runner.tile_worker.process_tiles
+   model_runner.tile_worker.setup_tile_workers
+
+
+
+.. py:class:: TileWorker(in_queue: queue.Queue, feature_detector: aws.osml.model_runner.inference.Detector, geolocator: Optional[aws.osml.features.Geolocator], feature_table: aws.osml.model_runner.database.FeatureTable)
+
+
+   Bases: :py:obj:`threading.Thread`
+
+   A class that represents a thread of control.
+
+   This class can be safely subclassed in a limited fashion. There are two ways
+   to specify the activity: by passing a callable object to the constructor, or
+   by overriding the run() method in a subclass.
+
+
+   .. py:method:: run() -> None
+
+      Method representing the thread's activity.
+
+      You may override this method in a subclass. The standard run() method
+      invokes the callable object passed to the object's constructor as the
+      target argument, if any, with sequential and keyword arguments taken
+      from the args and kwargs arguments, respectively.
+
+
+
+   .. py:method:: process_tile(image_info: Dict, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None) -> None
+
+      This method handles the processing of a single tile by invoking the ML model, geolocating the detections to
+      create features and finally storing the features in the database.
+
+      :param image_info: description of the tile to be processed
+      :param metrics: the current metric scope
+
+
+   .. py:method:: _refine_features(feature_collection, image_info: Dict, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None) -> List[geojson.Feature]
+
+      This method converts the detections returned by the model into geolocated features. It first updates the
+      image coordinates of each detection to be in relation to the full image then it geolocates the image feature.
+
+      :param feature_collection: the features from the ML model
+      :param image_info: a description of the image tile containing the features
+      :param metrics: the current metric scope
+      :return: a list of GeoJSON features
+
+
+   .. py:method:: convert_deprecated_feature_properties(feature: geojson.Feature) -> None
+      :staticmethod:
+
+      This function converts the legacy properties produced by CV models into the feature properties used
+      by OversightML.
+
+      :param feature: the feature that needs its "properties" updated.
+
+      :return: None
+
+
+
+.. py:function:: generate_crops(region: aws.osml.model_runner.common.ImageRegion, chip_size: aws.osml.model_runner.common.ImageDimensions, overlap: aws.osml.model_runner.common.ImageDimensions) -> List[aws.osml.model_runner.common.ImageRegion]
+
+   Yields a list of overlapping chip bounding boxes for the given region. Chips will start
+   in the upper left corner of the region (i.e. region[0][0], region[0][1]) and will be spaced
+   such that they have the specified horizontal and vertical overlap.
+
+   :param region: ImageDimensions = a tuple for the bounding box of the region ((ul_r, ul_c), (width, height))
+   :param chip_size: ImageDimensions = a tuple for the chip dimensions (width, height)
+   :param overlap: ImageDimensions = a tuple for the overlap (width, height)
+
+   :return: List[ImageRegion] = an iterable list of tuples for the chip bounding boxes [((ul_r, ul_c), (w, h)), ...]
+
+
+.. py:function:: process_tiles(region_request: aws.osml.model_runner.api.RegionRequest, tile_queue: queue.Queue, tile_workers: List[aws.osml.model_runner.tile_worker.TileWorker], raster_dataset: osgeo.gdal.Dataset, sensor_model: Optional[aws.osml.photogrammetry.SensorModel] = None) -> Tuple[int, int]
+
+   Loads a GDAL dataset into memory and processes it with a pool of tile workers.
+
+   :param region_request: RegionRequest = the region request to update.
+   :param tile_queue: Queue = keeps the image in the queue for processing
+   :param tile_workers: List[Tileworker] = the list of tile workers
+   :param raster_dataset: gdal.Dataset = the raster dataset containing the region
+   :param sensor_model: Optional[SensorModel] = the sensor model for this raster dataset
+
+   :return: Tuple[int, int] = number of tiles processed, number of tiles with an error
+
+
+.. py:function:: setup_tile_workers(region_request: aws.osml.model_runner.api.RegionRequest, sensor_model: Optional[aws.osml.photogrammetry.SensorModel] = None, elevation_model: Optional[aws.osml.photogrammetry.ElevationModel] = None) -> Tuple[queue.Queue, List[aws.osml.model_runner.tile_worker.TileWorker]]
+
+   Sets up a pool of tile-workers to process image tiles from a region request
+
+   :param region_request: RegionRequest = the region request to update.
+   :param sensor_model: Optional[SensorModel] = the sensor model for this raster dataset
+   :param elevation_model: Optional[ElevationModel] = an elevation model used to fix the elevation of the image coordinate
+
+   :return: Tuple[Queue, List[TileWorker] = a list of tile workers and the queue that manages them
+
+

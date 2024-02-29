@@ -1,0 +1,183 @@
+:py:mod:`model_runner.database.ddb_helper`
+==========================================
+
+.. py:module:: model_runner.database.ddb_helper
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   model_runner.database.ddb_helper.DDBKey
+   model_runner.database.ddb_helper.DDBItem
+   model_runner.database.ddb_helper.DDBHelper
+
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   model_runner.database.ddb_helper.logger
+
+
+.. py:data:: logger
+
+   
+
+.. py:class:: DDBKey
+
+
+   DDBItem is a dataclass meant to represent a single item in a DynamoDB table via a key-value pair
+
+   The data schema is defined as follows:
+   key: str = the table key to index on
+   value: str = the value of the item (given a key) to use
+   range_key: str = the sort key to index on
+   range_value: str = the value of the item (given a key + range key) to use
+
+   .. py:attribute:: hash_key
+      :type: str
+
+      
+
+   .. py:attribute:: hash_value
+      :type: str
+
+      
+
+   .. py:attribute:: range_key
+      :type: Optional[str]
+
+      
+
+   .. py:attribute:: range_value
+      :type: Optional[str]
+
+      
+
+
+.. py:class:: DDBItem
+
+
+   DDBItem is a dataclass meant to represent a single item in a DynamoDB table via a key-value pair
+
+   The data schema is defined as follows:
+   key: str = the table key to index on
+   value: str = the value of the item (given a key) to use
+   range_key: str = the sort key to index on
+   range_value: str = the value of the item (given a key + range key) to use
+
+   .. py:attribute:: ddb_key
+      :type: DDBKey
+
+      
+
+   .. py:method:: to_put() -> Dict[str, str]
+
+
+   .. py:method:: to_update() -> Dict[str, str]
+
+
+   .. py:method:: __get_fields()
+      :staticmethod:
+
+
+
+.. py:class:: DDBHelper(table_name: str)
+
+
+   DDBHelper is a class meant to help OSML with accessing and interacting with DynamoDB tables.
+   Generally, this class should be inherited by downstream specific table classes to build on top
+   of such as the FeatureTable and JobTable classes.
+
+   :param table_name: str = the name of the table to interact with
+
+   :return: None
+
+   .. py:method:: get_ddb_item(ddb_item: DDBItem) -> Dict[str, Any]
+
+      Get a DynamoDB item from table
+
+      :param ddb_item: DDBItem = item that we want to get (required)
+
+      :return: Dict[str, Any] = response from the get_item request
+
+
+   .. py:method:: put_ddb_item(ddb_item: DDBItem, condition_expression: str = None) -> Dict[str, Any]
+
+      Put a DynamoDB item into the table with a jitter-delayed retry logic for unprocessed items.
+
+      :param ddb_item: DDBItem = item that we want to put (required)
+      :param condition_expression: str = Condition that must be satisfied in order for a PutItem operation to succeed.
+
+      :return: Dict[str, Any] = item from the put_item response
+
+
+   .. py:method:: batch_write_items(ddb_items: List[DDBItem], max_retries: int = 500, max_delay: float = 8) -> None
+
+      Write multiple DynamoDB items in a batch with a jitter-delayed retry logic for unprocessed items.
+      :param ddb_items: List[DDBItem] = List of items that we want to write.
+      :param max_retries: int = Maximum number of retries for unprocessed items.
+      :param max_delay: Maximum delay in seconds between retries.
+      :return: None
+
+
+   .. py:method:: delete_ddb_item(ddb_item: DDBItem) -> Dict[str, Any]
+
+      Delete a DynamoDB item from the table
+
+      :param ddb_item: DDBItem = item that we want to delete (required)
+
+      :return: Dict[str, Any] = response from the delete_item request
+
+
+   .. py:method:: update_ddb_item(ddb_item: DDBItem, update_exp: str = None, update_attr: Dict = None) -> Dict[str, Any]
+
+      Update the DynamoDB item based on the contents of an input dictionary. If the user doesn't
+      provide an update expression and attributes, one will be generated from the body.
+
+      :param ddb_item: DDBItem = item that we want to update (required)
+      :param update_exp: Optional[str] = the update expression to use for the update
+      :param update_attr: Optional[list] = attribute string to use when updating DDB item
+
+      :return: Dict[str, Any] = the new ddb item as a dict
+
+
+   .. py:method:: query_items(ddb_item: DDBItem) -> List[Dict[str, Any]]
+
+      Query the table for all items of a given hash_key.
+
+      :param ddb_item: DDBItem = the hash key we want to query the table for
+
+      :return: List[Dict[str, Any]] = the list of dictionary responses corresponding to the items returned
+
+
+   .. py:method:: get_update_params(body: Dict, ddb_item: DDBItem) -> Tuple[str, Dict[str, Any]]
+      :staticmethod:
+
+      Generate an update expression and a dict of values to update a dynamodb table.
+
+      :param body: Dict = the body of the request that contains the updated data
+      :param ddb_item: DDBItem = the hash key we want to query the table for
+
+      :return: Tuple[str, Dict[str, Any]] = the generated update expression and attributes
+
+
+   .. py:method:: get_keys(ddb_item: DDBItem) -> Dict[str, Any]
+      :staticmethod:
+
+      Determine to see if we need to use both keys to search an item in DDB
+
+      :param ddb_item: DDBItem = the hash key we want to query the table for
+
+      return Dict[str, Any] = Holding either Hash Key or both Keys (Hash and Range)
+
+
+

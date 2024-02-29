@@ -1,0 +1,25 @@
+:py:mod:`model_runner.common.exceptions`
+========================================
+
+.. py:module:: model_runner.common.exceptions
+
+
+Module Contents
+---------------
+
+.. py:exception:: InvalidClassificationException
+
+
+   Bases: :py:obj:`Exception`
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: InvalidAssumedRoleException
+
+
+   Bases: :py:obj:`Exception`
+
+   Common base class for all non-exit exceptions.
+
+

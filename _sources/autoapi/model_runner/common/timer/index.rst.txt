@@ -1,0 +1,50 @@
+:py:mod:`model_runner.common.timer`
+===================================
+
+.. py:module:: model_runner.common.timer
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   model_runner.common.timer.Timer
+
+
+
+
+.. py:class:: Timer(task_str: str, metric_name: str, logger: logging.Logger, metrics_logger: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None)
+
+
+   Bases: :py:obj:`object`
+
+   .. py:method:: set_use_milliseconds(use_milliseconds: bool = True) -> None
+
+      Use milliseconds format
+
+      :param use_milliseconds: bool = should the timer be in milliseconds or not
+
+      :return: None
+
+
+   .. py:method:: set_normalizing_factor(normalizing_factor: float, normalizing_unit: str) -> None
+
+      Set normalizing factor
+
+      :param normalizing_factor: float = formatted factor (in time)
+      :param normalizing_unit: str = formatted unit
+
+      :return: None
+
+
+   .. py:method:: __enter__()
+
+
+   .. py:method:: __exit__(exc_type: str, exc_val: str, exec_traceback: str) -> None
+
+
+

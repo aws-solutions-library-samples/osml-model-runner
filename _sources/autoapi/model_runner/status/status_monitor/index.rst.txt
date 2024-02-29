@@ -1,0 +1,44 @@
+:py:mod:`model_runner.status.status_monitor`
+============================================
+
+.. py:module:: model_runner.status.status_monitor
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   model_runner.status.status_monitor.StatusMonitor
+
+
+
+
+.. py:class:: StatusMonitor
+
+
+   .. py:method:: process_event(image_request_item: aws.osml.model_runner.database.job_table.JobItem, status: aws.osml.model_runner.common.ImageRequestStatus, message: str) -> None
+
+      Publishes the message via SNS
+
+      :param image_request_item: JobItem = the image request item
+      :param status: ImageRequestStatus = the status of an image request
+      :param message: str = the message to notify the user
+
+      :return: None
+
+
+   .. py:method:: get_image_request_status(image_request_item: aws.osml.model_runner.database.job_table.JobItem) -> aws.osml.model_runner.common.ImageRequestStatus
+      :staticmethod:
+
+      Produce a image request status from a given image request
+
+      :param image_request_item: JobItem = the image request item
+
+      :return: ImageRequestStatus = the current status of an image request
+
+
+

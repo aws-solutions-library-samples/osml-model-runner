@@ -1,0 +1,38 @@
+:py:mod:`model_runner.api.region_request`
+=========================================
+
+.. py:module:: model_runner.api.region_request
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   model_runner.api.region_request.RegionRequest
+
+
+
+
+.. py:class:: RegionRequest(*initial_data: Dict[str, Any], **kwargs: Any)
+
+
+   Bases: :py:obj:`object`
+
+   Request for the Model Runner to process a region of an image.
+
+   This class contains the attributes that make up a region processing request along with
+   constructors used to create these requests from common constructs.
+
+   .. py:method:: is_valid() -> bool
+
+      Check to see if this request contains required attributes and meaningful values
+
+      :return: bool = True if the request contains all the mandatory attributes with acceptable values,
+               False otherwise
+
+
+

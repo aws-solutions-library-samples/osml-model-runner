@@ -1,0 +1,25 @@
+:py:mod:`model_runner.tile_worker.exceptions`
+=============================================
+
+.. py:module:: model_runner.tile_worker.exceptions
+
+
+Module Contents
+---------------
+
+.. py:exception:: SetupTileWorkersException
+
+
+   Bases: :py:obj:`Exception`
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: ProcessTilesException
+
+
+   Bases: :py:obj:`Exception`
+
+   Common base class for all non-exit exceptions.
+
+

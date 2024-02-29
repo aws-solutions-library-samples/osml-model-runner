@@ -1,0 +1,114 @@
+:py:mod:`model_runner.status.image_request_status`
+==================================================
+
+.. py:module:: model_runner.status.image_request_status
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   model_runner.status.image_request_status.ImageRequestStatusMessage
+
+
+
+
+.. py:class:: ImageRequestStatusMessage
+
+
+   .. py:attribute:: image_status
+      :type: aws.osml.model_runner.common.ImageRequestStatus
+
+      
+
+   .. py:attribute:: job_id
+      :type: str
+
+      
+
+   .. py:attribute:: job_arn
+      :type: Optional[str]
+
+      
+
+   .. py:attribute:: image_id
+      :type: Optional[str]
+
+      
+
+   .. py:attribute:: image_url
+      :type: Optional[str]
+
+      
+
+   .. py:attribute:: image_read_role
+      :type: Optional[str]
+
+      
+
+   .. py:attribute:: outputs
+      :type: Optional[List[aws.osml.model_runner.sink.Sink]]
+
+      
+
+   .. py:attribute:: model_name
+      :type: Optional[str]
+
+      
+
+   .. py:attribute:: processing_duration
+      :type: Optional[decimal.Decimal]
+
+      
+
+   .. py:attribute:: model_invoke_mode
+      :type: Optional[aws.osml.model_runner.api.ModelInvokeMode]
+
+      
+
+   .. py:attribute:: model_invocation_role
+      :type: Optional[str]
+
+      
+
+   .. py:attribute:: tile_size
+      :type: Optional[aws.osml.model_runner.common.ImageDimensions]
+
+      
+
+   .. py:attribute:: tile_overlap
+      :type: Optional[aws.osml.model_runner.common.ImageDimensions]
+
+      
+
+   .. py:attribute:: tile_format
+      :type: Optional[aws.osml.model_runner.common.ImageFormats]
+
+      
+
+   .. py:attribute:: tile_compression
+      :type: Optional[aws.osml.model_runner.common.ImageCompression]
+
+      
+
+   .. py:attribute:: roi
+      :type: Optional[shapely.geometry.base.BaseGeometry]
+
+      
+
+   .. py:attribute:: region_bounds
+      :type: Optional[aws.osml.model_runner.common.ImageRegion]
+
+      
+
+   .. py:method:: asdict_str_values() -> Dict[str, str]
+
+
+   .. py:method:: asdict() -> dict
+
+
+

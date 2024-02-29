@@ -1,0 +1,112 @@
+:py:mod:`model_runner.common.security_classification`
+=====================================================
+
+.. py:module:: model_runner.common.security_classification
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   model_runner.common.security_classification.ClassificationLevel
+   model_runner.common.security_classification.Classification
+
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   model_runner.common.security_classification.classification_asdict_factory
+   model_runner.common.security_classification.get_image_classification
+
+
+
+.. py:function:: classification_asdict_factory(attributes: List[Tuple[str, Any]]) -> Dict[str, Any]
+
+   Factory method designed to be used with asdict(<Classification object>, dict_factory=classification_asdict_factory)
+   Removes attributes with None values from the resulting dictionary.
+
+   :param attributes: List[Tuple[str, Any]] = dataclass asdict object
+
+   :return: Dict[str, Any] = asdict representation of object with None attributes removed
+
+
+.. py:class:: ClassificationLevel
+
+
+   Bases: :py:obj:`str`, :py:obj:`model_runner.common.auto_string_enum.AutoStringEnum`
+
+   Enum defining the 4 security classification levels.
+
+   .. py:attribute:: UNCLASSIFIED
+
+      
+
+   .. py:attribute:: CONFIDENTIAL
+
+      
+
+   .. py:attribute:: SECRET
+
+      
+
+   .. py:attribute:: TOP_SECRET
+      :value: 'TOP SECRET'
+
+      
+
+
+.. py:class:: Classification
+
+
+   Dataclass for holding security classification information.  Level, caveats, and releasability are provided at
+   init and the classification string is generated automatically.  If an invalid classification is provided an
+   InvalidClassificationException will be thrown.
+
+   :param level: str enum = security classification level defined by enum
+   :param caveats: List[str] = list of security caveats
+   :param releasability: str = defining the releasability of the information
+
+   .. py:attribute:: classification
+      :type: str
+
+      
+
+   .. py:attribute:: level
+      :type: Optional[ClassificationLevel]
+
+      
+
+   .. py:attribute:: caveats
+      :type: Optional[List[str]]
+
+      
+
+   .. py:attribute:: releasability
+      :type: Optional[str]
+
+      
+
+   .. py:method:: __post_init__()
+
+
+   .. py:method:: from_dict(params: Dict)
+      :classmethod:
+
+
+
+.. py:function:: get_image_classification(dataset: osgeo.gdal.Dataset) -> Optional[Classification]
+
+   Get image classification from a provided dataset
+
+   :param dataset: gdal.Dataset = the dataset containing the image/region
+
+   :return: Optional[Classification] = classification type
+
+

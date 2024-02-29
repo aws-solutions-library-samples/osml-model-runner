@@ -1,0 +1,7 @@
+aws.osml.model\_runner.api.inference module
+===========================================
+
+.. automodule:: aws.osml.model_runner.api.inference
+   :members:
+   :undoc-members:
+   :show-inheritance:

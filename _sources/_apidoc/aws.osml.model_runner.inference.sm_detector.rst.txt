@@ -1,0 +1,7 @@
+aws.osml.model\_runner.inference.sm\_detector module
+====================================================
+
+.. automodule:: aws.osml.model_runner.inference.sm_detector
+   :members:
+   :undoc-members:
+   :show-inheritance:
