@@ -65,6 +65,12 @@ overlapping the previous by the specified amount. Then the results from each til
 Non-Maximal Suppression algorithm used to eliminate duplicates in cases where an object in an overlap region was picked
 up by multiple model runs.
 
+### Metrics and Logs
+
+As the application runs key performance metrics and detailed logging information are output to [CloudWatch](https://aws.amazon.com/cloudwatch/).
+A detailed description of what information is tracked along with example dashboards can be found in
+[METRICS_AND_DASHBOARDS.md](./METRICS_AND_DASHBOARDS.md).
+
 ### Package Layout
 
 * **/src**: This is the Python implementation of this application.
