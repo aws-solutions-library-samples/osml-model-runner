@@ -1,3 +1,5 @@
+#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+
 import logging
 from threading import Thread
 from unittest import TestCase, main
