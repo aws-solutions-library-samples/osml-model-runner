@@ -1,3 +1,5 @@
+#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+
 from typing import Dict, Optional
 
 from aws.osml.model_runner.api import ModelInvokeMode

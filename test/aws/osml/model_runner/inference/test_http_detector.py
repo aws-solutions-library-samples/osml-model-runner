@@ -1,3 +1,5 @@
+#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+
 import json
 from unittest import TestCase
 from unittest.mock import patch

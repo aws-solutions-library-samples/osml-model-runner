@@ -1,3 +1,5 @@
+# Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+
 # Stage 1: Build environment
 FROM public.ecr.aws/amazonlinux/amazonlinux:2023-minimal as build
 

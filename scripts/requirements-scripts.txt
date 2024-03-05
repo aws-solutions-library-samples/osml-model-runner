@@ -1,3 +1,5 @@
+# Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+
 # Added to support the KML visualization script
 lxml==4.9.1
 defusedxml==0.7.1

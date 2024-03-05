@@ -1,4 +1,4 @@
-#  Copyright 2023 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
 
 from aws.osml.model_runner.common import VALID_IMAGE_COMPRESSION, VALID_IMAGE_FORMATS
 
