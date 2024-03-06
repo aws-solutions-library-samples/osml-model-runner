@@ -63,9 +63,7 @@ class S3Sink(Sink):
                 Key=object_key,
                 ACL="bucket-owner-full-control",
             )
-            logger.info(
-                "Wrote aggregate feature collection for Image '{}' to s3://{}/{}".format(image_id, self.bucket, object_key)
-            )
+            logger.info(f"Wrote aggregate feature collection for Image '{image_id}' to s3://{self.bucket}/{object_key}")
             return True
         else:
             return False
@@ -81,10 +79,10 @@ class S3Sink(Sink):
             return True
         except ClientError as err:
             if err.response["Error"]["Code"] == "404":  # Does not exist
-                logging.error("This S3 Bucket({}) does not exist".format(self.bucket))
+                logging.error(f"This S3 Bucket({self.bucket}) does not exist")
             elif err.response["Error"]["Code"] == "403":  # Forbidden access
-                logging.error("Do not have permission to read/write this S3 Bucket({})".format(self.bucket))
-            logging.error("Cannot read/write S3 Bucket ({})".format(self.bucket))
+                logging.error(f"Do not have permission to read/write this S3 Bucket({self.bucket})")
+            logging.error(f"Cannot read/write S3 Bucket ({self.bucket})")
             return False
 
     @staticmethod

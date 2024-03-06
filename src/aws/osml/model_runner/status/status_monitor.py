@@ -56,11 +56,9 @@ class StatusMonitor:
                     sns_message_attributes.asdict_str_values(),
                 )
             except Exception as err:
-                raise StatusMonitorException(
-                    "StatusMonitor failed: {} {}: {}".format(status, image_request_item.job_id, err)
-                )
+                raise StatusMonitorException(f"StatusMonitor failed: {status} {image_request_item.job_id}: {err}")
         else:
-            raise StatusMonitorException("StatusMonitor failed: {} {}".format(status, image_request_item.job_id))
+            raise StatusMonitorException(f"StatusMonitor failed: {status} {image_request_item.job_id}")
 
     @staticmethod
     def get_image_request_status(image_request_item: JobItem) -> ImageRequestStatus:
