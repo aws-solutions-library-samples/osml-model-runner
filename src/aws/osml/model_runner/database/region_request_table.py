@@ -147,6 +147,6 @@ class RegionRequestTable(DDBHelper):
                 RegionRequestItem,
                 self.get_ddb_item(RegionRequestItem(region_id=region_id, image_id=image_id)),
             )
-        except Exception as e:
-            logger.warning(GetRegionRequestItemException("Failed to get RegionRequestItem! {0}".format(e)))
+        except Exception as err:
+            logger.warning(GetRegionRequestItemException(f"Failed to get RegionRequestItem! {err}"))
             return None

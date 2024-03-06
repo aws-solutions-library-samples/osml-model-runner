@@ -159,7 +159,7 @@ class ImageRequest(object):
 
         num_feature_detection_options = len(self.get_feature_distillation_option())
         if num_feature_detection_options > 1:
-            logger.error("{} feature distillation options in ImageRequest".format(num_feature_detection_options))
+            logger.error(f"{num_feature_detection_options} feature distillation options in ImageRequest")
             return False
 
         return True
