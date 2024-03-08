@@ -487,6 +487,7 @@ class ModelRunner:
             if in_progress >= max_regions:
                 if isinstance(metrics, MetricsLogger):
                     metrics.put_metric(MetricLabels.THROTTLES, 1, str(Unit.COUNT.value))
+
                 logger.info(f"Throttling region request. (Max: {max_regions} In-progress: {in_progress}")
                 raise SelfThrottledRegionException
 
@@ -623,7 +624,9 @@ class ModelRunner:
 
         :return: None
         """
+
         logger.exception(f"Failed to start image processing!: {err}")
+
         self.status_monitor.process_event(image_request_item, ImageRequestStatus.FAILED, str(err))
 
     def complete_image_request(self, region_request: RegionRequest, image_format: str) -> None:

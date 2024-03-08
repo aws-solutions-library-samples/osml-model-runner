@@ -141,6 +141,7 @@ class TileWorker(Thread):
             uly = image_info["region"][0][0]
             if isinstance(feature_collection, dict) and "features" in feature_collection:
                 logging.info(f"SM Model returned {len(feature_collection['features'])} features")
+
                 for feature in feature_collection["features"]:
                     # Check to see if there is a bbox defined in image coordinates. If so, update it to
                     # use full image coordinates and store the updated value in the feature properties.
@@ -178,6 +179,7 @@ class TileWorker(Thread):
 
                     features.append(feature)
             logging.info(f"# Features Created: {len(features)}")
+
             if len(features) > 0:
                 if self.geolocator is not None:
                     # Create a geometry for each feature in the result. The geographic coordinates of these
