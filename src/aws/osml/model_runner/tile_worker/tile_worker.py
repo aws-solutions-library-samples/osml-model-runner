@@ -1,4 +1,4 @@
-#  Copyright 2023 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
 
 import asyncio
 import logging
@@ -47,8 +47,9 @@ class TileWorker(Thread):
             if image_info is None:
                 logging.info("All images processed. Stopping tile worker.")
                 logging.info(
-                    "Feature Detector Stats: {} requests with {} errors".format(
-                        self.feature_detector.request_count, self.feature_detector.error_count
+                    (
+                        f"Feature Detector Stats: {self.feature_detector.request_count} requests "
+                        f"with {self.feature_detector.error_count} errors"
                     )
                 )
                 break
@@ -139,7 +140,8 @@ class TileWorker(Thread):
             ulx = image_info["region"][0][1]
             uly = image_info["region"][0][0]
             if isinstance(feature_collection, dict) and "features" in feature_collection:
-                logging.info("SM Model returned {} features".format(len(feature_collection["features"])))
+                logging.info(f"SM Model returned {len(feature_collection['features'])} features")
+
                 for feature in feature_collection["features"]:
                     # Check to see if there is a bbox defined in image coordinates. If so, update it to
                     # use full image coordinates and store the updated value in the feature properties.
@@ -176,13 +178,14 @@ class TileWorker(Thread):
                     TileWorker.convert_deprecated_feature_properties(feature)
 
                     features.append(feature)
-            logging.info("# Features Created: {}".format(len(features)))
+            logging.info(f"# Features Created: {len(features)}")
+
             if len(features) > 0:
                 if self.geolocator is not None:
                     # Create a geometry for each feature in the result. The geographic coordinates of these
                     # features are computed using the sensor model provided in the image metadata
                     self.geolocator.geolocate_features(features)
-                    logging.info("Created Geographic Coordinates for {} features".format(len(features)))
+                    logging.info(f"Created Geographic Coordinates for {len(features)} features")
 
         return features
 

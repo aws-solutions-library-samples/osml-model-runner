@@ -1,3 +1,5 @@
+#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+
 import logging
 from io import BufferedReader
 from json import JSONDecodeError
@@ -108,7 +110,7 @@ class HTTPDetector(Detector):
 
         :return: GeoJSON FeatureCollection containing the center point of a tile
         """
-        logger.info("Invoking Model: {}".format(self.name))
+        logger.info(f"Invoking Model: {self.name}")
         if isinstance(metrics, MetricsLogger):
             metrics.set_dimensions()
             metrics.put_dimensions(
@@ -149,21 +151,22 @@ class HTTPDetector(Detector):
             self.error_count += 1
             if isinstance(metrics, MetricsLogger):
                 metrics.put_metric(MetricLabels.ERRORS, 1, str(Unit.COUNT.value))
-            logger.error("Retry failed - failed due to {}".format(err))
+            logger.error(f"Retry failed - failed due to {err}")
             logger.exception(err)
         except MaxRetryError as err:
             self.error_count += 1
             if isinstance(metrics, MetricsLogger):
                 metrics.put_metric(MetricLabels.ERRORS, 1, str(Unit.COUNT.value))
-            logger.error("Max retries reached - failed due to {}".format(err.reason))
+            logger.error(f"Max retries reached - failed due to {err.reason}")
             logger.exception(err)
         except JSONDecodeError as err:
             self.error_count += 1
             if isinstance(metrics, MetricsLogger):
                 metrics.put_metric(MetricLabels.ERRORS, 1, str(Unit.COUNT.value))
             logger.error(
-                "Unable to decode response from model. URL: {}, Status: {}, Headers: {}, Response: {}".format(
-                    self.endpoint, response.status, response.info(), response.data
+                (
+                    f"Unable to decode response from model. URL: {self.endpoint}, Status: {response.status}, "
+                    f"Headers: {response.info()}, Response: {response.data}"
                 )
             )
             logger.exception(err)

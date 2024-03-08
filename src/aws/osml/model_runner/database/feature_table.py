@@ -1,4 +1,4 @@
-#  Copyright 2023 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
 
 import logging
 import random
@@ -265,6 +265,4 @@ class FeatureTable(DDBHelper):
         if min_y_offset < self.overlap[1] and min_y_index > 0:
             min_y_index -= 1
 
-        return "{}-region-{}:{}:{}:{}".format(
-            feature["properties"]["image_id"], min_x_index, max_x_index, min_y_index, max_y_index
-        )
+        return f"{feature['properties']['image_id']}-region-{min_x_index}:{max_x_index}:{min_y_index}:{max_y_index}"

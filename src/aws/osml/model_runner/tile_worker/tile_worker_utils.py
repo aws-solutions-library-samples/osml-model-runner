@@ -1,4 +1,4 @@
-#  Copyright 2023 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
 
 import logging
 import tempfile
@@ -75,11 +75,11 @@ def setup_tile_workers(
             worker.start()
             tile_workers.append(worker)
 
-        logger.info("Setup pool of {} tile workers".format(len(tile_workers)))
+        logger.info(f"Setup pool of {len(tile_workers)} tile workers")
 
         return tile_queue, tile_workers
     except Exception as err:
-        logger.exception("Failed to setup tile workers!: {}".format(err))
+        logger.exception(f"Failed to setup tile workers!: {err}")
         raise SetupTileWorkersException("Failed to setup tile workers!") from err
 
 
@@ -134,13 +134,9 @@ def process_tiles(
                     region_request.tile_overlap,
                 ):
                     # Create a temp file name for the encoded region
-                    region_image_filename = "{}-region-{}-{}-{}-{}.{}".format(
-                        token_hex(16),
-                        tile_bounds[0][0],
-                        tile_bounds[0][1],
-                        tile_bounds[1][0],
-                        tile_bounds[1][1],
-                        region_request.tile_format,
+                    region_image_filename = (
+                        f"{token_hex(16)}-region-{tile_bounds[0][0]}-{tile_bounds[0][1]}-"
+                        f"{tile_bounds[1][0]}-{tile_bounds[1][1]}.{region_request.tile_format}"
                     )
 
                     # Set a path for the tmp image
@@ -179,12 +175,13 @@ def process_tiles(
                     tile_error_count += worker.feature_detector.error_count
 
         logger.info(
-            "Model Runner Stats Processed {} image tiles for region {}. {} tile errors.".format(
-                total_tile_count, region_request.region_bounds, tile_error_count
+            (
+                f"Model Runner Stats Processed {total_tile_count} image tiles for "
+                f"region {region_request.region_bounds}. {tile_error_count} tile errors."
             )
         )
     except Exception as err:
-        logger.exception("File processing tiles: {}", err)
+        logger.exception(f"File processing tiles: {err}")
         raise ProcessTilesException("Failed to process tiles!") from err
 
     return total_tile_count, tile_error_count
@@ -213,7 +210,7 @@ def _create_tile(gdal_tile_factory, tile_bounds, tmp_image_path, metrics: Metric
     # Use GDAL to create an encoded tile of the image region
     absolute_tile_path = tmp_image_path.absolute()
     with Timer(
-        task_str="Creating image tile: {}".format(absolute_tile_path),
+        task_str=f"Creating image tile: {absolute_tile_path}",
         metric_name=MetricLabels.DURATION,
         logger=logger,
         metrics_logger=metrics,
