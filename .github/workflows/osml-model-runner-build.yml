@@ -1,8 +1,8 @@
-name: "OSML Model Runner Build Workflow"
+name: OSML Model Runner Build Workflow
 
 on:
   pull_request:
-    branches: ["main", "dev"]
+    branches: ["main"]
 
 jobs:
   Build_Validate_Tox:
