@@ -1,4 +1,4 @@
-name: Publish OSML Model Runner GitHub Container
+name: docker github
 
 on:
   workflow_call:
@@ -8,29 +8,25 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-push-image:
+  docker-build-and-push:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           lfs: 'true'
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
+      - uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Extract metadata (tags, labels) for Docker
+      - uses: docker/metadata-action@v5
         id: meta
-        uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-      - name: Push to Github
-        uses: docker/build-push-action@v5
+      - uses: docker/build-push-action@v5
         with:
           context: .
           push: true
