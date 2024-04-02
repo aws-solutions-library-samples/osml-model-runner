@@ -1,4 +1,4 @@
-#  Copyright 2023 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
 
 import logging
 from datetime import datetime
@@ -254,8 +254,8 @@ def get_source_property(image_location: str, image_extension: str, dataset: gdal
 
             return source_property
         except Exception as err:
-            logging.warning("Source metadata not available for {} image extension! {}".format(image_extension, err))
+            logging.warning(f"Source metadata not available for {image_extension} image extension! {err}")
             return None
     else:
-        logging.warning("Source metadata not available for {} image extension!".format(image_extension))
+        logging.warning(f"Source metadata not available for {image_extension} image extension!")
         return None

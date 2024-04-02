@@ -1,4 +1,4 @@
-#  Copyright 2023 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
 
 import ast
 import functools
@@ -178,8 +178,9 @@ class ModelRunner:
                             )
                             self.region_request_table.start_region_request(region_request_item)
                             logging.info(
-                                "Adding region request: imageid: {0} - regionid: {1}".format(
-                                    region_request_item.image_id, region_request_item.region_id
+                                (
+                                    f"Adding region request: image id: {region_request_item.image_id} - "
+                                    f"region id: {region_request_item.region_id}"
                                 )
                             )
 
@@ -203,7 +204,7 @@ class ModelRunner:
                             visibility_timeout=int(ServiceConfig.throttling_retry_timeout),
                         )
                     except Exception as err:
-                        logger.error("There was a problem processing the region request: {}".format(err))
+                        logger.error(f"There was a problem processing the region request: {err}")
                         self.region_request_queue.finish_request(receipt_handle)
                 else:
                     logger.debug("Checking work queue for images to process ...")
@@ -219,7 +220,7 @@ class ModelRunner:
 
                             # Check that our image request looks good
                             if not image_request.is_valid():
-                                error = "Invalid image request: {}".format(image_request_message)
+                                error = f"Invalid image request: {image_request_message}"
                                 logger.exception(error)
                                 raise InvalidImageRequestException(error)
 
@@ -231,7 +232,7 @@ class ModelRunner:
                         except RetryableJobException:
                             self.image_request_queue.reset_request(receipt_handle, visibility_timeout=0)
                         except Exception as err:
-                            logger.error("There was a problem processing the image request: {}".format(err))
+                            logger.error(f"There was a problem processing the image request: {err}")
                             min_image_id = image_request.image_id if image_request and image_request.image_id else ""
                             min_job_id = image_request.job_id if image_request and image_request.job_id else ""
                             min_job_arn = image_request.job_arn if image_request and image_request.job_arn else ""
@@ -269,7 +270,7 @@ class ModelRunner:
                 self.endpoint_statistics_table.upsert_endpoint(image_request.model_name, max_regions)
 
             # Update the image status to started and include relevant image meta-data
-            logger.info("Starting processing of {}".format(image_request.image_url))
+            logger.info(f"Starting processing of {image_request.image_url}")
             image_request_item = JobItem(
                 image_id=image_request.image_id,
                 job_id=image_request.job_id,
@@ -303,9 +304,7 @@ class ModelRunner:
 
             if sensor_model is None:
                 logging.warning(
-                    "Dataset {} did not have a geo transform. Results are not geo-referenced.".format(
-                        image_request_item.image_id
-                    )
+                    f"Dataset {image_request_item.image_id} did not have a geo transform. Results are not geo-referenced."
                 )
 
             # If we got valid outputs
@@ -378,7 +377,7 @@ class ModelRunner:
         # Set aside the first region
         first_region = all_regions.pop(0)
         for region in all_regions:
-            logger.info("Queueing region: {}".format(region))
+            logger.info(f"Queueing region: {region}")
 
             region_pixel_bounds = f"{region[0]}{region[1]}"
             region_id = f"{region_pixel_bounds}-{token_hex(16)}"
@@ -395,8 +394,9 @@ class ModelRunner:
             )
             self.region_request_table.start_region_request(region_request_item)
             logging.info(
-                "Adding region request: imageid: {0} - regionid: {1}".format(
-                    region_request_item.image_id, region_request_item.region_id
+                (
+                    f"Adding region request: image id: {region_request_item.image_id} - "
+                    f"region id: {region_request_item.region_id}"
                 )
             )
 
@@ -404,7 +404,7 @@ class ModelRunner:
             self.region_request_queue.send_request(region_request.__dict__)
 
         # Go ahead and process the first region
-        logger.info("Processing first region {}: {}".format(0, first_region))
+        logger.info(f"Processing first region {0}: {first_region}")
 
         region_pixel_bounds = f"{first_region[0]}{first_region[1]}"
         region_id = f"{region_pixel_bounds}-{token_hex(16)}"
@@ -424,9 +424,7 @@ class ModelRunner:
         )
         self.region_request_table.start_region_request(region_request_item)
         logging.info(
-            "Adding region request: imageid: {0} - regionid: {1}".format(
-                region_request_item.image_id, region_request_item.region_id
-            )
+            f"Adding region request: imageid: {region_request_item.image_id} - regionid: {region_request_item.region_id}"
         )
 
         # Processes our region request and return the updated item
@@ -465,7 +463,7 @@ class ModelRunner:
             metrics.set_dimensions()
 
         if not region_request.is_valid():
-            logger.error("Invalid Region Request! {}".format(region_request.__dict__))
+            logger.error(f"Invalid Region Request! {region_request.__dict__}")
             raise ValueError("Invalid Region Request")
 
         if isinstance(metrics, MetricsLogger):
@@ -489,7 +487,7 @@ class ModelRunner:
             if in_progress >= max_regions:
                 if isinstance(metrics, MetricsLogger):
                     metrics.put_metric(MetricLabels.THROTTLES, 1, str(Unit.COUNT.value))
-                logger.info("Throttling region request. (Max: {} In-progress: {}".format(max_regions, in_progress))
+                logger.info(f"Throttling region request. (Max: {max_regions} In-progress: {in_progress}")
                 raise SelfThrottledRegionException
 
             # Increment the endpoint region counter
@@ -497,7 +495,7 @@ class ModelRunner:
 
         try:
             with Timer(
-                task_str="Processing region {} {}".format(region_request.image_url, region_request.region_bounds),
+                task_str=f"Processing region {region_request.image_url} {region_request.region_bounds}",
                 metric_name=MetricLabels.DURATION,
                 logger=logger,
                 metrics_logger=metrics,
@@ -531,9 +529,10 @@ class ModelRunner:
             return image_request_item
 
         except Exception as err:
-            logger.error("Failed to process image region: {}".format(err))
+            failed_msg = f"Failed to process image region: {err}"
+            logger.error(failed_msg)
             # update the table to take in that exception
-            region_request_item.message = "Failed to process image region: {0}".format(err)
+            region_request_item.message = failed_msg
             return self.fail_region_request(region_request_item, metrics)
 
         finally:
@@ -624,7 +623,7 @@ class ModelRunner:
 
         :return: None
         """
-        logger.exception("Failed to start image processing!: {}".format(err))
+        logger.exception(f"Failed to start image processing!: {err}")
         self.status_monitor.process_event(image_request_item, ImageRequestStatus.FAILED, str(err))
 
     def complete_image_request(self, region_request: RegionRequest, image_format: str) -> None:
@@ -951,7 +950,7 @@ class ModelRunner:
 
             # Ensure we have outputs defined for where to dump our features
             if image_request_item.outputs:
-                logging.info("Writing aggregate feature for job '{}'".format(image_request_item.job_id))
+                logging.info(f"Writing aggregate feature for job '{image_request_item.job_id}'")
                 for sink in SinkFactory.outputs_to_sinks(json.loads(image_request_item.outputs)):
                     if sink.mode == SinkMode.AGGREGATE and image_request_item.job_id:
                         is_write_output_succeeded = sink.write(image_request_item.job_id, features)

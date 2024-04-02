@@ -1,6 +1,4 @@
-#  Copyright 2023 Amazon.com, Inc. or its affiliates.
-
-#  Copyright 2023 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
 
 import logging
 from io import BufferedReader
@@ -70,7 +68,7 @@ class SMDetector(Detector):
 
         :return: FeatureCollection = a feature collection containing the center point of a tile
         """
-        logger.info("Invoking Model: {}".format(self.endpoint))
+        logger.info(f"Invoking Model: {self.endpoint}")
         if isinstance(metrics, MetricsLogger):
             metrics.set_dimensions()
             metrics.put_dimensions(
@@ -115,9 +113,7 @@ class SMDetector(Detector):
             if isinstance(metrics, MetricsLogger):
                 metrics.put_metric(MetricLabels.ERRORS, 1, str(Unit.COUNT.value))
             logger.error(
-                "Unable to get detections from model - HTTP Status Code: {}, Error Code: {}".format(
-                    http_status_code, error_code
-                )
+                f"Unable to get detections from model - HTTP Status Code: {http_status_code}, Error Code: {error_code}"
             )
             logger.exception(ce)
         # If there was an error parsing the models output
