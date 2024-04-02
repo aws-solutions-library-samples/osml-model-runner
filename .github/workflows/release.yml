@@ -1,0 +1,25 @@
+name: release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  tox:
+    uses: ./.github/workflows/tox.yml
+    secrets: inherit
+  docker-build:
+    uses: ./.github/workflows/docker-build.yml
+    secrets: inherit
+  pypi:
+    needs: [tox, docker-build]
+    uses: ./.github/workflows/pypi.yml
+    secrets: inherit
+  docker-publish:
+    needs: [tox, docker-build]
+    uses: ./.github/workflows/docker-publish.yml
+    secrets: inherit
+  docs:
+    needs: [pypi, docker-publish]
+    uses: ./.github/workflows/docs.yml
+    secrets: inherit
