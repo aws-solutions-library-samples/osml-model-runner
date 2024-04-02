@@ -1,7 +1,7 @@
 name: notify
 
 on:
-  push:
+  pull_request:
     branches: ["main"]
 
 jobs:
@@ -13,5 +13,6 @@ jobs:
       with:
         repo: aws-solutions-library-samples/guidance-for-overhead-imagery-inference-on-aws
         workflow: osml_update_submodules.yml
+        ref: dev
         token: ${{ secrets.GUIDANCE_OSML_SUBMODULES_ACTION_10_24 }}
         inputs: '{ "DISPATCH_REPO_NAME" : "${{ github.event.repository.name }}", "DISPATCH_REPO_SHA": "${{ env.SHA }}" }'
