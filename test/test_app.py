@@ -118,7 +118,6 @@ class TestModelRunner(TestCase):
                 "category": "VIS",
                 "sourceId": "Checks an uncompressed 1024x1024 8 bit mono image with GEOcentric data. Airfield",
                 "sourceDT": "1996-12-17T10:26:30Z",
-                "classification": "UNCLASSIFIED",
             }
         ]
 

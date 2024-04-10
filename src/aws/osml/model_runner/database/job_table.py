@@ -56,7 +56,6 @@ class JobItem(DDBItem):
     outputs: Optional[str] = None
     processing_time: Optional[Decimal] = None
     feature_properties: Optional[str] = None
-    image_security_classification: Optional[str] = None
     feature_distillation_option: Optional[str] = None
 
     def __post_init__(self):
