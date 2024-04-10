@@ -183,8 +183,7 @@ more common and chose to work within the existing constructs.
             "modelMetadata": {
                 "modelName": "FasterRCNN_ResNet50_FPN_V2",
                 "ontologyName": "SampleOntology",
-                "ontologyVersion": "1.0.0",
-                "classification": "U//XX/XX//XXXX"
+                "ontologyVersion": "1.0.0"
             }
         }
     }]
@@ -226,7 +225,6 @@ and digital terrain data or changes detected between two images). These include:
 * **category**: This field differentiates between EO, FMV, WAMI, SAR, and other potential future source data types.
 * **sourceId**: This is an unique identifier can be used to look up original imagery/video from view of authoritative data repository. It is pulled from the image metadata or a duplicate of the location field if the metadata is not available.
 * **sourceDT**: The time for when the source was collected. The value will be a ISO 8601 string as defined by RFC 3339 section 5.6.
-* **classification**: The level at which the image is classified. These values will be taken directly from the overall classification of the source information and encoded as a valid paragraph marking.
 
 The `inferenceMetadata` property contains information about the ML job that produced the feature. The specific values include:
 
@@ -261,16 +259,14 @@ The `inferenceMetadata` property contains information about the ML job that prod
             "modelMetadata": {
                 "modelName": "FasterRCNN_ResNet50_FPN_V2",
                 "ontologyName": "SampleOntology",
-                "ontologyVersion": "1.0.0",
-                "classification": "U//XX/XX//XXXX"
+                "ontologyVersion": "1.0.0"
             },
             "sourceMetadata": [{
                 "location": "s3://bucket-name/sample-image.NTF",
                 "format": "NITF",
                 "category": "EO",
                 "sourceId": "20230101-sample-ID",
-                "sourceDT": "2023-01-01T05:48:13Z",
-                "classification": "U//XX/XX//XXXX"
+                "sourceDT": "2023-01-01T05:48:13Z"
             }],
             "inferenceMetadata": {
                 "jobId": "dbc68a2c-2ddf-45a4-9910-ef3a34ed00c1",

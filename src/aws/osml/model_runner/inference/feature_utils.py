@@ -13,7 +13,7 @@ from geojson import Feature, FeatureCollection, LineString, MultiLineString, Mul
 from osgeo import gdal
 from shapely.geometry.base import BaseGeometry
 
-from aws.osml.model_runner.common import Classification, ImageDimensions, get_image_classification
+from aws.osml.model_runner.common import ImageDimensions
 from aws.osml.photogrammetry import GeodeticWorldCoordinate, SensorModel
 
 
@@ -232,11 +232,6 @@ def get_source_property(image_location: str, image_extension: str, dataset: gdal
                 if metadata.get("NITF_IDATIM")
                 else None
             )
-            # Determine the image classification from the metadata
-            source_classification = get_image_classification(dataset)
-            source_classification_str = (
-                source_classification.classification if isinstance(source_classification, Classification) else None
-            )
 
             # Build a source property for features
             source_property = {
@@ -247,7 +242,6 @@ def get_source_property(image_location: str, image_extension: str, dataset: gdal
                         "category": data_type,
                         "sourceId": source_id,
                         "sourceDT": source_dt,
-                        "classification": source_classification_str,
                     }
                 ]
             }
