@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.database.region_request_table &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.database.region_request_table</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.model_runner.database.region_request_table</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">decimal</span> <span class="kn">import</span> <span class="n">Decimal</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">dacite</span> <span class="kn">import</span> <span class="n">from_dict</span>
+
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.common</span> <span class="kn">import</span> <span class="n">RegionRequestStatus</span>
+
+<span class="kn">from</span> <span class="nn">.ddb_helper</span> <span class="kn">import</span> <span class="n">DDBHelper</span><span class="p">,</span> <span class="n">DDBItem</span><span class="p">,</span> <span class="n">DDBKey</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">CompleteRegionException</span><span class="p">,</span> <span class="n">GetRegionRequestItemException</span><span class="p">,</span> <span class="n">StartRegionException</span><span class="p">,</span> <span class="n">UpdateRegionException</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="RegionRequestItem">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.region_request_table.html#aws.osml.model_runner.database.region_request_table.RegionRequestItem">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">RegionRequestItem</span><span class="p">(</span><span class="n">DDBItem</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    RegionRequestItem is a dataclass meant to represent a single item in the Region table</span>
+
+<span class="sd">    The data schema is defined as follows:</span>
+<span class="sd">    region_id: str = primary key - formatted as region (pixel bounds) + &quot;-&quot; + unique_identifier</span>
+<span class="sd">    image_id: str = secondary key - image_id for the job</span>
+<span class="sd">    start_time: Optional[Decimal] = time in epoch seconds when the job started</span>
+<span class="sd">    last_updated_time: Optional[Decimal] = time in epoch seconds when job is processing (periodically)</span>
+<span class="sd">    end_time: Optional[Decimal] = time in epoch seconds when the job ended</span>
+<span class="sd">    message: Optional[str] = information about the region job</span>
+<span class="sd">    status: Optional[str] = region job status - PROCESSING, COMPLETED, FAILED</span>
+<span class="sd">    region_retry_count: Optional[Decimal] = total count of regions expected for this image</span>
+<span class="sd">    region_pixel_bounds: = Region pixel bounds</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">region_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">image_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">job_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">start_time</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Decimal</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">last_updated_time</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Decimal</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">end_time</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Decimal</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">message</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">region_status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">total_tiles</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Decimal</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">region_retry_count</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Decimal</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">region_pixel_bounds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ddb_key</span> <span class="o">=</span> <span class="n">DDBKey</span><span class="p">(</span>
+            <span class="n">hash_key</span><span class="o">=</span><span class="s2">&quot;image_id&quot;</span><span class="p">,</span>
+            <span class="n">hash_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span>
+            <span class="n">range_key</span><span class="o">=</span><span class="s2">&quot;region_id&quot;</span><span class="p">,</span>
+            <span class="n">range_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">region_id</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="RegionRequestTable">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.region_request_table.html#aws.osml.model_runner.database.region_request_table.RegionRequestTable">[docs]</a>
+<span class="k">class</span> <span class="nc">RegionRequestTable</span><span class="p">(</span><span class="n">DDBHelper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    RegionRequestTable is a class meant to help OSML with accessing and interacting with the region processing jobs we</span>
+<span class="sd">    track as part of the region table. It extends the DDBHelper class and provides its own item data class for use when</span>
+<span class="sd">    working with items from the table. It also sets the key for which we index on this table in the constructor.</span>
+
+<span class="sd">    :param table_name: str = the name of the table to interact with</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RegionRequestTable.start_region_request">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.region_request_table.html#aws.osml.model_runner.database.region_request_table.RegionRequestTable.start_region_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">start_region_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region_request_item</span><span class="p">:</span> <span class="n">RegionRequestItem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RegionRequestItem</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Start a region processing request for given region pixel bounds, this should be the first record</span>
+<span class="sd">        for this region in the table.</span>
+
+<span class="sd">        :param region_request_item: RegionRequestItem = the unique identifier for the region we want to add to ddb</span>
+
+<span class="sd">        :return: RegionRequestItem = Updated region request item</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">start_time_millisec</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span>
+
+            <span class="c1"># Update the job item to have the correct start parameters</span>
+            <span class="n">region_request_item</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">start_time_millisec</span>
+            <span class="n">region_request_item</span><span class="o">.</span><span class="n">region_status</span> <span class="o">=</span> <span class="n">RegionRequestStatus</span><span class="o">.</span><span class="n">STARTING</span>
+            <span class="n">region_request_item</span><span class="o">.</span><span class="n">region_retry_count</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="c1"># Put the item into the table</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">put_ddb_item</span><span class="p">(</span><span class="n">region_request_item</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">region_request_item</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">StartRegionException</span><span class="p">(</span><span class="s2">&quot;Failed to add region request to the table!&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span></div>
+
+
+<div class="viewcode-block" id="RegionRequestTable.complete_region_request">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.region_request_table.html#aws.osml.model_runner.database.region_request_table.RegionRequestTable.complete_region_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">complete_region_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region_request_item</span><span class="p">:</span> <span class="n">RegionRequestItem</span><span class="p">,</span> <span class="n">region_status</span><span class="p">:</span> <span class="n">RegionRequestStatus</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the region job to reflect that a region has succeeded or failed.</span>
+
+<span class="sd">        :param region_request_item: RegionRequestItem = the unique identifier for the region we want to update</span>
+<span class="sd">        :param region_status: RegionRequestStatus = Status of region at completion (FAILURE, PARTIAL, SUCCESS, etc.)</span>
+
+<span class="sd">        :return: RegionRequestItem = Updated region request item</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">region_request_item</span><span class="o">.</span><span class="n">last_updated_time</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span>
+            <span class="n">region_request_item</span><span class="o">.</span><span class="n">region_status</span> <span class="o">=</span> <span class="n">region_status</span>
+            <span class="n">region_request_item</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">from_dict</span><span class="p">(</span>
+                <span class="n">RegionRequestItem</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">update_ddb_item</span><span class="p">(</span><span class="n">region_request_item</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CompleteRegionException</span><span class="p">(</span><span class="s2">&quot;Failed to complete region!&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
+
+
+<div class="viewcode-block" id="RegionRequestTable.update_region_request">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.region_request_table.html#aws.osml.model_runner.database.region_request_table.RegionRequestTable.update_region_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_region_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region_request_item</span><span class="p">:</span> <span class="n">RegionRequestItem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RegionRequestItem</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the region info in the ddb</span>
+
+<span class="sd">        :param region_request_item: RegionRequestItem = the unique identifier for the region we want to update</span>
+
+<span class="sd">        :return: RegionRequestItem = Updated region request item</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">region_request_item</span><span class="o">.</span><span class="n">last_updated_time</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">from_dict</span><span class="p">(</span>
+                <span class="n">RegionRequestItem</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">update_ddb_item</span><span class="p">(</span><span class="n">region_request_item</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">UpdateRegionException</span><span class="p">(</span><span class="s2">&quot;Failed to update region!&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
+
+
+<div class="viewcode-block" id="RegionRequestTable.get_region_request">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.region_request_table.html#aws.osml.model_runner.database.region_request_table.RegionRequestTable.get_region_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_region_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">image_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RegionRequestItem</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a RegionRequestItem object from the table based on the region_id and image_id provided</span>
+
+<span class="sd">        :param region_id: str = the unique identifier for the region we want to start processing</span>
+<span class="sd">        :param image_id: str = the unique identifier for the image (range key)</span>
+
+<span class="sd">        :return: Optional[RegionRequestItem] = region request item</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Retrieve job item from our table and set to expected RegionRequestItem class</span>
+            <span class="k">return</span> <span class="n">from_dict</span><span class="p">(</span>
+                <span class="n">RegionRequestItem</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">get_ddb_item</span><span class="p">(</span><span class="n">RegionRequestItem</span><span class="p">(</span><span class="n">region_id</span><span class="o">=</span><span class="n">region_id</span><span class="p">,</span> <span class="n">image_id</span><span class="o">=</span><span class="n">image_id</span><span class="p">)),</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">GetRegionRequestItemException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to get RegionRequestItem! </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">))</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

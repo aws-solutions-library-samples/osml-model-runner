@@ -1,0 +1,75 @@
+model_runner.api.region_request
+===============================
+
+.. py:module:: model_runner.api.region_request
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.api.region_request.ModelInvokeMode
+   model_runner.api.region_request.RegionRequest
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   model_runner.api.region_request.shared_properties_are_valid
+
+
+Module Contents
+---------------
+
+.. py:class:: ModelInvokeMode
+
+   Bases: :py:obj:`str`, :py:obj:`aws.osml.model_runner.common.AutoStringEnum`
+
+
+   Enumeration defining the hosting options for CV models.
+
+
+   .. py:attribute:: NONE
+
+
+   .. py:attribute:: SM_ENDPOINT
+
+
+   .. py:attribute:: HTTP_ENDPOINT
+
+
+.. py:function:: shared_properties_are_valid(request) -> bool
+
+   There are some attributes that are shared between ImageRequests and RegionRequests. This
+   function exists to validate if ImageRequests/RegionRequests have all the metadata info
+   in order to process it
+
+   :param request: an object of either ImageRequests or RegionRequests
+
+   :return: bool = True if the request contains all the mandatory attributes with acceptable values,
+                False otherwise
+
+
+.. py:class:: RegionRequest(*initial_data: Dict[str, Any], **kwargs: Any)
+
+   Bases: :py:obj:`object`
+
+
+   Request for the Model Runner to process a region of an image.
+
+   This class contains the attributes that make up a region processing request along with
+   constructors used to create these requests from common constructs.
+
+
+   .. py:method:: is_valid() -> bool
+
+      Check to see if this request contains required attributes and meaningful values
+
+      :return: bool = True if the request contains all the mandatory attributes with acceptable values,
+               False otherwise
+
+
+

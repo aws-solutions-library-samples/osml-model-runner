@@ -1,0 +1,333 @@
+model_runner.database.feature_table
+===================================
+
+.. py:module:: model_runner.database.feature_table
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.database.feature_table.logger
+   model_runner.database.feature_table.parser
+
+
+Exceptions
+----------
+
+.. autoapisummary::
+
+   model_runner.database.feature_table.AddFeaturesException
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.database.feature_table.DDBHelper
+   model_runner.database.feature_table.DDBItem
+   model_runner.database.feature_table.DDBKey
+   model_runner.database.feature_table.FeatureItem
+   model_runner.database.feature_table.FeatureTable
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   model_runner.database.feature_table.handle_json_body
+
+
+Module Contents
+---------------
+
+.. py:class:: DDBHelper(table_name: str)
+
+   DDBHelper is a class meant to help OSML with accessing and interacting with DynamoDB tables.
+   Generally, this class should be inherited by downstream specific table classes to build on top
+   of such as the FeatureTable and JobTable classes.
+
+   :param table_name: str = the name of the table to interact with
+
+   :return: None
+
+
+   .. py:method:: get_ddb_item(ddb_item: DDBItem) -> Dict[str, Any]
+
+      Get a DynamoDB item from table
+
+      :param ddb_item: DDBItem = item that we want to get (required)
+
+      :return: Dict[str, Any] = response from the get_item request
+
+
+
+   .. py:method:: put_ddb_item(ddb_item: DDBItem, condition_expression: str = None) -> Dict[str, Any]
+
+      Put a DynamoDB item into the table with a jitter-delayed retry logic for unprocessed items.
+
+      :param ddb_item: DDBItem = item that we want to put (required)
+      :param condition_expression: str = Condition that must be satisfied in order for a PutItem operation to succeed.
+
+      :return: Dict[str, Any] = item from the put_item response
+
+
+
+   .. py:method:: batch_write_items(ddb_items: List[DDBItem], max_retries: int = 500, max_delay: float = 8) -> None
+
+      Write multiple DynamoDB items in a batch with a jitter-delayed retry logic for unprocessed items.
+      :param ddb_items: List[DDBItem] = List of items that we want to write.
+      :param max_retries: int = Maximum number of retries for unprocessed items.
+      :param max_delay: Maximum delay in seconds between retries.
+      :return: None
+
+
+
+   .. py:method:: delete_ddb_item(ddb_item: DDBItem) -> Dict[str, Any]
+
+      Delete a DynamoDB item from the table
+
+      :param ddb_item: DDBItem = item that we want to delete (required)
+
+      :return: Dict[str, Any] = response from the delete_item request
+
+
+
+   .. py:method:: update_ddb_item(ddb_item: DDBItem, update_exp: str = None, update_attr: Dict = None) -> Dict[str, Any]
+
+      Update the DynamoDB item based on the contents of an input dictionary. If the user doesn't
+      provide an update expression and attributes, one will be generated from the body.
+
+      :param ddb_item: DDBItem = item that we want to update (required)
+      :param update_exp: Optional[str] = the update expression to use for the update
+      :param update_attr: Optional[list] = attribute string to use when updating DDB item
+
+      :return: Dict[str, Any] = the new ddb item as a dict
+
+
+
+   .. py:method:: query_items(ddb_item: DDBItem) -> List[Dict[str, Any]]
+
+      Query the table for all items of a given hash_key.
+
+      :param ddb_item: DDBItem = the hash key we want to query the table for
+
+      :return: List[Dict[str, Any]] = the list of dictionary responses corresponding to the items returned
+
+
+
+   .. py:method:: get_update_params(body: Dict, ddb_item: DDBItem) -> Tuple[str, Dict[str, Any]]
+      :staticmethod:
+
+
+      Generate an update expression and a dict of values to update a dynamodb table.
+
+      :param body: Dict = the body of the request that contains the updated data
+      :param ddb_item: DDBItem = the hash key we want to query the table for
+
+      :return: Tuple[str, Dict[str, Any]] = the generated update expression and attributes
+
+
+
+   .. py:method:: get_keys(ddb_item: DDBItem) -> Dict[str, Any]
+      :staticmethod:
+
+
+      Determine to see if we need to use both keys to search an item in DDB
+
+      :param ddb_item: DDBItem = the hash key we want to query the table for
+
+      return Dict[str, Any] = Holding either Hash Key or both Keys (Hash and Range)
+
+
+
+.. py:class:: DDBItem
+
+   DDBItem is a dataclass meant to represent a single item in a DynamoDB table via a key-value pair
+
+   The data schema is defined as follows:
+   key: str = the table key to index on
+   value: str = the value of the item (given a key) to use
+   range_key: str = the sort key to index on
+   range_value: str = the value of the item (given a key + range key) to use
+
+
+   .. py:attribute:: ddb_key
+      :type:  DDBKey
+
+
+   .. py:method:: to_put() -> Dict[str, str]
+
+
+   .. py:method:: to_update() -> Dict[str, str]
+
+
+   .. py:method:: __get_fields()
+      :staticmethod:
+
+
+
+.. py:class:: DDBKey
+
+   DDBItem is a dataclass meant to represent a single item in a DynamoDB table via a key-value pair
+
+   The data schema is defined as follows:
+   key: str = the table key to index on
+   value: str = the value of the item (given a key) to use
+   range_key: str = the sort key to index on
+   range_value: str = the value of the item (given a key + range key) to use
+
+
+   .. py:attribute:: hash_key
+      :type:  str
+
+
+   .. py:attribute:: hash_value
+      :type:  str
+
+
+   .. py:attribute:: range_key
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: range_value
+      :type:  Optional[str]
+      :value: None
+
+
+
+.. py:exception:: AddFeaturesException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:data:: logger
+
+.. py:data:: parser
+
+.. py:function:: handle_json_body(self, raw_body, shape) -> Dict[str, any]
+
+   :param self: Boto core class object.
+   :param raw_body: Raw JSON body content to be type checked.
+   :param shape: The type enforced shape to check against (none).
+   :return: The parsed body as a JSON object.
+
+
+.. py:class:: FeatureItem
+
+   Bases: :py:obj:`model_runner.database.ddb_helper.DDBItem`
+
+
+   FeatureItem is a dataclass meant to represent a single item in the FeatureTable
+   The data schema is defined as follows:
+       hash_key: str
+       range_key: str
+       tile_id: str
+       features: [str]
+       expire_time: Optional[Decimal] = None
+
+
+   .. py:attribute:: hash_key
+      :type:  str
+
+
+   .. py:attribute:: range_key
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: tile_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: features
+      :type:  Optional[List[str]]
+      :value: None
+
+
+
+   .. py:attribute:: expire_time
+      :type:  Optional[_decimal.Decimal]
+      :value: None
+
+
+
+   .. py:method:: __post_init__()
+
+
+.. py:class:: FeatureTable(table_name: str, tile_size: aws.osml.model_runner.common.ImageDimensions, overlap: aws.osml.model_runner.common.ImageDimensions)
+
+   Bases: :py:obj:`model_runner.database.ddb_helper.DDBHelper`
+
+
+   DDBHelper is a class meant to help OSML with accessing and interacting with DynamoDB tables.
+   Generally, this class should be inherited by downstream specific table classes to build on top
+   of such as the FeatureTable and JobTable classes.
+
+   :param table_name: str = the name of the table to interact with
+
+   :return: None
+
+
+   .. py:method:: add_features(features: List[geojson.Feature], metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None)
+
+      Group all the features together and add/update an item in the DDB
+
+      :param features: The list of features to add to the DDB table.
+      :param metrics: Metrics logger to use to report metrics.
+      :return: None
+
+
+
+   .. py:method:: get_features(image_id: str, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None) -> List[geojson.Feature]
+
+      Parallelized version to query the database for all items with a given image_id,
+      then convert them into feature items, and group the features per tile.
+
+      :param image_id: The image_id to aggregate features from DDB for.
+      :param metrics: MetricsLogger = the metrics logger to use to report metrics.
+      :return: List of features aggregates from the DDB table.
+
+
+
+   .. py:method:: group_features_by_key(features: List[geojson.Feature]) -> Dict[str, List[geojson.Feature]]
+
+      Group all the feature items by key
+
+      :param features: The list of features
+
+      :return: Map of keys containing a list of features
+
+
+
+   .. py:method:: group_items_by_tile_id(items: List[FeatureItem]) -> Dict[str, List[FeatureItem]]
+      :staticmethod:
+
+
+      Group all the feature items by tile id
+
+      :param items: The list of feature items
+      :return: A unique tile id and within tile id contains a list of features
+
+
+
+   .. py:method:: generate_tile_key(feature: geojson.Feature) -> str
+
+      Generate the tile key based on the given feature.
+
+      :param feature: Properties of a feature
+      :return: The tile key associated with this list of features.
+
+
+

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>model_runner.inference.sm_detector &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=fd3f3429" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="model_runner.queue" href="../../queue/index.html" />
+    <link rel="prev" title="model_runner.inference.http_detector" href="../http_detector/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">model_runner</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../index.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../api/index.html">model_runner.api</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../common/index.html">model_runner.common</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../database/index.html">model_runner.database</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../index.html">model_runner.inference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../queue/index.html">model_runner.queue</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../sink/index.html">model_runner.sink</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../status/index.html">model_runner.status</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../tile_worker/index.html">model_runner.tile_worker</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../index.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">model_runner</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">model_runner.inference</a></li>
+      <li class="breadcrumb-item active">model_runner.inference.sm_detector</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/autoapi/model_runner/inference/sm_detector/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-model_runner.inference.sm_detector">
+<span id="model-runner-inference-sm-detector"></span><h1>model_runner.inference.sm_detector<a class="headerlink" href="#module-model_runner.inference.sm_detector" title="Link to this heading"></a></h1>
+<section id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.inference.sm_detector.logger" title="model_runner.inference.sm_detector.logger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logger</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.inference.sm_detector.Detector" title="model_runner.inference.sm_detector.Detector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Detector</span></code></a></p></td>
+<td><p>The mechanism by which detected features are sent to their destination.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#model_runner.inference.sm_detector.FeatureEndpointBuilder" title="model_runner.inference.sm_detector.FeatureEndpointBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureEndpointBuilder</span></code></a></p></td>
+<td><p>This is an abstract base for all classes to construct Detectors for various types of endpoints.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.inference.sm_detector.SMDetector" title="model_runner.inference.sm_detector.SMDetector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SMDetector</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#model_runner.inference.sm_detector.SMDetectorBuilder" title="model_runner.inference.sm_detector.SMDetectorBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SMDetectorBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.inference.sm_detector.create_mock_feature_collection" title="model_runner.inference.sm_detector.create_mock_feature_collection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_mock_feature_collection</span></code></a>(→ geojson.FeatureCollection)</p></td>
+<td><p>This function allows us to emulate what we would expect a model to return to MR, a geojson formatted</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.inference.sm_detector.Detector">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.inference.sm_detector.</span></span><span class="sig-name descname"><span class="pre">Detector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_runner.inference.sm_detector.Detector" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>The mechanism by which detected features are sent to their destination.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="model_runner.inference.sm_detector.Detector.mode">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">aws.osml.model_runner.api.ModelInvokeMode</span></em><a class="headerlink" href="#model_runner.inference.sm_detector.Detector.mode" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Abstractmethod<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<p>The mode of the detector.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.inference.sm_detector.Detector.find_features">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/io.html#io.BufferedReader" title="(in Python v3.12)"><span class="pre">io.BufferedReader</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws_embedded_metrics.logger.metrics_logger.MetricsLogger</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">geojson.FeatureCollection</span></span></span><a class="headerlink" href="#model_runner.inference.sm_detector.Detector.find_features" title="Link to this definition"></a></dt>
+<dd><p>Query the established endpoint mode to find features based on a payload</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>payload</strong> – BufferedReader = the BufferedReader object that holds the
+data that will be  sent to the feature generator</p></li>
+<li><p><strong>metrics</strong> – MetricsLogger = the metrics logger object to capture the log data on the system</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>FeatureCollection = a feature collection containing the center point of a tile</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.inference.sm_detector.FeatureEndpointBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.inference.sm_detector.</span></span><span class="sig-name descname"><span class="pre">FeatureEndpointBuilder</span></span><a class="headerlink" href="#model_runner.inference.sm_detector.FeatureEndpointBuilder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>This is an abstract base for all classes to construct Detectors for various types of endpoints.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.inference.sm_detector.FeatureEndpointBuilder.build">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../detector/index.html#model_runner.inference.detector.Detector" title="model_runner.inference.detector.Detector"><span class="pre">model_runner.inference.detector.Detector</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#model_runner.inference.sm_detector.FeatureEndpointBuilder.build" title="Link to this definition"></a></dt>
+<dd><p>Constructs the sensor model from the available information. Note that in cases where not enough information is
+available to provide any solution, this method will return None.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Detector] = the detector to generate features based on the provided build data</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="model_runner.inference.sm_detector.create_mock_feature_collection">
+<span class="sig-prename descclassname"><span class="pre">model_runner.inference.sm_detector.</span></span><span class="sig-name descname"><span class="pre">create_mock_feature_collection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/io.html#io.BufferedReader" title="(in Python v3.12)"><span class="pre">io.BufferedReader</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">geom</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">geojson.FeatureCollection</span></span></span><a class="headerlink" href="#model_runner.inference.sm_detector.create_mock_feature_collection" title="Link to this definition"></a></dt>
+<dd><p>This function allows us to emulate what we would expect a model to return to MR, a geojson formatted
+FeatureCollection. This allows us to bypass using a real model if the NOOP_MODEL_NAME is given as the
+model name in the image request. This is the same logic used by our current default dummy model to select
+detection points in our pipeline.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>payload</strong> – BufferedReader = object that holds the data that will be  sent to the feature generator</p></li>
+<li><p><strong>geom</strong> – Bool = whether or not to return the geom_imcoords field in the geojson</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>FeatureCollection = feature collection containing the center point of a tile given as a detection point</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="model_runner.inference.sm_detector.logger">
+<span class="sig-prename descclassname"><span class="pre">model_runner.inference.sm_detector.</span></span><span class="sig-name descname"><span class="pre">logger</span></span><a class="headerlink" href="#model_runner.inference.sm_detector.logger" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.inference.sm_detector.SMDetector">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.inference.sm_detector.</span></span><span class="sig-name descname"><span class="pre">SMDetector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">assumed_credentials</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_runner.inference.sm_detector.SMDetector" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="../detector/index.html#model_runner.inference.detector.Detector" title="model_runner.inference.detector.Detector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_runner.inference.detector.Detector</span></code></a></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="model_runner.inference.sm_detector.SMDetector.mode">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">aws.osml.model_runner.api.ModelInvokeMode</span></em><a class="headerlink" href="#model_runner.inference.sm_detector.SMDetector.mode" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.inference.sm_detector.SMDetector.find_features">
+<span class="sig-name descname"><span class="pre">find_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/io.html#io.BufferedReader" title="(in Python v3.12)"><span class="pre">io.BufferedReader</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws_embedded_metrics.logger.metrics_logger.MetricsLogger</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">geojson.FeatureCollection</span></span></span><a class="headerlink" href="#model_runner.inference.sm_detector.SMDetector.find_features" title="Link to this definition"></a></dt>
+<dd><p>Query the established endpoint mode to find features based on a payload</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>payload</strong> – BufferedReader = the BufferedReader object that holds the
+data that will be sent to the feature generator</p></li>
+<li><p><strong>metrics</strong> – MetricsLogger = the metrics logger object to capture the log data on the system</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>FeatureCollection = a feature collection containing the center point of a tile</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.inference.sm_detector.SMDetectorBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.inference.sm_detector.</span></span><span class="sig-name descname"><span class="pre">SMDetectorBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">assumed_credentials</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_runner.inference.sm_detector.SMDetectorBuilder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="../endpoint_builder/index.html#model_runner.inference.endpoint_builder.FeatureEndpointBuilder" title="model_runner.inference.endpoint_builder.FeatureEndpointBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_runner.inference.endpoint_builder.FeatureEndpointBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.inference.sm_detector.SMDetectorBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../detector/index.html#model_runner.inference.detector.Detector" title="model_runner.inference.detector.Detector"><span class="pre">model_runner.inference.detector.Detector</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#model_runner.inference.sm_detector.SMDetectorBuilder.build" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>a SageMaker detector based on the parameters defined during initialization</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../http_detector/index.html" class="btn btn-neutral float-left" title="model_runner.inference.http_detector" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../queue/index.html" class="btn btn-neutral float-right" title="model_runner.queue" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

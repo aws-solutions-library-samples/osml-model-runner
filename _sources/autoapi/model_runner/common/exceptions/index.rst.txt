@@ -1,0 +1,25 @@
+model_runner.common.exceptions
+==============================
+
+.. py:module:: model_runner.common.exceptions
+
+
+Exceptions
+----------
+
+.. autoapisummary::
+
+   model_runner.common.exceptions.InvalidAssumedRoleException
+
+
+Module Contents
+---------------
+
+.. py:exception:: InvalidAssumedRoleException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+

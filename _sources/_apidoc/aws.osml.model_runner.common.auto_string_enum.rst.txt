@@ -1,0 +1,7 @@
+aws.osml.model\_runner.common.auto\_string\_enum module
+=======================================================
+
+.. automodule:: aws.osml.model_runner.common.auto_string_enum
+   :members:
+   :undoc-members:
+   :show-inheritance:

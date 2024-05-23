@@ -1,0 +1,133 @@
+model_runner.inference.sm_detector
+==================================
+
+.. py:module:: model_runner.inference.sm_detector
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.inference.sm_detector.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.inference.sm_detector.Detector
+   model_runner.inference.sm_detector.FeatureEndpointBuilder
+   model_runner.inference.sm_detector.SMDetector
+   model_runner.inference.sm_detector.SMDetectorBuilder
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   model_runner.inference.sm_detector.create_mock_feature_collection
+
+
+Module Contents
+---------------
+
+.. py:class:: Detector(endpoint: str)
+
+   Bases: :py:obj:`abc.ABC`
+
+
+   The mechanism by which detected features are sent to their destination.
+
+
+   .. py:property:: mode
+      :type: aws.osml.model_runner.api.ModelInvokeMode
+
+      :abstractmethod:
+
+      The mode of the detector.
+
+
+
+   .. py:method:: find_features(payload: io.BufferedReader, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger) -> geojson.FeatureCollection
+      :abstractmethod:
+
+
+      Query the established endpoint mode to find features based on a payload
+
+      :param payload: BufferedReader = the BufferedReader object that holds the
+                                  data that will be  sent to the feature generator
+      :param metrics: MetricsLogger = the metrics logger object to capture the log data on the system
+
+      :return: FeatureCollection = a feature collection containing the center point of a tile
+
+
+
+.. py:class:: FeatureEndpointBuilder
+
+   Bases: :py:obj:`abc.ABC`
+
+
+   This is an abstract base for all classes to construct Detectors for various types of endpoints.
+
+
+   .. py:method:: build() -> Optional[model_runner.inference.detector.Detector]
+      :abstractmethod:
+
+
+      Constructs the sensor model from the available information. Note that in cases where not enough information is
+      available to provide any solution, this method will return None.
+
+      :return: Optional[Detector] = the detector to generate features based on the provided build data
+
+
+
+.. py:function:: create_mock_feature_collection(payload: io.BufferedReader, geom=False) -> geojson.FeatureCollection
+
+   This function allows us to emulate what we would expect a model to return to MR, a geojson formatted
+   FeatureCollection. This allows us to bypass using a real model if the NOOP_MODEL_NAME is given as the
+   model name in the image request. This is the same logic used by our current default dummy model to select
+   detection points in our pipeline.
+
+   :param payload: BufferedReader = object that holds the data that will be  sent to the feature generator
+   :param geom: Bool = whether or not to return the geom_imcoords field in the geojson
+   :return: FeatureCollection = feature collection containing the center point of a tile given as a detection point
+
+
+.. py:data:: logger
+
+.. py:class:: SMDetector(endpoint: str, assumed_credentials: Dict[str, str] = None)
+
+   Bases: :py:obj:`model_runner.inference.detector.Detector`
+
+
+   .. py:property:: mode
+      :type: aws.osml.model_runner.api.ModelInvokeMode
+
+
+
+   .. py:method:: find_features(payload: io.BufferedReader, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger) -> geojson.FeatureCollection
+
+      Query the established endpoint mode to find features based on a payload
+
+      :param payload: BufferedReader = the BufferedReader object that holds the
+                                  data that will be sent to the feature generator
+      :param metrics: MetricsLogger = the metrics logger object to capture the log data on the system
+
+      :return: FeatureCollection = a feature collection containing the center point of a tile
+
+
+
+.. py:class:: SMDetectorBuilder(endpoint: str, assumed_credentials: Dict[str, str] = None)
+
+   Bases: :py:obj:`model_runner.inference.endpoint_builder.FeatureEndpointBuilder`
+
+
+   .. py:method:: build() -> Optional[model_runner.inference.detector.Detector]
+
+      :return: a SageMaker detector based on the parameters defined during initialization
+
+
+

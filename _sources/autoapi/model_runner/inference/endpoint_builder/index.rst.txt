@@ -1,0 +1,68 @@
+model_runner.inference.endpoint_builder
+=======================================
+
+.. py:module:: model_runner.inference.endpoint_builder
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.inference.endpoint_builder.Detector
+   model_runner.inference.endpoint_builder.FeatureEndpointBuilder
+
+
+Module Contents
+---------------
+
+.. py:class:: Detector(endpoint: str)
+
+   Bases: :py:obj:`abc.ABC`
+
+
+   The mechanism by which detected features are sent to their destination.
+
+
+   .. py:property:: mode
+      :type: aws.osml.model_runner.api.ModelInvokeMode
+
+      :abstractmethod:
+
+      The mode of the detector.
+
+
+
+   .. py:method:: find_features(payload: io.BufferedReader, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger) -> geojson.FeatureCollection
+      :abstractmethod:
+
+
+      Query the established endpoint mode to find features based on a payload
+
+      :param payload: BufferedReader = the BufferedReader object that holds the
+                                  data that will be  sent to the feature generator
+      :param metrics: MetricsLogger = the metrics logger object to capture the log data on the system
+
+      :return: FeatureCollection = a feature collection containing the center point of a tile
+
+
+
+.. py:class:: FeatureEndpointBuilder
+
+   Bases: :py:obj:`abc.ABC`
+
+
+   This is an abstract base for all classes to construct Detectors for various types of endpoints.
+
+
+   .. py:method:: build() -> Optional[model_runner.inference.detector.Detector]
+      :abstractmethod:
+
+
+      Constructs the sensor model from the available information. Note that in cases where not enough information is
+      available to provide any solution, this method will return None.
+
+      :return: Optional[Detector] = the detector to generate features based on the provided build data
+
+
+

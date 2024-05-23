@@ -1,0 +1,7 @@
+aws.osml.model\_runner.sink.sink\_factory module
+================================================
+
+.. automodule:: aws.osml.model_runner.sink.sink_factory
+   :members:
+   :undoc-members:
+   :show-inheritance:
