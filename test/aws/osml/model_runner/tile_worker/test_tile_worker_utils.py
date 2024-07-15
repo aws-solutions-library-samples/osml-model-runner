@@ -63,6 +63,41 @@ class TestTileWorkerUtils(TestCase):
             # with self.assertRaises(ValueError):
             setup_tile_workers(mock_region_request, mock_sensor_model, mock_elevation_model)
 
+    def test_process_tiles(
+        self,
+    ):
+        from aws.osml.gdal.gdal_utils import load_gdal_dataset
+        from aws.osml.model_runner.api import RegionRequest
+        from aws.osml.model_runner.tile_worker.tile_worker_utils import process_tiles, setup_tile_workers
+
+        mock_region_request = RegionRequest(
+            {
+                "tile_size": (10, 10),
+                "tile_overlap": (0, 0),
+                "tile_format": "NITF",
+                "image_id": "1",
+                "image_url": "/mock/path",
+                "region_bounds": ((0, 0), (50, 50)),
+                "model_invoke_mode": "SM_ENDPOINT",
+                "image_extension": "fake",
+            }
+        )
+
+        ds, sensor_model = load_gdal_dataset("./test/data/small.ntf")
+        mock_elevation_model = None
+        work_queue, tile_worker_list = setup_tile_workers(mock_region_request, sensor_model, mock_elevation_model)
+
+        completed_tiles, failed_tiles = process_tiles(
+            region_request=mock_region_request,
+            tile_queue=work_queue,
+            tile_workers=tile_worker_list,
+            raster_dataset=ds,
+            sensor_model=sensor_model,
+        )
+
+        assert completed_tiles == 25
+        assert failed_tiles == 0
+
     def test_chip_generator(self):
         from aws.osml.model_runner.tile_worker.tile_worker_utils import generate_crops
 

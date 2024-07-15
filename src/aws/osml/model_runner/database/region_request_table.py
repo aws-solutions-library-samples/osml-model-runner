@@ -42,6 +42,8 @@ class RegionRequestItem(DDBItem):
     message: Optional[str] = None
     region_status: Optional[str] = None
     total_tiles: Optional[Decimal] = None
+    failed_tiles: Optional[Decimal] = None
+    completed_tiles: Optional[Decimal] = None
     region_retry_count: Optional[Decimal] = None
     region_pixel_bounds: Optional[str] = None
 
