@@ -101,6 +101,13 @@ def process_tiles(
 
     :return: Tuple[int, int] = number of tiles processed, number of tiles with an error
     """
+
+    tile_array = generate_crops(
+        region_request.region_bounds,
+        region_request.tile_size,
+        region_request.tile_overlap,
+    )
+    total_tile_count = len(tile_array)
     try:
         # This will update the GDAL configuration options to use the security credentials for
         # this request. Any GDAL managed AWS calls (i.e. incrementally fetching pixels from a
@@ -124,15 +131,10 @@ def process_tiles(
             # Calculate a set of ML engine sized regions that we need to process for this image
             # and set up a temporary directory to store the temporary files. The entire directory
             # will be deleted at the end of this image's processing
-            total_tile_count = 0
             with tempfile.TemporaryDirectory() as tmp:
                 # Ignoring mypy error - if region_bounds was None the call to validate the
                 # image region request at the start of this function would have failed
-                for tile_bounds in generate_crops(
-                    region_request.region_bounds,  # type: ignore[arg-type]
-                    region_request.tile_size,
-                    region_request.tile_overlap,
-                ):
+                for tile_bounds in tile_array:
                     # Create a temp file name for the encoded region
                     region_image_filename = (
                         f"{token_hex(16)}-region-{tile_bounds[0][0]}-{tile_bounds[0][1]}-"
@@ -155,8 +157,6 @@ def process_tiles(
                         "image_id": region_request.image_id,
                         "job_id": region_request.job_id,
                     }
-                    # Increment our tile count tracking
-                    total_tile_count += 1
 
                     # Place the image info onto our processing queue
                     tile_queue.put(image_info)

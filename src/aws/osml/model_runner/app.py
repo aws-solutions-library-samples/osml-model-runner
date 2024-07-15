@@ -510,6 +510,8 @@ class ModelRunner:
 
                 # Update table w/ total tile counts
                 region_request_item.total_tiles = Decimal(total_tile_count)
+                region_request_item.completed_tiles = Decimal(total_tile_count - tile_error_count)
+                region_request_item.failed_tiles = Decimal(tile_error_count)
                 region_request_item = self.region_request_table.update_region_request(region_request_item)
 
             # Update the image request to complete this region
