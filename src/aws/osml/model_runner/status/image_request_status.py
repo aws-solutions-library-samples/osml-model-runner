@@ -16,7 +16,6 @@ from aws.osml.model_runner.sink import Sink
 class ImageRequestStatusMessage:
     image_status: ImageRequestStatus
     job_id: str
-    job_arn: Optional[str] = None
     image_id: Optional[str] = None
     image_url: Optional[str] = None
     image_read_role: Optional[str] = None

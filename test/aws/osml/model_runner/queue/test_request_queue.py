@@ -17,10 +17,6 @@ TEST_MOCK_MESSAGE = {
         "job_id": {"Type": "String", "Value": "0"},
         "processing_duration": {"Type": "String", "Value": "0.290897369384765625"},
         "image_status": {"Type": "String", "Value": "IN_PROGRESS"},
-        "job_arn": {
-            "Type": "String",
-            "Value": "arn:aws:oversightml:us-west-2:012345678910:ipj/test-0",
-        },
         "image_id": {"Type": "String", "Value": "0:s3://test-images-012345678910/images/small.ntf"},
     },
 }

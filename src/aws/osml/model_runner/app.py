@@ -235,11 +235,9 @@ class ModelRunner:
                             logger.error(f"There was a problem processing the image request: {err}")
                             min_image_id = image_request.image_id if image_request and image_request.image_id else ""
                             min_job_id = image_request.job_id if image_request and image_request.job_id else ""
-                            min_job_arn = image_request.job_arn if image_request and image_request.job_arn else ""
                             minimal_job_item = JobItem(
                                 image_id=min_image_id,
                                 job_id=min_job_id,
-                                job_arn=min_job_arn,
                                 processing_time=Decimal(0),
                             )
                             self.fail_image_request_send_messages(minimal_job_item, err)
@@ -274,7 +272,6 @@ class ModelRunner:
             image_request_item = JobItem(
                 image_id=image_request.image_id,
                 job_id=image_request.job_id,
-                job_arn=image_request.job_arn,
                 tile_size=str(image_request.tile_size),
                 tile_overlap=str(image_request.tile_overlap),
                 model_name=image_request.model_name,
@@ -345,7 +342,6 @@ class ModelRunner:
                 minimal_job_item = JobItem(
                     image_id=image_request.image_id,
                     job_id=image_request.job_id,
-                    job_arn=image_request.job_arn,
                     processing_time=Decimal(0),
                 )
                 self.fail_image_request(minimal_job_item, err)

@@ -42,14 +42,12 @@ class TestStatusMonitor(TestCase):
         from aws.osml.model_runner.common.typing import ImageRequestStatus
 
         self.job_item.job_id = "1234"
-        self.job_item.job_arn = "arn"
         self.job_item.processing_time = Decimal(1)
         mock_message = "test message 1"
         mock_status = ImageRequestStatus.SUCCESS
         expected_attributes = {
             "image_status": {"Type": "String", "Value": mock_status.value},
             "job_id": {"Type": "String", "Value": self.job_item.job_id},
-            "job_arn": {"Type": "String", "Value": self.job_item.job_arn},
             "image_id": {"Type": "String", "Value": self.job_item.image_id},
             "processing_duration": {"Type": "String", "Value": str(self.job_item.processing_time)},
         }
@@ -61,7 +59,6 @@ class TestStatusMonitor(TestCase):
             MessageAttributeNames=[
                 "image_status",
                 "job_id",
-                "job_arn",
                 "image_id",
                 "processing_duration",
             ],
@@ -76,7 +73,6 @@ class TestStatusMonitor(TestCase):
         from aws.osml.model_runner.status.status_monitor import StatusMonitorException
 
         self.job_item.job_id = "1234"
-        self.job_item.job_arn = "arn"
         self.job_item.processing_time = Decimal(1)
         self.status_monitor.image_status_sns.topic_arn = "topic:arn:that:does:not:exist"
         with self.assertRaises(StatusMonitorException):
@@ -89,13 +85,6 @@ class TestStatusMonitor(TestCase):
         with self.assertRaises(StatusMonitorException):
             self.status_monitor.process_event(self.job_item, ImageRequestStatus.SUCCESS, "test")
         self.job_item.job_id = "1234"
-        with self.assertRaises(StatusMonitorException):
-            self.status_monitor.process_event(self.job_item, ImageRequestStatus.SUCCESS, "test")
-        self.job_item.job_arn = "arn"
-        with self.assertRaises(StatusMonitorException):
-            self.status_monitor.process_event(self.job_item, ImageRequestStatus.SUCCESS, "test")
-        self.job_item.job_arn = None
-        self.job_item.processing_time = Decimal(1)
         with self.assertRaises(StatusMonitorException):
             self.status_monitor.process_event(self.job_item, ImageRequestStatus.SUCCESS, "test")
 
