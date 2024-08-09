@@ -12,7 +12,6 @@ from botocore.stub import Stubber
 TEST_S3_FULL_BUCKET_PATH = "s3://test-results-bucket/test/data/small.ntf"
 
 base_request = {
-    "jobArn": "arn:aws:oversightml:us-east-1:012345678910:ipj/test-job",
     "jobName": "test-job",
     "jobId": "5f4e8a55-95cf-4d96-95cd-9b037f767eff",
     "imageUrls": ["s3://fake-bucket/images/test-image-id"],
@@ -79,7 +78,6 @@ class TestModelRunnerAPI(TestCase):
         }
         ir = ImageRequest(
             image_request_template,
-            job_arn="arn:aws:oversightml:us-east-1:012345678910:ipj/test-job",
             job_name="test-job",
             job_id="5f4e8a55-95cf-4d96-95cd-9b037f767eff",
             image_id="5f4e8a55-95cf-4d96-95cd-9b037f767eff:s3://fake-bucket/images/test-image-id",
@@ -99,7 +97,6 @@ class TestModelRunnerAPI(TestCase):
         assert ir.tile_format == "NITF"
         assert ir.tile_compression == ImageCompression.NONE
         assert ir.job_id == "5f4e8a55-95cf-4d96-95cd-9b037f767eff"
-        assert ir.job_arn == "arn:aws:oversightml:us-east-1:012345678910:ipj/test-job"
         assert len(ir.outputs) == 1
         sinks = SinkFactory.outputs_to_sinks(ir.outputs)
         s3_sink: Sink = sinks[0]
@@ -159,7 +156,6 @@ class TestModelRunnerAPI(TestCase):
         assert ir.tile_format == "PNG"
         assert ir.tile_compression == ImageCompression.NONE
         assert ir.job_id == "5f4e8a55-95cf-4d96-95cd-9b037f767eff"
-        assert ir.job_arn == "arn:aws:oversightml:us-east-1:012345678910:ipj/test-job"
         assert len(ir.outputs) == 1
         sinks = SinkFactory.outputs_to_sinks(ir.outputs)
         s3_sink: Sink = sinks[0]
@@ -192,7 +188,6 @@ class TestModelRunnerAPI(TestCase):
         assert ir.tile_format == "NITF"
         assert ir.tile_compression == ImageCompression.NONE
         assert ir.job_id == "5f4e8a55-95cf-4d96-95cd-9b037f767eff"
-        assert ir.job_arn == "arn:aws:oversightml:us-east-1:012345678910:ipj/test-job"
         assert len(ir.outputs) == 1
         sinks = SinkFactory.outputs_to_sinks(ir.outputs)
         s3_sink: Sink = sinks[0]
@@ -235,7 +230,6 @@ class TestModelRunnerAPI(TestCase):
         assert ir.tile_format == "NITF"
         assert ir.tile_compression == ImageCompression.NONE
         assert ir.job_id == "5f4e8a55-95cf-4d96-95cd-9b037f767eff"
-        assert ir.job_arn == "arn:aws:oversightml:us-east-1:012345678910:ipj/test-job"
         assert len(ir.outputs) == 2
         sinks = SinkFactory.outputs_to_sinks(ir.outputs)
         s3_sink: Sink = sinks[0]

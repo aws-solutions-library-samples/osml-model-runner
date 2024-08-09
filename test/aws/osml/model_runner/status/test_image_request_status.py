@@ -15,7 +15,6 @@ class TestImageRequestStatus(TestCase):
 
         self.mock_image_status = ImageRequestStatus.IN_PROGRESS
         self.mock_job_id = "job id"
-        self.mock_job_arn = "job arn"
         self.mock_image_id = "image id"
         self.mock_image_url = "https://image-link.ntf"
         self.mock_image_read_role = "ImageReader"
@@ -40,7 +39,6 @@ class TestImageRequestStatus(TestCase):
         mock_item = ImageRequestStatusMessage(
             image_status=self.mock_image_status,
             job_id=self.mock_job_id,
-            job_arn=self.mock_job_arn,
             image_id=self.mock_image_id,
             image_url=self.mock_image_url,
             image_read_role=self.mock_image_read_role,
@@ -59,7 +57,6 @@ class TestImageRequestStatus(TestCase):
         expected_dict_of_strings = {
             "image_status": str(self.mock_image_status.value),
             "job_id": self.mock_job_id,
-            "job_arn": self.mock_job_arn,
             "image_id": self.mock_image_id,
             "image_url": self.mock_image_url,
             "image_read_role": self.mock_image_read_role,

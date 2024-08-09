@@ -28,7 +28,6 @@ class StatusMonitor:
         # Check that the image request has valid properties
         if (
             image_request_item.job_id is not None
-            and image_request_item.job_arn is not None
             and image_request_item.image_id is not None
             and image_request_item.processing_time is not None
         ):
@@ -45,7 +44,6 @@ class StatusMonitor:
                 sns_message_attributes = ImageRequestStatusMessage(
                     image_status=status,
                     job_id=image_request_item.job_id,
-                    job_arn=image_request_item.job_arn,
                     image_id=image_request_item.image_id,
                     processing_duration=image_request_item.processing_time,
                 )

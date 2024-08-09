@@ -37,7 +37,6 @@ class JobItem(DDBItem):
 
     image_id: str
     job_id: Optional[str] = None
-    job_arn: Optional[str] = None
     image_url: Optional[str] = None
     image_read_role: Optional[str] = None
     model_invoke_mode: Optional[str] = None

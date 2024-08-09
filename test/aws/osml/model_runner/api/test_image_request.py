@@ -25,16 +25,6 @@ class TestImageRequest(unittest.TestCase):
 
         assert not ir.is_valid()
 
-    def test_invalid_job_arn(self):
-        from aws.osml.model_runner.api.image_request import ImageRequest
-
-        ir = ImageRequest(
-            self.sample_request_data,
-            job_arn="",
-        )
-
-        assert not ir.is_valid()
-
     def test_invalid_job_id(self):
         from aws.osml.model_runner.api.image_request import ImageRequest
 
@@ -48,7 +38,6 @@ class TestImageRequest(unittest.TestCase):
     @staticmethod
     def build_request_data():
         return {
-            "job_arn": "arn:aws:oversightml:us-east-1:012345678910:ipj/test-job",
             "job_id": "test-job",
             "image_id": "test-image-id",
             "image_url": "test-image-url",

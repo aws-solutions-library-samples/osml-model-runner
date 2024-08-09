@@ -101,7 +101,6 @@ To start a job, place an ImageRequest on the ImageRequestQueue.
 Sample ImageRequest:
 ```json
 {
-    "jobArn": "arn:aws:oversightml:<REGION>:<ACCOUNT>:ipj/<job_name>",
     "jobName": "<job_name>",
     "jobId": "<job_id>",
     "imageUrls": ["<image_url>"],
