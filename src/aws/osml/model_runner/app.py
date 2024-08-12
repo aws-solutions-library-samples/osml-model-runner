@@ -647,7 +647,7 @@ class ModelRunner:
             features = self.add_properties_to_features(image_request_item, features)
 
             # Sink the features into the right outputs
-            is_write_succeeded = self.sync_features(image_request_item, features)
+            is_write_succeeded = self.sink_features(image_request_item, features)
             if not is_write_succeeded:
                 raise AggregateOutputFeaturesException(
                     "Failed to write features to S3 or Kinesis! Please check the " "log..."
@@ -750,7 +750,7 @@ class ModelRunner:
     ) -> List[Feature]:
         """
         For a given image processing job - aggregate all the features that were collected for it and
-        put them in the correct output sync locations.
+        put them in the correct output sink locations.
 
         :param image_request_item: JobItem = the image request
         :param feature_table: FeatureTable = the table storing features from all completed regions
@@ -915,7 +915,7 @@ class ModelRunner:
 
     @staticmethod
     @metric_scope
-    def sync_features(image_request_item: JobItem, features: List[Feature], metrics: MetricsLogger = None) -> bool:
+    def sink_features(image_request_item: JobItem, features: List[Feature], metrics: MetricsLogger = None) -> bool:
         """
         Writing the features output to S3 and/or Kinesis Stream
 
@@ -923,7 +923,7 @@ class ModelRunner:
         :param features: List[Features] = the list of features to update
         :param metrics: the current metrics scope
 
-        :return: bool = if it has successfully written to an output sync
+        :return: bool = if it has successfully written to an output sink
         """
 
         if isinstance(metrics, MetricsLogger):
