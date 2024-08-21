@@ -7,10 +7,13 @@ from unittest import mock
 import boto3
 import geojson
 from botocore.stub import ANY, Stubber
+from geojson import Feature
+from moto import mock_aws
 
 TEST_PREFIX = "folder"
 TEST_RESULTS_BUCKET = "test-results-bucket"
 TEST_IMAGE_ID = "test-image-id"
+
 MOCK_S3_PUT_OBJECT_RESPONSE = {
     "ResponseMetadata": {
         "RequestId": "5994D680BF127CE3",
@@ -160,6 +163,26 @@ class TestS3Sink(unittest.TestCase):
 
         s3_sink = S3Sink(TEST_RESULTS_BUCKET, TEST_PREFIX)
         assert SinkMode.AGGREGATE == s3_sink.mode
+
+    @mock_aws
+    @mock.patch("boto3.s3.transfer.S3Transfer.upload_file", autospec=True)
+    @mock.patch("sys.getsizeof", return_value=6 * 1024**3)  # Mock geojson_size to be 6 GB
+    def test_write_triggers_multipart_upload(self, mock_getsizeof, mock_upload_file):
+        from aws.osml.model_runner.app_config import BotoConfig
+        from aws.osml.model_runner.sink.s3_sink import S3Sink
+
+        s3_client = boto3.client("s3", config=BotoConfig.default)
+        s3_client.create_bucket(
+            Bucket=TEST_RESULTS_BUCKET,
+            CreateBucketConfiguration={"LocationConstraint": "us-west-2"},
+        )
+        sink = S3Sink(bucket=TEST_RESULTS_BUCKET, prefix=TEST_PREFIX)
+
+        features = Feature(geometry={"type": "Point", "coordinates": [0.0, 0.0]})
+        result = sink.write(image_id=TEST_IMAGE_ID, features=features)
+        self.assertTrue(result)
+
+        mock_upload_file.assert_called_once()
 
     @staticmethod
     def build_feature_list() -> List[geojson.Feature]:
