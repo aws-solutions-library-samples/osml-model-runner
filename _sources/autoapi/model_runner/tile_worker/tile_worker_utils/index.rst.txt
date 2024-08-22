@@ -1,0 +1,92 @@
+model_runner.tile_worker.tile_worker_utils
+==========================================
+
+.. py:module:: model_runner.tile_worker.tile_worker_utils
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.tile_worker.tile_worker_utils.logger
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   model_runner.tile_worker.tile_worker_utils.setup_tile_workers
+   model_runner.tile_worker.tile_worker_utils.process_tiles
+   model_runner.tile_worker.tile_worker_utils._create_tile
+   model_runner.tile_worker.tile_worker_utils.sizeof_fmt
+   model_runner.tile_worker.tile_worker_utils.generate_crops
+   model_runner.tile_worker.tile_worker_utils.ceildiv
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:function:: setup_tile_workers(region_request: aws.osml.model_runner.api.RegionRequest, sensor_model: Optional[aws.osml.photogrammetry.SensorModel] = None, elevation_model: Optional[aws.osml.photogrammetry.ElevationModel] = None) -> Tuple[queue.Queue, List[aws.osml.model_runner.tile_worker.TileWorker]]
+
+   Sets up a pool of tile-workers to process image tiles from a region request
+
+   :param region_request: RegionRequest = the region request to update.
+   :param sensor_model: Optional[SensorModel] = the sensor model for this raster dataset
+   :param elevation_model: Optional[ElevationModel] = an elevation model used to fix the elevation of the image coordinate
+
+   :return: Tuple[Queue, List[TileWorker] = a list of tile workers and the queue that manages them
+
+
+.. py:function:: process_tiles(region_request: aws.osml.model_runner.api.RegionRequest, tile_queue: queue.Queue, tile_workers: List[aws.osml.model_runner.tile_worker.TileWorker], raster_dataset: osgeo.gdal.Dataset, sensor_model: Optional[aws.osml.photogrammetry.SensorModel] = None) -> Tuple[int, int]
+
+   Loads a GDAL dataset into memory and processes it with a pool of tile workers.
+
+   :param region_request: RegionRequest = the region request to update.
+   :param tile_queue: Queue = keeps the image in the queue for processing
+   :param tile_workers: List[Tileworker] = the list of tile workers
+   :param raster_dataset: gdal.Dataset = the raster dataset containing the region
+   :param sensor_model: Optional[SensorModel] = the sensor model for this raster dataset
+
+   :return: Tuple[int, int] = number of tiles processed, number of tiles with an error
+
+
+.. py:function:: _create_tile(gdal_tile_factory, tile_bounds, tmp_image_path, metrics: aws_embedded_metrics.MetricsLogger = None) -> Optional[str]
+
+   Create an encoded tile of the requested image region.
+
+   :param gdal_tile_factory: the factory used to create the tile
+   :param tile_bounds: the requested tile boundary
+   :param tmp_image_path: the output location of the tile
+   :param metrics: the current metrics scope
+   :return: the resulting tile path or None if the tile could not be created
+
+
+.. py:function:: sizeof_fmt(num: float, suffix: str = 'B') -> str
+
+.. py:function:: generate_crops(region: aws.osml.model_runner.common.ImageRegion, chip_size: aws.osml.model_runner.common.ImageDimensions, overlap: aws.osml.model_runner.common.ImageDimensions) -> List[aws.osml.model_runner.common.ImageRegion]
+
+   Yields a list of overlapping chip bounding boxes for the given region. Chips will start
+   in the upper left corner of the region (i.e. region[0][0], region[0][1]) and will be spaced
+   such that they have the specified horizontal and vertical overlap.
+
+   :param region: ImageDimensions = a tuple for the bounding box of the region ((ul_r, ul_c), (width, height))
+   :param chip_size: ImageDimensions = a tuple for the chip dimensions (width, height)
+   :param overlap: ImageDimensions = a tuple for the overlap (width, height)
+
+   :return: List[ImageRegion] = an iterable list of tuples for the chip bounding boxes [((ul_r, ul_c), (w, h)), ...]
+
+
+.. py:function:: ceildiv(a: int, b: int) -> int
+
+   Integer ceiling division
+
+   :param a: int = numerator
+   :param b: int = denominator
+
+   :return: ceil(a/b)
+
+

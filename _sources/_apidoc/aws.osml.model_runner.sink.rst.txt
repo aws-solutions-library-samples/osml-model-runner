@@ -1,0 +1,19 @@
+aws.osml.model\_runner.sink package
+===================================
+
+.. automodule:: aws.osml.model_runner.sink
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   aws.osml.model_runner.sink.exceptions
+   aws.osml.model_runner.sink.kinesis_sink
+   aws.osml.model_runner.sink.s3_sink
+   aws.osml.model_runner.sink.sink
+   aws.osml.model_runner.sink.sink_factory

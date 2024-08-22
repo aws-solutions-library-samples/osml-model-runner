@@ -1,0 +1,18 @@
+aws.osml.model\_runner.status package
+=====================================
+
+.. automodule:: aws.osml.model_runner.status
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   aws.osml.model_runner.status.exceptions
+   aws.osml.model_runner.status.image_request_status
+   aws.osml.model_runner.status.sns_helper
+   aws.osml.model_runner.status.status_monitor

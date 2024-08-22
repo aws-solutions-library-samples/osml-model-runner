@@ -1,0 +1,34 @@
+model_runner.inference.endpoint_factory
+=======================================
+
+.. py:module:: model_runner.inference.endpoint_factory
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.inference.endpoint_factory.FeatureDetectorFactory
+
+
+Module Contents
+---------------
+
+.. py:class:: FeatureDetectorFactory(endpoint: str, endpoint_mode: aws.osml.model_runner.api.ModelInvokeMode, assumed_credentials: Optional[Dict[str, str]] = None)
+
+   .. py:attribute:: endpoint
+
+
+   .. py:attribute:: endpoint_mode
+
+
+   .. py:attribute:: assumed_credentials
+
+
+   .. py:method:: build() -> Optional[model_runner.inference.detector.Detector]
+
+      :return: a feature detector based on the parameters defined during initialization
+
+
+

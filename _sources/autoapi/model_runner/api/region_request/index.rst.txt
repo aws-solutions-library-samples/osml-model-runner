@@ -1,0 +1,115 @@
+model_runner.api.region_request
+===============================
+
+.. py:module:: model_runner.api.region_request
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.api.region_request.RegionRequest
+
+
+Module Contents
+---------------
+
+.. py:class:: RegionRequest(*initial_data: Dict[str, Any], **kwargs: Any)
+
+   Bases: :py:obj:`object`
+
+
+   Request for the Model Runner to process a region of an image.
+
+   This class contains the attributes that make up a region processing request along with
+   constructors used to create these requests from common constructs.
+
+
+   .. py:attribute:: region_id
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: image_id
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: image_extension
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: job_id
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: image_url
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: image_read_role
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: model_name
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: model_invoke_mode
+      :type:  model_runner.api.inference.ModelInvokeMode
+
+
+   .. py:attribute:: model_invocation_role
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: tile_size
+      :type:  aws.osml.model_runner.common.ImageDimensions
+      :value: (1024, 1024)
+
+
+
+   .. py:attribute:: tile_overlap
+      :type:  aws.osml.model_runner.common.ImageDimensions
+      :value: (50, 50)
+
+
+
+   .. py:attribute:: tile_format
+      :type:  aws.osml.model_runner.common.ImageFormats
+
+
+   .. py:attribute:: tile_compression
+      :type:  aws.osml.model_runner.common.ImageCompression
+
+
+   .. py:attribute:: region_bounds
+      :type:  aws.osml.model_runner.common.ImageRegion
+      :value: ((0, 0), (0, 0))
+
+
+
+   .. py:method:: is_valid() -> bool
+
+      Check to see if this request contains required attributes and meaningful values
+
+      :return: bool = True if the request contains all the mandatory attributes with acceptable values,
+               False otherwise
+
+
+

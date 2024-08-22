@@ -1,0 +1,363 @@
+model_runner.app
+================
+
+.. py:module:: model_runner.app
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.app.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.app.ModelRunner
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:class:: ModelRunner
+
+   Main class for operating the ModelRunner application. It monitors input queues for processing requests,
+   decomposes the image into a set of smaller regions and tiles, invokes an ML model endpoint with each tile, and
+   finally aggregates all the results into a single output which can be deposited into the desired output sinks.
+
+
+   .. py:attribute:: image_request_queue
+
+
+   .. py:attribute:: image_requests_iter
+
+
+   .. py:attribute:: job_table
+
+
+   .. py:attribute:: region_request_table
+
+
+   .. py:attribute:: endpoint_statistics_table
+
+
+   .. py:attribute:: region_request_queue
+
+
+   .. py:attribute:: region_requests_iter
+
+
+   .. py:attribute:: status_monitor
+
+
+   .. py:attribute:: elevation_model
+
+
+   .. py:attribute:: endpoint_utils
+
+
+   .. py:attribute:: running
+      :value: False
+
+
+
+   .. py:method:: run() -> None
+
+      Starts ModelRunner in a loop that continuously monitors the image work queue and region work queue.
+
+      :return: None
+
+
+
+   .. py:method:: stop() -> None
+
+      Stops ModelRunner by setting the global run variable to False.
+
+      :return: None
+
+
+
+   .. py:method:: create_elevation_model() -> Optional[aws.osml.photogrammetry.ElevationModel]
+      :staticmethod:
+
+
+      Create an elevation model if the relevant options are set in the service configuration.
+
+      :return: Optional[ElevationModel] = the elevation model or None if not configured
+
+
+
+   .. py:method:: monitor_work_queues() -> None
+
+      Monitors SQS queues for ImageRequest and RegionRequest The region work queue is checked first and will wait for
+      up to 10 seconds to start work. Only if no regions need to be processed in that time will this worker check to
+      see if a new image can be started. Ultimately this setup is intended to ensure that all the regions for an image
+      are completed by the cluster before work begins on more images.
+
+      :return: None
+
+
+
+   .. py:method:: process_image_request(image_request: model_runner.api.ImageRequest) -> None
+
+      Processes ImageRequest objects that are picked up from  queue. Loads the specified image into memory to be
+      chipped apart into regions and sent downstream for processing via RegionRequest. This will also process the
+      first region chipped from the image. # This worker will process the first region of this image since it has
+      already loaded the dataset from S3 and is ready to go. Any additional regions will be queued for processing by
+      other workers in this cluster.
+
+      :param image_request: ImageRequest = the image request derived from the ImageRequest SQS message
+
+      :return: None
+
+
+
+   .. py:method:: queue_region_request(all_regions: List[model_runner.common.ImageRegion], image_request: model_runner.api.ImageRequest, raster_dataset: osgeo.gdal.Dataset, sensor_model: Optional[aws.osml.photogrammetry.SensorModel], image_extension: Optional[str]) -> None
+
+      Loads the list of regions into the queue. First it will create a RequestRequestItem and creates
+      an entry into the RegionRequestTable for traceability. Then process the region request. Once it's completed,
+      it will update an entry in the RegionRequestTable.
+
+      :param image_extension: = the GDAL derived image extension
+      :param all_regions: List[ImageRegion] = the list of image regions
+      :param image_request: ImageRequest = the image request
+      :param raster_dataset: Dataset = the raster dataset containing the region
+      :param sensor_model: Optional[SensorModel] = the sensor model for this raster dataset
+
+      :return None
+
+
+
+   .. py:method:: process_region_request(region_request: model_runner.api.RegionRequest, region_request_item: model_runner.database.RegionRequestItem, raster_dataset: osgeo.gdal.Dataset, sensor_model: Optional[aws.osml.photogrammetry.SensorModel] = None, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None) -> model_runner.database.JobItem
+
+      Processes RegionRequest objects that are delegated for processing. Loads the specified region of an image into
+      memory to be processed by tile-workers. If a raster_dataset is not provided directly it will poll the image
+      from the region request.
+
+      :param region_request: RegionRequest = the region request
+      :param region_request_item: RegionRequestItem = the region request to update
+      :param raster_dataset: gdal.Dataset = the raster dataset containing the region
+      :param sensor_model: Optional[SensorModel] = the sensor model for this raster dataset
+      :param metrics: MetricsLogger = the metrics logger to use to report metrics.
+
+      :return: None
+
+
+
+   .. py:method:: load_image_request(image_request_item: model_runner.database.JobItem, roi: shapely.geometry.base.BaseGeometry) -> Tuple[str, osgeo.gdal.Dataset, Optional[aws.osml.photogrammetry.SensorModel], List[model_runner.common.ImageRegion]]
+      :staticmethod:
+
+
+      Loads the required image file metadata into memory to be chipped apart into regions and
+      distributed for region processing.
+
+      :param image_request_item: JobItem = the region request to update.
+      :param roi: BaseGeometry = the region of interest shape
+
+      :return: Tuple[Queue, List[TileWorker]: A list of tile workers and the queue that manages them
+
+
+
+   .. py:method:: fail_image_request(image_request_item: model_runner.database.JobItem, err: Exception) -> None
+
+      Handles failure events/exceptions for image requests and tries to update the status monitor accordingly
+
+      :param image_request_item: JobItem = the image request that failed.
+      :param err: Exception = the exception that caused the failure
+
+      :return: None
+
+
+
+   .. py:method:: fail_image_request_send_messages(image_request_item: model_runner.database.JobItem, err: Exception) -> None
+
+      Updates failed metrics and update the status monitor accordingly
+
+      :param image_request_item: JobItem = the image request that failed.
+      :param err: Exception = the exception that caused the failure
+
+      :return: None
+
+
+
+   .. py:method:: complete_image_request(region_request: model_runner.api.RegionRequest, image_format: str) -> None
+
+      Runs after every region has completed processing to check if that was the last region and run required
+      completion logic for the associated ImageRequest.
+
+      :param region_request: RegionRequest = the region request to update.
+      :param image_format: the format of the image
+      :return: None
+
+
+
+   .. py:method:: generate_image_processing_metrics(image_request_item: model_runner.database.JobItem, image_format: str, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None) -> None
+
+      Output the metrics for the full image processing timeline.
+
+      :param image_request_item: the completed image request item that tracks the duration and error counts
+      :param image_format: the input image format
+      :param metrics: the current metric scope
+
+
+
+   .. py:method:: fail_region_request(region_request_item: model_runner.database.RegionRequestItem, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None) -> model_runner.database.JobItem
+
+      Fails a region if it failed to process successfully and updates the table accordingly before
+      raising an exception
+
+      :param region_request_item: RegionRequestItem = the region request to update
+      :param metrics: MetricsLogger = the metrics logger to use to report metrics.
+
+      :return: None
+
+
+
+   .. py:method:: validate_model_hosting(image_request: model_runner.database.JobItem)
+
+      Validates that the image request is valid. If not, raises an exception.
+
+      :param image_request: JobItem = the image request
+
+      :return: None
+
+
+
+   .. py:method:: aggregate_features(image_request_item: model_runner.database.JobItem, feature_table: model_runner.database.FeatureTable, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None) -> List[geojson.Feature]
+      :staticmethod:
+
+
+      For a given image processing job - aggregate all the features that were collected for it and
+      put them in the correct output sink locations.
+
+      :param image_request_item: JobItem = the image request
+      :param feature_table: FeatureTable = the table storing features from all completed regions
+      :param metrics: the current metrics scope
+
+      :return: List[geojson.Feature] = the list of features
+
+
+
+   .. py:method:: identify_overlap(feature: geojson.Feature, shape: Tuple[int, int], overlap: Tuple[int, int], origin: Tuple[int, int] = (0, 0)) -> Tuple[int, int, int, int]
+      :staticmethod:
+
+
+      Generate a tuple that contains the min and max indexes of adjacent tiles or regions for a given feature. If
+      the min and max values for both x and y are the same then this feature does not touch an overlap region.
+
+      :param feature: the geojson Feature that must contain properties to identify its location in an image
+      :param shape: the width, height of the area in pixels
+      :param overlap: the x, y overlap between areas in pixels
+      :param origin: the x, y coordinate of the area in relation to the full image
+
+      :return: a tuple: minx, maxx, miny, maxy that identifies any overlap.
+
+
+
+   .. py:method:: group_features_by_overlap(features: List[geojson.Feature], shape: Tuple[int, int], overlap: Tuple[int, int], origin: Tuple[int, int] = (0, 0)) -> Dict[Tuple[int, int, int, int], List[geojson.Feature]]
+      :staticmethod:
+
+
+      Group all the feature items by tile id
+
+      :param features: List[FeatureItem] = the list of feature items
+      :param shape: the width, height of the area in pixels
+      :param overlap: the x, y overlap between areas in pixels
+      :param origin: the x, y coordinate of the area in relation to the full image
+
+      :return: a mapping of overlap id to a list of features that intersect that overlap region
+
+
+
+   .. py:method:: select_features(image_request_item: model_runner.database.JobItem, features: List[geojson.Feature], metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None) -> List[geojson.Feature]
+      :staticmethod:
+
+
+      Selects the desired features using the options in the JobItem (NMS, SOFT_NMS, etc.).
+      This code applies a feature selector only to the features that came from regions of the image
+      that were processed multiple times. First features are grouped based on the region they were
+      processed in. Any features found in the overlap area between regions are run through the
+      FeatureSelector. If they were not part of an overlap area between regions, they will be grouped
+      based on tile boundaries. Any features that fall into the overlap of adjacent tiles are filtered
+      by the FeatureSelector. All other features should not be duplicates; they are added to the result
+      without additional filtering.
+
+      Computationally, this implements two critical factors that lower the overall processing time for the
+      O(N^2) selection algorithms. First, it will filter out the majority of features that couldn't possibly
+      have duplicates generated by our tiled image processing; Second, it runs the selection algorithms
+      incrementally on much smaller groups of features.
+
+      :param image_request_item: JobItem = the image request
+      :param features: List[Feature] = the list of geojson features to process
+      :param metrics: MetricsLogger = the metrics logger to use to report metrics.
+      :return: List[Feature] = the list of geojson features after processing
+
+
+
+   .. py:method:: sink_features(image_request_item: model_runner.database.JobItem, features: List[geojson.Feature], metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None) -> bool
+      :staticmethod:
+
+
+      Writing the features output to S3 and/or Kinesis Stream
+
+      :param image_request_item: JobItem = the job table item for an image request
+      :param features: List[Features] = the list of features to update
+      :param metrics: the current metrics scope
+
+      :return: bool = if it has successfully written to an output sink
+
+
+
+   .. py:method:: add_properties_to_features(image_request_item: model_runner.database.JobItem, features: List[geojson.Feature]) -> List[geojson.Feature]
+
+      Add arbitrary and controlled property dictionaries to geojson feature properties
+
+      :param image_request_item: JobItem = the job table item for an image request
+      :param features: List[geojson.Feature] = the list of features to update
+
+      :return: List[geojson.Feature] = updated list of features
+
+
+
+   .. py:method:: get_inference_metadata_property(image_request_item: model_runner.database.JobItem, inference_time: str) -> Dict[str, Any]
+      :staticmethod:
+
+
+      Create an inference dictionary property to append to geojson features
+
+      :param image_request_item: JobItem = the job table item for an image request
+      :param inference_time: str = the time the inference was made in epoch millisec
+
+      :return: Dict[str, Any] = an inference metadata dictionary property to attach to features
+
+
+
+   .. py:method:: get_extents(ds: osgeo.gdal.Dataset, sm: aws.osml.photogrammetry.SensorModel) -> Dict[str, Any]
+      :staticmethod:
+
+
+      Returns the geographic extents of the given GDAL dataset.
+
+      :param ds: GDAL dataset.
+      :param sm: OSML Sensor Model imputed for dataset
+      :return: Dictionary with keys 'north', 'south', 'east', 'west' representing the extents.
+
+
+
+   .. py:method:: calculate_region_status(total_tile_count: int, tile_error_count: int) -> model_runner.common.RegionRequestStatus
+      :staticmethod:
+
+
+      Calculate the processing status of a region upon completion
+      :param total_tile_count: number of tiles that were processed
+      :param tile_error_count: number of tiles with errors
+      :return: RegionRequestStatus
+
+
+

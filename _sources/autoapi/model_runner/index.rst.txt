@@ -1,0 +1,33 @@
+model_runner
+============
+
+.. py:module:: model_runner
+
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/model_runner/api/index
+   /autoapi/model_runner/common/index
+   /autoapi/model_runner/database/index
+   /autoapi/model_runner/inference/index
+   /autoapi/model_runner/queue/index
+   /autoapi/model_runner/sink/index
+   /autoapi/model_runner/status/index
+   /autoapi/model_runner/tile_worker/index
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/model_runner/app/index
+   /autoapi/model_runner/app_config/index
+   /autoapi/model_runner/exceptions/index
+
+

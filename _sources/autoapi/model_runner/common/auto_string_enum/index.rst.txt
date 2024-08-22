@@ -1,0 +1,40 @@
+model_runner.common.auto_string_enum
+====================================
+
+.. py:module:: model_runner.common.auto_string_enum
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.common.auto_string_enum.AutoStringEnum
+
+
+Module Contents
+---------------
+
+.. py:class:: AutoStringEnum
+
+   Bases: :py:obj:`enum.Enum`
+
+
+   Generic enumeration.
+
+   Derive from this class to define new enumerations.
+
+
+   .. py:method:: _generate_next_value_(name, start, count, last_values) -> str
+      :staticmethod:
+
+
+      Generate the next value when not given.
+
+      name: the name of the member
+      start: the initial start value or None
+      count: the number of existing members
+      last_value: the last value assigned or None
+
+
+

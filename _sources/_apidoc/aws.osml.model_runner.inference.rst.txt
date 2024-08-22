@@ -1,0 +1,22 @@
+aws.osml.model\_runner.inference package
+========================================
+
+.. automodule:: aws.osml.model_runner.inference
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   aws.osml.model_runner.inference.detector
+   aws.osml.model_runner.inference.endpoint_builder
+   aws.osml.model_runner.inference.endpoint_factory
+   aws.osml.model_runner.inference.exceptions
+   aws.osml.model_runner.inference.feature_selection
+   aws.osml.model_runner.inference.feature_utils
+   aws.osml.model_runner.inference.http_detector
+   aws.osml.model_runner.inference.sm_detector

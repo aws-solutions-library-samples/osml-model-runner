@@ -1,0 +1,32 @@
+aws.osml.model\_runner package
+==============================
+
+.. automodule:: aws.osml.model_runner
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   aws.osml.model_runner.api
+   aws.osml.model_runner.common
+   aws.osml.model_runner.database
+   aws.osml.model_runner.inference
+   aws.osml.model_runner.queue
+   aws.osml.model_runner.sink
+   aws.osml.model_runner.status
+   aws.osml.model_runner.tile_worker
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   aws.osml.model_runner.app
+   aws.osml.model_runner.app_config
+   aws.osml.model_runner.exceptions

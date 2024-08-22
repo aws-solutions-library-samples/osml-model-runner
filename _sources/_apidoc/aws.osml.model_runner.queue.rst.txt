@@ -1,0 +1,15 @@
+aws.osml.model\_runner.queue package
+====================================
+
+.. automodule:: aws.osml.model_runner.queue
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   aws.osml.model_runner.queue.request_queue

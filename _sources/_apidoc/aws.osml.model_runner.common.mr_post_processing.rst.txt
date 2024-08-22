@@ -1,0 +1,7 @@
+aws.osml.model\_runner.common.mr\_post\_processing module
+=========================================================
+
+.. automodule:: aws.osml.model_runner.common.mr_post_processing
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,208 @@
+model_runner.status
+===================
+
+.. py:module:: model_runner.status
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/model_runner/status/exceptions/index
+   /autoapi/model_runner/status/image_request_status/index
+   /autoapi/model_runner/status/sns_helper/index
+   /autoapi/model_runner/status/status_monitor/index
+
+
+Exceptions
+----------
+
+.. autoapisummary::
+
+   model_runner.status.SNSPublishException
+   model_runner.status.StatusMonitorException
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.status.ImageRequestStatusMessage
+   model_runner.status.SNSHelper
+   model_runner.status.StatusMonitor
+
+
+Package Contents
+----------------
+
+.. py:exception:: SNSPublishException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: StatusMonitorException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:class:: ImageRequestStatusMessage
+
+   .. py:attribute:: image_status
+      :type:  aws.osml.model_runner.common.ImageRequestStatus
+
+
+   .. py:attribute:: job_id
+      :type:  str
+
+
+   .. py:attribute:: image_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: image_url
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: image_read_role
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: outputs
+      :type:  Optional[List[aws.osml.model_runner.sink.Sink]]
+
+
+   .. py:attribute:: model_name
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: processing_duration
+      :type:  Optional[decimal.Decimal]
+      :value: None
+
+
+
+   .. py:attribute:: model_invoke_mode
+      :type:  Optional[aws.osml.model_runner.api.ModelInvokeMode]
+      :value: None
+
+
+
+   .. py:attribute:: model_invocation_role
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: tile_size
+      :type:  Optional[aws.osml.model_runner.common.ImageDimensions]
+      :value: None
+
+
+
+   .. py:attribute:: tile_overlap
+      :type:  Optional[aws.osml.model_runner.common.ImageDimensions]
+      :value: None
+
+
+
+   .. py:attribute:: tile_format
+      :type:  Optional[aws.osml.model_runner.common.ImageFormats]
+      :value: None
+
+
+
+   .. py:attribute:: tile_compression
+      :type:  Optional[aws.osml.model_runner.common.ImageCompression]
+      :value: None
+
+
+
+   .. py:attribute:: roi
+      :type:  Optional[shapely.geometry.base.BaseGeometry]
+      :value: None
+
+
+
+   .. py:attribute:: region_bounds
+      :type:  Optional[aws.osml.model_runner.common.ImageRegion]
+      :value: None
+
+
+
+   .. py:method:: asdict_str_values() -> Dict[str, str]
+
+
+   .. py:method:: asdict() -> dict
+
+
+.. py:class:: SNSHelper(topic_arn: Optional[str])
+
+   Encapsulates Amazon SNS topic functions.
+
+
+   .. py:attribute:: sns_client
+
+
+   .. py:attribute:: topic_arn
+
+
+   .. py:method:: publish_message(message: str, attributes: Dict[str, Any]) -> Optional[str]
+
+      Publishes a message, with attributes, to a topic. Subscriptions can be filtered
+      based on message attributes so that a subscription receives messages only
+      when specified attributes are present.
+
+      :param message: str = the message to publish.
+      :param attributes: Dict[str, Any] = the key-value attributes to attach to the message. Values
+                         must be either `str` or `bytes`.
+
+      :return: Optional[str] The ID of the message.
+
+
+
+.. py:class:: StatusMonitor
+
+   .. py:attribute:: image_status_sns
+
+
+   .. py:method:: process_event(image_request_item: aws.osml.model_runner.database.job_table.JobItem, status: aws.osml.model_runner.common.ImageRequestStatus, message: str) -> None
+
+      Publishes the message via SNS
+
+      :param image_request_item: JobItem = the image request item
+      :param status: ImageRequestStatus = the status of an image request
+      :param message: str = the message to notify the user
+
+      :return: None
+
+
+
+   .. py:method:: get_image_request_status(image_request_item: aws.osml.model_runner.database.job_table.JobItem) -> aws.osml.model_runner.common.ImageRequestStatus
+      :staticmethod:
+
+
+      Produce a image request status from a given image request
+
+      :param image_request_item: JobItem = the image request item
+
+      :return: ImageRequestStatus = the current status of an image request
+
+
+

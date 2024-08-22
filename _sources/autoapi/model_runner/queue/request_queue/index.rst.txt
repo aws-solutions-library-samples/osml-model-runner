@@ -1,0 +1,66 @@
+model_runner.queue.request_queue
+================================
+
+.. py:module:: model_runner.queue.request_queue
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.queue.request_queue.RequestQueue
+
+
+Module Contents
+---------------
+
+.. py:class:: RequestQueue(queue_url: str, wait_seconds: int = 20, num_messages: int = 1)
+
+   .. py:attribute:: sqs_client
+
+
+   .. py:attribute:: queue_url
+
+
+   .. py:attribute:: wait_seconds
+
+
+   .. py:attribute:: num_messages
+
+
+   .. py:method:: __iter__()
+
+
+   .. py:method:: finish_request(receipt_handle: str) -> None
+
+      Delete the message from the SQS
+
+      :param receipt_handle: str = unique identifier of a message
+
+      :return: None
+
+
+
+   .. py:method:: reset_request(receipt_handle: str, visibility_timeout: int = 0) -> None
+
+      Reset the message in SQS
+
+      :param receipt_handle: str = unique identifier of a message
+      :param visibility_timeout: int = period of time which SQS prevents other consumers from receiving
+                                      and processing the message
+
+      :return: None
+
+
+
+   .. py:method:: send_request(request: Dict) -> None
+
+      Send the message via SQS
+
+      :param request: Dict = unique identifier of a message
+
+      :return: None
+
+
+

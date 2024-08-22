@@ -1,0 +1,29 @@
+model_runner.api.request_utils
+==============================
+
+.. py:module:: model_runner.api.request_utils
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   model_runner.api.request_utils.shared_properties_are_valid
+
+
+Module Contents
+---------------
+
+.. py:function:: shared_properties_are_valid(request) -> bool
+
+   There are some attributes that are shared between ImageRequests and RegionRequests. This
+   function exists to validate if ImageRequests/RegionRequests have all the metadata info
+   in order to process it
+
+   :param request: an object of either ImageRequests or RegionRequests
+
+   :return: bool = True if the request contains all the mandatory attributes with acceptable values,
+                False otherwise
+
+

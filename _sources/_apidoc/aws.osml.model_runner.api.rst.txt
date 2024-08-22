@@ -1,0 +1,20 @@
+aws.osml.model\_runner.api package
+==================================
+
+.. automodule:: aws.osml.model_runner.api
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   aws.osml.model_runner.api.exceptions
+   aws.osml.model_runner.api.image_request
+   aws.osml.model_runner.api.inference
+   aws.osml.model_runner.api.region_request
+   aws.osml.model_runner.api.request_utils
+   aws.osml.model_runner.api.sink

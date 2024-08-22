@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner package &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_apidoc/aws.osml.model_runner.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-aws.osml.model_runner">
+<span id="aws-osml-model-runner-package"></span><h1>aws.osml.model_runner package<a class="headerlink" href="#module-aws.osml.model_runner" title="Link to this heading"></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="aws.osml.model_runner.api.html">aws.osml.model_runner.api package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.api.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.api.exceptions.html">aws.osml.model_runner.api.exceptions module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.api.exceptions.html#aws.osml.model_runner.api.exceptions.InvalidImageRequestException"><code class="docutils literal notranslate"><span class="pre">InvalidImageRequestException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.api.exceptions.html#aws.osml.model_runner.api.exceptions.InvalidS3ObjectException"><code class="docutils literal notranslate"><span class="pre">InvalidS3ObjectException</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.api.image_request.html">aws.osml.model_runner.api.image_request module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.api.image_request.html#aws.osml.model_runner.api.image_request.ImageRequest"><code class="docutils literal notranslate"><span class="pre">ImageRequest</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.api.inference.html">aws.osml.model_runner.api.inference module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.api.inference.html#aws.osml.model_runner.api.inference.ModelInvokeMode"><code class="docutils literal notranslate"><span class="pre">ModelInvokeMode</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.api.region_request.html">aws.osml.model_runner.api.region_request module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.api.region_request.html#aws.osml.model_runner.api.region_request.RegionRequest"><code class="docutils literal notranslate"><span class="pre">RegionRequest</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.api.request_utils.html">aws.osml.model_runner.api.request_utils module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.api.request_utils.html#aws.osml.model_runner.api.request_utils.shared_properties_are_valid"><code class="docutils literal notranslate"><span class="pre">shared_properties_are_valid()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.api.sink.html">aws.osml.model_runner.api.sink module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.api.sink.html#aws.osml.model_runner.api.sink.SinkMode"><code class="docutils literal notranslate"><span class="pre">SinkMode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.api.sink.html#aws.osml.model_runner.api.sink.SinkType"><code class="docutils literal notranslate"><span class="pre">SinkType</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aws.osml.model_runner.common.html">aws.osml.model_runner.common package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.common.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.common.auto_string_enum.html">aws.osml.model_runner.common.auto_string_enum module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.auto_string_enum.html#aws.osml.model_runner.common.auto_string_enum.AutoStringEnum"><code class="docutils literal notranslate"><span class="pre">AutoStringEnum</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.common.credentials_utils.html">aws.osml.model_runner.common.credentials_utils module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.credentials_utils.html#aws.osml.model_runner.common.credentials_utils.get_credentials_for_assumed_role"><code class="docutils literal notranslate"><span class="pre">get_credentials_for_assumed_role()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.common.endpoint_utils.html">aws.osml.model_runner.common.endpoint_utils module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.endpoint_utils.html#aws.osml.model_runner.common.endpoint_utils.EndpointUtils"><code class="docutils literal notranslate"><span class="pre">EndpointUtils</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.common.exceptions.html">aws.osml.model_runner.common.exceptions module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.exceptions.html#aws.osml.model_runner.common.exceptions.InvalidAssumedRoleException"><code class="docutils literal notranslate"><span class="pre">InvalidAssumedRoleException</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.common.feature_utils.html">aws.osml.model_runner.common.feature_utils module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.feature_utils.html#aws.osml.model_runner.common.feature_utils.get_feature_image_bounds"><code class="docutils literal notranslate"><span class="pre">get_feature_image_bounds()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.common.log_context.html">aws.osml.model_runner.common.log_context module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.log_context.html#aws.osml.model_runner.common.log_context.ThreadingLocalContextFilter"><code class="docutils literal notranslate"><span class="pre">ThreadingLocalContextFilter</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.common.metrics_utils.html">aws.osml.model_runner.common.metrics_utils module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.metrics_utils.html#aws.osml.model_runner.common.metrics_utils.build_embedded_metrics_config"><code class="docutils literal notranslate"><span class="pre">build_embedded_metrics_config()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.common.mr_post_processing.html">aws.osml.model_runner.common.mr_post_processing module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.ABCEnumMeta"><code class="docutils literal notranslate"><span class="pre">ABCEnumMeta</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithmType"><code class="docutils literal notranslate"><span class="pre">MRPostProcessingAlgorithmType</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType"><code class="docutils literal notranslate"><span class="pre">FeatureDistillationAlgorithmType</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.MRPostprocessingStep"><code class="docutils literal notranslate"><span class="pre">MRPostprocessingStep</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithm"><code class="docutils literal notranslate"><span class="pre">MRPostProcessingAlgorithm</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithm"><code class="docutils literal notranslate"><span class="pre">FeatureDistillationAlgorithm</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationNMS"><code class="docutils literal notranslate"><span class="pre">FeatureDistillationNMS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationSoftNMS"><code class="docutils literal notranslate"><span class="pre">FeatureDistillationSoftNMS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.MRPostProcessing"><code class="docutils literal notranslate"><span class="pre">MRPostProcessing</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.PostProcessingDeserializer"><code class="docutils literal notranslate"><span class="pre">PostProcessingDeserializer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationDeserializer"><code class="docutils literal notranslate"><span class="pre">FeatureDistillationDeserializer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.MRPostProcessingDeserializer"><code class="docutils literal notranslate"><span class="pre">MRPostProcessingDeserializer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.deserialize_post_processing_list"><code class="docutils literal notranslate"><span class="pre">deserialize_post_processing_list()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.mr_post_processing_options_factory"><code class="docutils literal notranslate"><span class="pre">mr_post_processing_options_factory()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.common.timer.html">aws.osml.model_runner.common.timer module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.timer.html#aws.osml.model_runner.common.timer.Timer"><code class="docutils literal notranslate"><span class="pre">Timer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.common.typing.html">aws.osml.model_runner.common.typing module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.typing.html#aws.osml.model_runner.common.typing.ImageCompression"><code class="docutils literal notranslate"><span class="pre">ImageCompression</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.typing.html#aws.osml.model_runner.common.typing.ImageFormats"><code class="docutils literal notranslate"><span class="pre">ImageFormats</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.typing.html#aws.osml.model_runner.common.typing.ImageRequestStatus"><code class="docutils literal notranslate"><span class="pre">ImageRequestStatus</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.typing.html#aws.osml.model_runner.common.typing.RegionRequestStatus"><code class="docutils literal notranslate"><span class="pre">RegionRequestStatus</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.common.typing.html#aws.osml.model_runner.common.typing.GeojsonDetectionField"><code class="docutils literal notranslate"><span class="pre">GeojsonDetectionField</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aws.osml.model_runner.database.html">aws.osml.model_runner.database package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.database.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.database.ddb_helper.html">aws.osml.model_runner.database.ddb_helper module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.ddb_helper.html#aws.osml.model_runner.database.ddb_helper.DDBKey"><code class="docutils literal notranslate"><span class="pre">DDBKey</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.ddb_helper.html#aws.osml.model_runner.database.ddb_helper.DDBItem"><code class="docutils literal notranslate"><span class="pre">DDBItem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.ddb_helper.html#aws.osml.model_runner.database.ddb_helper.DDBHelper"><code class="docutils literal notranslate"><span class="pre">DDBHelper</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.database.endpoint_statistics_table.html">aws.osml.model_runner.database.endpoint_statistics_table module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.endpoint_statistics_table.html#aws.osml.model_runner.database.endpoint_statistics_table.EndpointStatisticsItem"><code class="docutils literal notranslate"><span class="pre">EndpointStatisticsItem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.endpoint_statistics_table.html#aws.osml.model_runner.database.endpoint_statistics_table.EndpointStatisticsTable"><code class="docutils literal notranslate"><span class="pre">EndpointStatisticsTable</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.database.exceptions.html">aws.osml.model_runner.database.exceptions module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.exceptions.html#aws.osml.model_runner.database.exceptions.AddFeaturesException"><code class="docutils literal notranslate"><span class="pre">AddFeaturesException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.exceptions.html#aws.osml.model_runner.database.exceptions.DDBUpdateException"><code class="docutils literal notranslate"><span class="pre">DDBUpdateException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.exceptions.html#aws.osml.model_runner.database.exceptions.DDBBatchWriteException"><code class="docutils literal notranslate"><span class="pre">DDBBatchWriteException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.exceptions.html#aws.osml.model_runner.database.exceptions.EndImageException"><code class="docutils literal notranslate"><span class="pre">EndImageException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.exceptions.html#aws.osml.model_runner.database.exceptions.GetImageRequestItemException"><code class="docutils literal notranslate"><span class="pre">GetImageRequestItemException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.exceptions.html#aws.osml.model_runner.database.exceptions.IsImageCompleteException"><code class="docutils literal notranslate"><span class="pre">IsImageCompleteException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.exceptions.html#aws.osml.model_runner.database.exceptions.StartImageException"><code class="docutils literal notranslate"><span class="pre">StartImageException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.exceptions.html#aws.osml.model_runner.database.exceptions.StartRegionException"><code class="docutils literal notranslate"><span class="pre">StartRegionException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.exceptions.html#aws.osml.model_runner.database.exceptions.InvalidRegionRequestException"><code class="docutils literal notranslate"><span class="pre">InvalidRegionRequestException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.exceptions.html#aws.osml.model_runner.database.exceptions.GetRegionRequestItemException"><code class="docutils literal notranslate"><span class="pre">GetRegionRequestItemException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.exceptions.html#aws.osml.model_runner.database.exceptions.UpdateRegionException"><code class="docutils literal notranslate"><span class="pre">UpdateRegionException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.exceptions.html#aws.osml.model_runner.database.exceptions.CompleteRegionException"><code class="docutils literal notranslate"><span class="pre">CompleteRegionException</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.database.feature_table.html">aws.osml.model_runner.database.feature_table module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.feature_table.html#aws.osml.model_runner.database.feature_table.handle_json_body"><code class="docutils literal notranslate"><span class="pre">handle_json_body()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.feature_table.html#aws.osml.model_runner.database.feature_table.FeatureItem"><code class="docutils literal notranslate"><span class="pre">FeatureItem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.feature_table.html#aws.osml.model_runner.database.feature_table.FeatureTable"><code class="docutils literal notranslate"><span class="pre">FeatureTable</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.database.job_table.html">aws.osml.model_runner.database.job_table module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.job_table.html#aws.osml.model_runner.database.job_table.JobItem"><code class="docutils literal notranslate"><span class="pre">JobItem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.job_table.html#aws.osml.model_runner.database.job_table.JobTable"><code class="docutils literal notranslate"><span class="pre">JobTable</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.database.region_request_table.html">aws.osml.model_runner.database.region_request_table module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.region_request_table.html#aws.osml.model_runner.database.region_request_table.RegionRequestItem"><code class="docutils literal notranslate"><span class="pre">RegionRequestItem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.database.region_request_table.html#aws.osml.model_runner.database.region_request_table.RegionRequestTable"><code class="docutils literal notranslate"><span class="pre">RegionRequestTable</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aws.osml.model_runner.inference.html">aws.osml.model_runner.inference package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.inference.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.inference.detector.html">aws.osml.model_runner.inference.detector module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.inference.detector.html#aws.osml.model_runner.inference.detector.Detector"><code class="docutils literal notranslate"><span class="pre">Detector</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.inference.endpoint_builder.html">aws.osml.model_runner.inference.endpoint_builder module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.inference.endpoint_builder.html#aws.osml.model_runner.inference.endpoint_builder.FeatureEndpointBuilder"><code class="docutils literal notranslate"><span class="pre">FeatureEndpointBuilder</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.inference.endpoint_factory.html">aws.osml.model_runner.inference.endpoint_factory module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.inference.endpoint_factory.html#aws.osml.model_runner.inference.endpoint_factory.FeatureDetectorFactory"><code class="docutils literal notranslate"><span class="pre">FeatureDetectorFactory</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.inference.exceptions.html">aws.osml.model_runner.inference.exceptions module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.inference.exceptions.html#aws.osml.model_runner.inference.exceptions.FeatureDistillationException"><code class="docutils literal notranslate"><span class="pre">FeatureDistillationException</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.inference.feature_selection.html">aws.osml.model_runner.inference.feature_selection module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.inference.feature_selection.html#aws.osml.model_runner.inference.feature_selection.FeatureSelector"><code class="docutils literal notranslate"><span class="pre">FeatureSelector</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.inference.feature_utils.html">aws.osml.model_runner.inference.feature_utils module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.inference.feature_utils.html#aws.osml.model_runner.inference.feature_utils.features_to_image_shapes"><code class="docutils literal notranslate"><span class="pre">features_to_image_shapes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.inference.feature_utils.html#aws.osml.model_runner.inference.feature_utils.convert_nested_coordinate_lists"><code class="docutils literal notranslate"><span class="pre">convert_nested_coordinate_lists()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.inference.feature_utils.html#aws.osml.model_runner.inference.feature_utils.create_mock_feature_collection"><code class="docutils literal notranslate"><span class="pre">create_mock_feature_collection()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.inference.feature_utils.html#aws.osml.model_runner.inference.feature_utils.calculate_processing_bounds"><code class="docutils literal notranslate"><span class="pre">calculate_processing_bounds()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.inference.feature_utils.html#aws.osml.model_runner.inference.feature_utils.get_source_property"><code class="docutils literal notranslate"><span class="pre">get_source_property()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.inference.http_detector.html">aws.osml.model_runner.inference.http_detector module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.inference.http_detector.html#aws.osml.model_runner.inference.http_detector.CountingRetry"><code class="docutils literal notranslate"><span class="pre">CountingRetry</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.inference.http_detector.html#aws.osml.model_runner.inference.http_detector.HTTPDetector"><code class="docutils literal notranslate"><span class="pre">HTTPDetector</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.inference.http_detector.html#aws.osml.model_runner.inference.http_detector.HTTPDetectorBuilder"><code class="docutils literal notranslate"><span class="pre">HTTPDetectorBuilder</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.inference.sm_detector.html">aws.osml.model_runner.inference.sm_detector module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.inference.sm_detector.html#aws.osml.model_runner.inference.sm_detector.SMDetector"><code class="docutils literal notranslate"><span class="pre">SMDetector</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.inference.sm_detector.html#aws.osml.model_runner.inference.sm_detector.SMDetectorBuilder"><code class="docutils literal notranslate"><span class="pre">SMDetectorBuilder</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aws.osml.model_runner.queue.html">aws.osml.model_runner.queue package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.queue.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.queue.request_queue.html">aws.osml.model_runner.queue.request_queue module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.queue.request_queue.html#aws.osml.model_runner.queue.request_queue.RequestQueue"><code class="docutils literal notranslate"><span class="pre">RequestQueue</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aws.osml.model_runner.sink.html">aws.osml.model_runner.sink package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.sink.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.sink.exceptions.html">aws.osml.model_runner.sink.exceptions module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.sink.exceptions.html#aws.osml.model_runner.sink.exceptions.InvalidS3BucketException"><code class="docutils literal notranslate"><span class="pre">InvalidS3BucketException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.sink.exceptions.html#aws.osml.model_runner.sink.exceptions.InvalidKinesisStreamException"><code class="docutils literal notranslate"><span class="pre">InvalidKinesisStreamException</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.sink.kinesis_sink.html">aws.osml.model_runner.sink.kinesis_sink module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.sink.kinesis_sink.html#aws.osml.model_runner.sink.kinesis_sink.KinesisSink"><code class="docutils literal notranslate"><span class="pre">KinesisSink</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.sink.s3_sink.html">aws.osml.model_runner.sink.s3_sink module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.sink.s3_sink.html#aws.osml.model_runner.sink.s3_sink.S3Sink"><code class="docutils literal notranslate"><span class="pre">S3Sink</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.sink.sink.html">aws.osml.model_runner.sink.sink module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.sink.sink.html#aws.osml.model_runner.sink.sink.Sink"><code class="docutils literal notranslate"><span class="pre">Sink</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.sink.sink_factory.html">aws.osml.model_runner.sink.sink_factory module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.sink.sink_factory.html#aws.osml.model_runner.sink.sink_factory.SinkFactory"><code class="docutils literal notranslate"><span class="pre">SinkFactory</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aws.osml.model_runner.status.html">aws.osml.model_runner.status package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.status.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.status.exceptions.html">aws.osml.model_runner.status.exceptions module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.status.exceptions.html#aws.osml.model_runner.status.exceptions.SNSPublishException"><code class="docutils literal notranslate"><span class="pre">SNSPublishException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.status.exceptions.html#aws.osml.model_runner.status.exceptions.StatusMonitorException"><code class="docutils literal notranslate"><span class="pre">StatusMonitorException</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.status.image_request_status.html">aws.osml.model_runner.status.image_request_status module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.status.image_request_status.html#aws.osml.model_runner.status.image_request_status.ImageRequestStatusMessage"><code class="docutils literal notranslate"><span class="pre">ImageRequestStatusMessage</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.status.sns_helper.html">aws.osml.model_runner.status.sns_helper module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.status.sns_helper.html#aws.osml.model_runner.status.sns_helper.SNSHelper"><code class="docutils literal notranslate"><span class="pre">SNSHelper</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.status.status_monitor.html">aws.osml.model_runner.status.status_monitor module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.status.status_monitor.html#aws.osml.model_runner.status.status_monitor.StatusMonitor"><code class="docutils literal notranslate"><span class="pre">StatusMonitor</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aws.osml.model_runner.tile_worker.html">aws.osml.model_runner.tile_worker package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.tile_worker.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.tile_worker.exceptions.html">aws.osml.model_runner.tile_worker.exceptions module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.tile_worker.exceptions.html#aws.osml.model_runner.tile_worker.exceptions.SetupTileWorkersException"><code class="docutils literal notranslate"><span class="pre">SetupTileWorkersException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.tile_worker.exceptions.html#aws.osml.model_runner.tile_worker.exceptions.ProcessTilesException"><code class="docutils literal notranslate"><span class="pre">ProcessTilesException</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.tile_worker.tile_worker.html">aws.osml.model_runner.tile_worker.tile_worker module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.tile_worker.tile_worker.html#aws.osml.model_runner.tile_worker.tile_worker.TileWorker"><code class="docutils literal notranslate"><span class="pre">TileWorker</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.tile_worker.tile_worker_utils.html">aws.osml.model_runner.tile_worker.tile_worker_utils module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.tile_worker.tile_worker_utils.html#aws.osml.model_runner.tile_worker.tile_worker_utils.setup_tile_workers"><code class="docutils literal notranslate"><span class="pre">setup_tile_workers()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.tile_worker.tile_worker_utils.html#aws.osml.model_runner.tile_worker.tile_worker_utils.process_tiles"><code class="docutils literal notranslate"><span class="pre">process_tiles()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.tile_worker.tile_worker_utils.html#aws.osml.model_runner.tile_worker.tile_worker_utils.sizeof_fmt"><code class="docutils literal notranslate"><span class="pre">sizeof_fmt()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.tile_worker.tile_worker_utils.html#aws.osml.model_runner.tile_worker.tile_worker_utils.generate_crops"><code class="docutils literal notranslate"><span class="pre">generate_crops()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="aws.osml.model_runner.tile_worker.tile_worker_utils.html#aws.osml.model_runner.tile_worker.tile_worker_utils.ceildiv"><code class="docutils literal notranslate"><span class="pre">ceildiv()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="aws.osml.model_runner.app.html">aws.osml.model_runner.app module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner"><code class="docutils literal notranslate"><span class="pre">ModelRunner</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.run"><code class="docutils literal notranslate"><span class="pre">run()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.stop"><code class="docutils literal notranslate"><span class="pre">stop()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.create_elevation_model"><code class="docutils literal notranslate"><span class="pre">create_elevation_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.monitor_work_queues"><code class="docutils literal notranslate"><span class="pre">monitor_work_queues()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.process_image_request"><code class="docutils literal notranslate"><span class="pre">process_image_request()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.queue_region_request"><code class="docutils literal notranslate"><span class="pre">queue_region_request()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.process_region_request"><code class="docutils literal notranslate"><span class="pre">process_region_request()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.load_image_request"><code class="docutils literal notranslate"><span class="pre">load_image_request()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.fail_image_request"><code class="docutils literal notranslate"><span class="pre">fail_image_request()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.fail_image_request_send_messages"><code class="docutils literal notranslate"><span class="pre">fail_image_request_send_messages()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.complete_image_request"><code class="docutils literal notranslate"><span class="pre">complete_image_request()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.generate_image_processing_metrics"><code class="docutils literal notranslate"><span class="pre">generate_image_processing_metrics()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.fail_region_request"><code class="docutils literal notranslate"><span class="pre">fail_region_request()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.validate_model_hosting"><code class="docutils literal notranslate"><span class="pre">validate_model_hosting()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.aggregate_features"><code class="docutils literal notranslate"><span class="pre">aggregate_features()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.identify_overlap"><code class="docutils literal notranslate"><span class="pre">identify_overlap()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.group_features_by_overlap"><code class="docutils literal notranslate"><span class="pre">group_features_by_overlap()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.select_features"><code class="docutils literal notranslate"><span class="pre">select_features()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.sink_features"><code class="docutils literal notranslate"><span class="pre">sink_features()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.add_properties_to_features"><code class="docutils literal notranslate"><span class="pre">add_properties_to_features()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.get_inference_metadata_property"><code class="docutils literal notranslate"><span class="pre">get_inference_metadata_property()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.get_extents"><code class="docutils literal notranslate"><span class="pre">get_extents()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app.html#aws.osml.model_runner.app.ModelRunner.calculate_region_status"><code class="docutils literal notranslate"><span class="pre">calculate_region_status()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aws.osml.model_runner.app_config.html">aws.osml.model_runner.app_config module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig"><code class="docutils literal notranslate"><span class="pre">ServiceConfig</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.aws_region"><code class="docutils literal notranslate"><span class="pre">aws_region</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.job_table"><code class="docutils literal notranslate"><span class="pre">job_table</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.region_request_table"><code class="docutils literal notranslate"><span class="pre">region_request_table</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.endpoint_statistics_table"><code class="docutils literal notranslate"><span class="pre">endpoint_statistics_table</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.feature_table"><code class="docutils literal notranslate"><span class="pre">feature_table</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.image_queue"><code class="docutils literal notranslate"><span class="pre">image_queue</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.region_queue"><code class="docutils literal notranslate"><span class="pre">region_queue</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.workers_per_cpu"><code class="docutils literal notranslate"><span class="pre">workers_per_cpu</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.workers"><code class="docutils literal notranslate"><span class="pre">workers</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.elevation_data_location"><code class="docutils literal notranslate"><span class="pre">elevation_data_location</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.elevation_data_extension"><code class="docutils literal notranslate"><span class="pre">elevation_data_extension</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.elevation_data_version"><code class="docutils literal notranslate"><span class="pre">elevation_data_version</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.image_status_topic"><code class="docutils literal notranslate"><span class="pre">image_status_topic</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.region_status_topic"><code class="docutils literal notranslate"><span class="pre">region_status_topic</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.cp_api_endpoint"><code class="docutils literal notranslate"><span class="pre">cp_api_endpoint</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.self_throttling"><code class="docutils literal notranslate"><span class="pre">self_throttling</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.region_size"><code class="docutils literal notranslate"><span class="pre">region_size</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.throttling_vcpu_scale_factor"><code class="docutils literal notranslate"><span class="pre">throttling_vcpu_scale_factor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.throttling_retry_timeout"><code class="docutils literal notranslate"><span class="pre">throttling_retry_timeout</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.kinesis_max_record_size"><code class="docutils literal notranslate"><span class="pre">kinesis_max_record_size</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.ddb_max_item_size"><code class="docutils literal notranslate"><span class="pre">ddb_max_item_size</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.noop_bounds_model_name"><code class="docutils literal notranslate"><span class="pre">noop_bounds_model_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig.noop_geom_model_name"><code class="docutils literal notranslate"><span class="pre">noop_geom_model_name</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.BotoConfig"><code class="docutils literal notranslate"><span class="pre">BotoConfig</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.BotoConfig.default"><code class="docutils literal notranslate"><span class="pre">default</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.BotoConfig.sagemaker"><code class="docutils literal notranslate"><span class="pre">sagemaker</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.BotoConfig.ddb"><code class="docutils literal notranslate"><span class="pre">ddb</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.MetricLabels"><code class="docutils literal notranslate"><span class="pre">MetricLabels</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.MetricLabels.DURATION"><code class="docutils literal notranslate"><span class="pre">DURATION</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.MetricLabels.INVOCATIONS"><code class="docutils literal notranslate"><span class="pre">INVOCATIONS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.MetricLabels.ERRORS"><code class="docutils literal notranslate"><span class="pre">ERRORS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.MetricLabels.THROTTLES"><code class="docutils literal notranslate"><span class="pre">THROTTLES</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.MetricLabels.RETRIES"><code class="docutils literal notranslate"><span class="pre">RETRIES</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.MetricLabels.OPERATION_DIMENSION"><code class="docutils literal notranslate"><span class="pre">OPERATION_DIMENSION</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.MetricLabels.MODEL_NAME_DIMENSION"><code class="docutils literal notranslate"><span class="pre">MODEL_NAME_DIMENSION</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.MetricLabels.INPUT_FORMAT_DIMENSION"><code class="docutils literal notranslate"><span class="pre">INPUT_FORMAT_DIMENSION</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.MetricLabels.IMAGE_PROCESSING_OPERATION"><code class="docutils literal notranslate"><span class="pre">IMAGE_PROCESSING_OPERATION</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.MetricLabels.REGION_PROCESSING_OPERATION"><code class="docutils literal notranslate"><span class="pre">REGION_PROCESSING_OPERATION</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.MetricLabels.TILE_GENERATION_OPERATION"><code class="docutils literal notranslate"><span class="pre">TILE_GENERATION_OPERATION</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.MetricLabels.TILE_PROCESSING_OPERATION"><code class="docutils literal notranslate"><span class="pre">TILE_PROCESSING_OPERATION</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.MetricLabels.MODEL_INVOCATION_OPERATION"><code class="docutils literal notranslate"><span class="pre">MODEL_INVOCATION_OPERATION</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.MetricLabels.FEATURE_REFINEMENT_OPERATION"><code class="docutils literal notranslate"><span class="pre">FEATURE_REFINEMENT_OPERATION</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.MetricLabels.FEATURE_STORAGE_OPERATION"><code class="docutils literal notranslate"><span class="pre">FEATURE_STORAGE_OPERATION</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.MetricLabels.FEATURE_AGG_OPERATION"><code class="docutils literal notranslate"><span class="pre">FEATURE_AGG_OPERATION</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.MetricLabels.FEATURE_SELECTION_OPERATION"><code class="docutils literal notranslate"><span class="pre">FEATURE_SELECTION_OPERATION</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.MetricLabels.FEATURE_DISSEMINATE_OPERATION"><code class="docutils literal notranslate"><span class="pre">FEATURE_DISSEMINATE_OPERATION</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aws.osml.model_runner.exceptions.html">aws.osml.model_runner.exceptions module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.exceptions.html#aws.osml.model_runner.exceptions.RetryableJobException"><code class="docutils literal notranslate"><span class="pre">RetryableJobException</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.exceptions.html#aws.osml.model_runner.exceptions.AggregateFeaturesException"><code class="docutils literal notranslate"><span class="pre">AggregateFeaturesException</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.exceptions.html#aws.osml.model_runner.exceptions.ProcessRegionException"><code class="docutils literal notranslate"><span class="pre">ProcessRegionException</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.exceptions.html#aws.osml.model_runner.exceptions.LoadImageException"><code class="docutils literal notranslate"><span class="pre">LoadImageException</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.exceptions.html#aws.osml.model_runner.exceptions.ProcessImageException"><code class="docutils literal notranslate"><span class="pre">ProcessImageException</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.exceptions.html#aws.osml.model_runner.exceptions.UnsupportedModelException"><code class="docutils literal notranslate"><span class="pre">UnsupportedModelException</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.exceptions.html#aws.osml.model_runner.exceptions.InvalidImageURLException"><code class="docutils literal notranslate"><span class="pre">InvalidImageURLException</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.exceptions.html#aws.osml.model_runner.exceptions.SelfThrottledRegionException"><code class="docutils literal notranslate"><span class="pre">SelfThrottledRegionException</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.exceptions.html#aws.osml.model_runner.exceptions.InvalidFeaturePropertiesException"><code class="docutils literal notranslate"><span class="pre">InvalidFeaturePropertiesException</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="aws.osml.model_runner.exceptions.html#aws.osml.model_runner.exceptions.AggregateOutputFeaturesException"><code class="docutils literal notranslate"><span class="pre">AggregateOutputFeaturesException</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

@@ -1,0 +1,22 @@
+model_runner.common.metrics_utils
+=================================
+
+.. py:module:: model_runner.common.metrics_utils
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   model_runner.common.metrics_utils.build_embedded_metrics_config
+
+
+Module Contents
+---------------
+
+.. py:function:: build_embedded_metrics_config()
+
+   Embedded metrics configuration
+
+

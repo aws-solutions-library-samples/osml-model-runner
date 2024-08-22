@@ -1,0 +1,7 @@
+aws.osml.model\_runner.database.feature\_table module
+=====================================================
+
+.. automodule:: aws.osml.model_runner.database.feature_table
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,72 @@
+model_runner.inference.sm_detector
+==================================
+
+.. py:module:: model_runner.inference.sm_detector
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.inference.sm_detector.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.inference.sm_detector.SMDetector
+   model_runner.inference.sm_detector.SMDetectorBuilder
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:class:: SMDetector(endpoint: str, assumed_credentials: Dict[str, str] = None)
+
+   Bases: :py:obj:`model_runner.inference.detector.Detector`
+
+
+   The mechanism by which detected features are sent to their destination.
+
+
+   .. py:property:: mode
+      :type: aws.osml.model_runner.api.ModelInvokeMode
+
+      The mode of the detector.
+
+
+
+   .. py:method:: find_features(payload: io.BufferedReader, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger) -> geojson.FeatureCollection
+
+      Query the established endpoint mode to find features based on a payload
+
+      :param payload: BufferedReader = the BufferedReader object that holds the
+                                  data that will be sent to the feature generator
+      :param metrics: MetricsLogger = the metrics logger object to capture the log data on the system
+
+      :return: FeatureCollection = a feature collection containing the center point of a tile
+
+
+
+.. py:class:: SMDetectorBuilder(endpoint: str, assumed_credentials: Dict[str, str] = None)
+
+   Bases: :py:obj:`model_runner.inference.endpoint_builder.FeatureEndpointBuilder`
+
+
+   .. py:attribute:: endpoint
+
+
+   .. py:attribute:: assumed_credentials
+
+
+   .. py:method:: build() -> Optional[model_runner.inference.detector.Detector]
+
+      :return: a SageMaker detector based on the parameters defined during initialization
+
+
+

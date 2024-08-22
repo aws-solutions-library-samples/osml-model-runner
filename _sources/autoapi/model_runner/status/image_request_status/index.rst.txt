@@ -1,0 +1,115 @@
+model_runner.status.image_request_status
+========================================
+
+.. py:module:: model_runner.status.image_request_status
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.status.image_request_status.ImageRequestStatusMessage
+
+
+Module Contents
+---------------
+
+.. py:class:: ImageRequestStatusMessage
+
+   .. py:attribute:: image_status
+      :type:  aws.osml.model_runner.common.ImageRequestStatus
+
+
+   .. py:attribute:: job_id
+      :type:  str
+
+
+   .. py:attribute:: image_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: image_url
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: image_read_role
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: outputs
+      :type:  Optional[List[aws.osml.model_runner.sink.Sink]]
+
+
+   .. py:attribute:: model_name
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: processing_duration
+      :type:  Optional[decimal.Decimal]
+      :value: None
+
+
+
+   .. py:attribute:: model_invoke_mode
+      :type:  Optional[aws.osml.model_runner.api.ModelInvokeMode]
+      :value: None
+
+
+
+   .. py:attribute:: model_invocation_role
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: tile_size
+      :type:  Optional[aws.osml.model_runner.common.ImageDimensions]
+      :value: None
+
+
+
+   .. py:attribute:: tile_overlap
+      :type:  Optional[aws.osml.model_runner.common.ImageDimensions]
+      :value: None
+
+
+
+   .. py:attribute:: tile_format
+      :type:  Optional[aws.osml.model_runner.common.ImageFormats]
+      :value: None
+
+
+
+   .. py:attribute:: tile_compression
+      :type:  Optional[aws.osml.model_runner.common.ImageCompression]
+      :value: None
+
+
+
+   .. py:attribute:: roi
+      :type:  Optional[shapely.geometry.base.BaseGeometry]
+      :value: None
+
+
+
+   .. py:attribute:: region_bounds
+      :type:  Optional[aws.osml.model_runner.common.ImageRegion]
+      :value: None
+
+
+
+   .. py:method:: asdict_str_values() -> Dict[str, str]
+
+
+   .. py:method:: asdict() -> dict
+
+

@@ -1,0 +1,20 @@
+aws.osml.model\_runner.database package
+=======================================
+
+.. automodule:: aws.osml.model_runner.database
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   aws.osml.model_runner.database.ddb_helper
+   aws.osml.model_runner.database.endpoint_statistics_table
+   aws.osml.model_runner.database.exceptions
+   aws.osml.model_runner.database.feature_table
+   aws.osml.model_runner.database.job_table
+   aws.osml.model_runner.database.region_request_table

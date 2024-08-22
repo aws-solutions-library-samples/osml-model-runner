@@ -1,0 +1,181 @@
+model_runner.database.region_request_table
+==========================================
+
+.. py:module:: model_runner.database.region_request_table
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.database.region_request_table.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.database.region_request_table.RegionRequestItem
+   model_runner.database.region_request_table.RegionRequestTable
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:class:: RegionRequestItem
+
+   Bases: :py:obj:`model_runner.database.ddb_helper.DDBItem`
+
+
+   RegionRequestItem is a dataclass meant to represent a single item in the Region table
+
+   The data schema is defined as follows:
+   region_id: str = primary key - formatted as region (pixel bounds) + "-" + unique_identifier
+   image_id: str = secondary key - image_id for the job
+   start_time: Optional[Decimal] = time in epoch seconds when the job started
+   last_updated_time: Optional[Decimal] = time in epoch seconds when job is processing (periodically)
+   end_time: Optional[Decimal] = time in epoch seconds when the job ended
+   message: Optional[str] = information about the region job
+   status: Optional[str] = region job status - PROCESSING, COMPLETED, FAILED
+   region_retry_count: Optional[Decimal] = total count of regions expected for this image
+   region_pixel_bounds: = Region pixel bounds
+
+
+   .. py:attribute:: region_id
+      :type:  str
+
+
+   .. py:attribute:: image_id
+      :type:  str
+
+
+   .. py:attribute:: job_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: start_time
+      :type:  Optional[decimal.Decimal]
+      :value: None
+
+
+
+   .. py:attribute:: last_updated_time
+      :type:  Optional[decimal.Decimal]
+      :value: None
+
+
+
+   .. py:attribute:: end_time
+      :type:  Optional[decimal.Decimal]
+      :value: None
+
+
+
+   .. py:attribute:: message
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: region_status
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: total_tiles
+      :type:  Optional[decimal.Decimal]
+      :value: None
+
+
+
+   .. py:attribute:: failed_tiles
+      :type:  Optional[decimal.Decimal]
+      :value: None
+
+
+
+   .. py:attribute:: completed_tiles
+      :type:  Optional[decimal.Decimal]
+      :value: None
+
+
+
+   .. py:attribute:: region_retry_count
+      :type:  Optional[decimal.Decimal]
+      :value: None
+
+
+
+   .. py:attribute:: region_pixel_bounds
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:method:: __post_init__()
+
+
+.. py:class:: RegionRequestTable(table_name: str)
+
+   Bases: :py:obj:`model_runner.database.ddb_helper.DDBHelper`
+
+
+   RegionRequestTable is a class meant to help OSML with accessing and interacting with the region processing jobs we
+   track as part of the region table. It extends the DDBHelper class and provides its own item data class for use when
+   working with items from the table. It also sets the key for which we index on this table in the constructor.
+
+   :param table_name: str = the name of the table to interact with
+
+   :return: None
+
+
+   .. py:method:: start_region_request(region_request_item: RegionRequestItem) -> RegionRequestItem
+
+      Start a region processing request for given region pixel bounds, this should be the first record
+      for this region in the table.
+
+      :param region_request_item: RegionRequestItem = the unique identifier for the region we want to add to ddb
+
+      :return: RegionRequestItem = Updated region request item
+
+
+
+   .. py:method:: complete_region_request(region_request_item: RegionRequestItem, region_status: aws.osml.model_runner.common.RegionRequestStatus)
+
+      Update the region job to reflect that a region has succeeded or failed.
+
+      :param region_request_item: RegionRequestItem = the unique identifier for the region we want to update
+      :param region_status: RegionRequestStatus = Status of region at completion (FAILURE, PARTIAL, SUCCESS, etc.)
+
+      :return: RegionRequestItem = Updated region request item
+
+
+
+   .. py:method:: update_region_request(region_request_item: RegionRequestItem) -> RegionRequestItem
+
+      Update the region info in the ddb
+
+      :param region_request_item: RegionRequestItem = the unique identifier for the region we want to update
+
+      :return: RegionRequestItem = Updated region request item
+
+
+
+   .. py:method:: get_region_request(region_id: str, image_id: str) -> Optional[RegionRequestItem]
+
+      Get a RegionRequestItem object from the table based on the region_id and image_id provided
+
+      :param region_id: str = the unique identifier for the region we want to start processing
+      :param image_id: str = the unique identifier for the image (range key)
+
+      :return: Optional[RegionRequestItem] = region request item
+
+
+

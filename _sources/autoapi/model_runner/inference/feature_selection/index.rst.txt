@@ -1,0 +1,96 @@
+model_runner.inference.feature_selection
+========================================
+
+.. py:module:: model_runner.inference.feature_selection
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.inference.feature_selection.FeatureSelector
+
+
+Module Contents
+---------------
+
+.. py:class:: FeatureSelector(options: aws.osml.model_runner.common.FeatureDistillationAlgorithm = None)
+
+   The FeatureSelector class is used to select a subset of geojson features from a larger set
+   using an algorith such as NMS or Soft NMS.  Parameters such as thresholds and the algorithm
+   to use can be set by passing a FeatureSelectionOptions object in when the FeatureSelector
+   is instantiated.
+
+
+   .. py:attribute:: options
+
+
+   .. py:method:: select_features(feature_list: List[geojson.Feature]) -> List[geojson.Feature]
+
+      Selects a subset of features from a larger set of features using an algorithm such as NMS or Soft NMS.
+
+      :param feature_list: a list of geojson features with a property of bounds_imcoords
+      :return: the filtered list of features
+
+
+
+   .. py:method:: _get_lists_from_features(feature_list: List[geojson.Feature]) -> Tuple[List, List, List]
+
+      This function converts the GeoJSON features into lists of normalized bounding boxes, scores, and label IDs
+      needed by the selection algorithm implementations. As a side effect of this function various class attributes
+      are set to support the inverse mapping of algorithm primitives to the full features. See
+      _get_features_from_lists for the inverse function.
+
+      :param feature_list: the input set of GeoJSON features to preprocess
+      :return: tuple of lists - bounding boxes, confidence scores, category labels
+
+
+
+   .. py:method:: _normalize_boxes(boxes: List[List[int]]) -> List[List[float]]
+
+      This function normalizes the bounding boxes by subtracting the minimum x and y coordinates from each
+      coordinate and dividing by the range of x and y coordinates. That means that all bounding boxes coordinates
+      will be in the range of [0.0, 1.0] where 0.0 is the minimum of the extent and 1.0 is the maximum. See
+      _denormalize_boxes() to convert back to bboxes in pixel coordinates.
+
+      :param boxes: the list of bounding boxes to normalize
+      :return: the normalized list of bounding boxes
+
+
+
+   .. py:method:: _get_category_and_score_from_feature(feature: geojson.Feature) -> Tuple[str, float]
+      :staticmethod:
+
+
+      Get the feature class with the highest score from the featureClasses property.
+
+      :return: tuple of feature class and highest score
+
+
+
+   .. py:method:: _get_features_from_lists(boxes: List, scores: List, labels: List) -> List[geojson.Feature]
+
+      This function consolidates the lists of bounding boxes, scores, and labels into the GeoJSON features.
+      This happens by finding the feature with a matching bounding box and category in the original feature list
+      and updating the score if necessary. Any features that were in the original feature list that were not
+      in the input lists end up filtered out of the result.
+
+      :param boxes: the normalized bounding boxes for the features
+      :param scores: the updated scores for each bounding box
+      :param labels: the labels for each bounding box
+      :return: the refined list of GeoJSON features
+
+
+
+   .. py:method:: _denormalize_boxes(boxes: List[List[float]]) -> List[List[int]]
+
+      This function denormalizes the bounding boxes by multiplying each coordinate by the width or height
+      of the extent and then adding in the extent minimums. That puts all bounding boxes back into the
+      image coordinate space. This is the inverse of _normalize_boxes().
+
+      :param boxes: the list of bounding boxes to denormalize
+      :return: the denormalized list of bounding boxes
+
+
+
