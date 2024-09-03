@@ -33,6 +33,7 @@ class JobItem(DDBItem):
     width: Optional[Decimal] = width of the image
     height: Optional[Decimal] = height of the image
     feature_distillation_options: Optional[str] = the options used in selecting features (NMS/SOFT_NMS, thresholds, etc.)
+    roi_wkt: a Well Known Text representation of the requested processing bounds
     """
 
     image_id: str
@@ -56,6 +57,7 @@ class JobItem(DDBItem):
     processing_time: Optional[Decimal] = None
     feature_properties: Optional[str] = None
     feature_distillation_option: Optional[str] = None
+    roi_wkt: Optional[str] = None
 
     def __post_init__(self):
         self.ddb_key = DDBKey(hash_key="image_id", hash_value=self.image_id)

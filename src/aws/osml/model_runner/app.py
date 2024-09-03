@@ -43,7 +43,6 @@ from .common import (
     Timer,
     build_embedded_metrics_config,
     get_credentials_for_assumed_role,
-    get_feature_image_bounds,
     mr_post_processing_options_factory,
 )
 from .database import EndpointStatisticsTable, FeatureTable, JobItem, JobTable, RegionRequestItem, RegionRequestTable
@@ -63,7 +62,7 @@ from .inference import FeatureSelector, calculate_processing_bounds, get_source_
 from .queue import RequestQueue
 from .sink import SinkFactory
 from .status import StatusMonitor
-from .tile_worker import generate_crops, process_tiles, setup_tile_workers
+from .tile_worker import TilingStrategy, VariableTileTilingStrategy, process_tiles, setup_tile_workers
 
 # Set up metrics configuration
 build_embedded_metrics_config()
@@ -79,7 +78,13 @@ class ModelRunner:
     finally aggregates all the results into a single output which can be deposited into the desired output sinks.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, tiling_strategy: TilingStrategy = VariableTileTilingStrategy()) -> None:
+        """
+        Initialize a model runner with the injectable behaviors.
+
+        :param tiling_strategy: class defining how a larger image will be broken into chunks for processing
+        """
+        self.tiling_strategy = tiling_strategy
         self.image_request_queue = RequestQueue(ServiceConfig.image_queue, wait_seconds=0)
         self.image_requests_iter = iter(self.image_request_queue)
         self.job_table = JobTable(ServiceConfig.job_table)
@@ -192,7 +197,7 @@ class ModelRunner:
                         # Check if the image is complete
                         if self.job_table.is_image_request_complete(image_request_item):
                             # If so complete the image request
-                            self.complete_image_request(region_request, image_format)
+                            self.complete_image_request(region_request, image_format, raster_dataset, sensor_model)
 
                         # Update the queue
                         self.region_request_queue.finish_request(receipt_handle)
@@ -280,6 +285,7 @@ class ModelRunner:
                 image_url=image_request.image_url,
                 image_read_role=image_request.image_read_role,
                 feature_properties=dumps(image_request.feature_properties),
+                roi_wkt=image_request.roi.wkt if image_request.roi else None,
             )
             feature_distillation_option_list = image_request.get_feature_distillation_option()
             if feature_distillation_option_list:
@@ -431,7 +437,7 @@ class ModelRunner:
         # If the image is finished then complete it
         if self.job_table.is_image_request_complete(image_request_item):
             image_format = str(raster_dataset.GetDriver().ShortName).upper()
-            self.complete_image_request(first_region_request, image_format)
+            self.complete_image_request(first_region_request, image_format, raster_dataset, sensor_model)
 
     @metric_scope
     def process_region_request(
@@ -501,7 +507,7 @@ class ModelRunner:
 
                 # Process all our tiles
                 total_tile_count, tile_error_count = process_tiles(
-                    region_request, tile_queue, tile_workers, raster_dataset, sensor_model
+                    self.tiling_strategy, region_request, tile_queue, tile_workers, raster_dataset, sensor_model
                 )
 
                 # Update table w/ total tile counts
@@ -538,8 +544,8 @@ class ModelRunner:
             if ServiceConfig.self_throttling:
                 self.endpoint_statistics_table.decrement_region_count(region_request.model_name)
 
-    @staticmethod
     def load_image_request(
+        self,
         image_request_item: JobItem,
         roi: shapely.geometry.base.BaseGeometry,
     ) -> Tuple[str, Dataset, Optional[SensorModel], List[ImageRegion]]:
@@ -591,12 +597,15 @@ class ModelRunner:
                 # Region size chosen to break large images into pieces that can be handled by a
                 # single tile worker
                 region_size: ImageDimensions = ast.literal_eval(ServiceConfig.region_size)
+                tile_size: ImageDimensions = ast.literal_eval(image_request_item.tile_size)
                 if not image_request_item.tile_overlap:
-                    region_overlap = (0, 0)
+                    minimum_overlap = (0, 0)
                 else:
-                    region_overlap = ast.literal_eval(image_request_item.tile_overlap)
+                    minimum_overlap = ast.literal_eval(image_request_item.tile_overlap)
 
-                all_regions = generate_crops(processing_bounds, region_size, region_overlap)
+                all_regions = self.tiling_strategy.compute_regions(
+                    processing_bounds, region_size, tile_size, minimum_overlap
+                )
 
         return image_extension, raster_dataset, sensor_model, all_regions
 
@@ -624,26 +633,38 @@ class ModelRunner:
         logger.exception(f"Failed to start image processing!: {err}")
         self.status_monitor.process_event(image_request_item, ImageRequestStatus.FAILED, str(err))
 
-    def complete_image_request(self, region_request: RegionRequest, image_format: str) -> None:
+    def complete_image_request(
+        self, region_request: RegionRequest, image_format: str, raster_dataset: gdal.Dataset, sensor_model: SensorModel
+    ) -> None:
         """
         Runs after every region has completed processing to check if that was the last region and run required
         completion logic for the associated ImageRequest.
 
         :param region_request: RegionRequest = the region request to update.
         :param image_format: the format of the image
+        :param raster_dataset: the image data
+        :param sensor_model: the image sensor model
+
         :return: None
         """
         try:
             # Grab the full image request item from the table
             image_request_item = self.job_table.get_image_request(region_request.image_id)
 
-            # Check if the image request is finished
             logger.info("Last region of image request was completed, aggregating features for image!")
+
+            roi = None
+            if image_request_item.roi_wkt:
+                logger.info(f"Using ROI from request to set processing boundary: {image_request_item.roi_wkt}")
+                roi = shapely.wkt.loads(image_request_item.roi_wkt)
+            processing_bounds = calculate_processing_bounds(raster_dataset, roi, sensor_model)
+            logger.info(f"Processing boundary from {roi} is {processing_bounds}")
+
             # Set up our feature table to work with the region quest
             feature_table = FeatureTable(ServiceConfig.feature_table, region_request.tile_size, region_request.tile_overlap)
             # Aggregate all the features from our job
             features = self.aggregate_features(image_request_item, feature_table)
-            features = self.select_features(image_request_item, features)
+            features = self.select_features(image_request_item, features, processing_bounds)
             features = self.add_properties_to_features(image_request_item, features)
 
             # Sink the features into the right outputs
@@ -774,68 +795,13 @@ class ModelRunner:
 
         return features
 
-    @staticmethod
-    def identify_overlap(
-        feature: Feature, shape: Tuple[int, int], overlap: Tuple[int, int], origin: Tuple[int, int] = (0, 0)
-    ) -> Tuple[int, int, int, int]:
-        """
-        Generate a tuple that contains the min and max indexes of adjacent tiles or regions for a given feature. If
-        the min and max values for both x and y are the same then this feature does not touch an overlap region.
-
-        :param feature: the geojson Feature that must contain properties to identify its location in an image
-        :param shape: the width, height of the area in pixels
-        :param overlap: the x, y overlap between areas in pixels
-        :param origin: the x, y coordinate of the area in relation to the full image
-
-        :return: a tuple: minx, maxx, miny, maxy that identifies any overlap.
-        """
-        bbox = get_feature_image_bounds(feature)
-
-        # If an offset origin was supplied adjust the bbox so the key is relative to the origin.
-        bbox = (bbox[0] - origin[0], bbox[1] - origin[1], bbox[2] - origin[0], bbox[3] - origin[1])
-
-        stride_x = shape[0] - overlap[0]
-        stride_y = shape[0] - overlap[1]
-
-        max_x_index = int(bbox[2] / stride_x)
-        max_y_index = int(bbox[3] / stride_y)
-
-        min_x_index = int(bbox[0] / stride_x)
-        min_y_index = int(bbox[1] / stride_y)
-        min_x_offset = int(bbox[0]) % stride_x
-        min_y_offset = int(bbox[1]) % stride_y
-
-        if min_x_offset < overlap[0] and min_x_index > 0:
-            min_x_index -= 1
-        if min_y_offset < overlap[1] and min_y_index > 0:
-            min_y_index -= 1
-
-        return min_x_index, max_x_index, min_y_index, max_y_index
-
-    @staticmethod
-    def group_features_by_overlap(
-        features: List[Feature], shape: Tuple[int, int], overlap: Tuple[int, int], origin: Tuple[int, int] = (0, 0)
-    ) -> Dict[Tuple[int, int, int, int], List[Feature]]:
-        """
-        Group all the feature items by tile id
-
-        :param features: List[FeatureItem] = the list of feature items
-        :param shape: the width, height of the area in pixels
-        :param overlap: the x, y overlap between areas in pixels
-        :param origin: the x, y coordinate of the area in relation to the full image
-
-        :return: a mapping of overlap id to a list of features that intersect that overlap region
-        """
-        grouped_features: Dict[Tuple[int, int, int, int], List[Feature]] = {}
-        for feature in features:
-            overlap_key = ModelRunner.identify_overlap(feature, shape, overlap, origin)
-            grouped_features.setdefault(overlap_key, []).append(feature)
-        return grouped_features
-
-    @staticmethod
     @metric_scope
     def select_features(
-        image_request_item: JobItem, features: List[Feature], metrics: MetricsLogger = None
+        self,
+        image_request_item: JobItem,
+        features: List[Feature],
+        processing_bounds: Optional[ImageRegion],
+        metrics: MetricsLogger = None,
     ) -> List[Feature]:
         """
         Selects the desired features using the options in the JobItem (NMS, SOFT_NMS, etc.).
@@ -854,6 +820,7 @@ class ModelRunner:
 
         :param image_request_item: JobItem = the image request
         :param features: List[Feature] = the list of geojson features to process
+        :param processing_bounds: the requested area of the image
         :param metrics: MetricsLogger = the metrics logger to use to report metrics.
         :return: List[Feature] = the list of geojson features after processing
         """
@@ -879,36 +846,8 @@ class ModelRunner:
             region_size = ast.literal_eval(ServiceConfig.region_size)
             tile_size = ast.literal_eval(image_request_item.tile_size)
             overlap = ast.literal_eval(image_request_item.tile_overlap)
-
-            logger.debug("FeatureSelection: Starting overlap-aware deduplication of features.")
-            total_skipped = 0
-            deduped_features = []
-            features_grouped_by_region = ModelRunner.group_features_by_overlap(features, region_size, overlap)
-            for region_key, region_features in features_grouped_by_region.items():
-                region_stride = (region_size[0] - overlap[0], region_size[1] - overlap[1])
-                region_origin = (region_stride[0] * region_key[0], region_stride[1] * region_key[1])
-
-                if region_key[0] != region_key[1] or region_key[2] != region_key[3]:
-                    # The Group contains contributions from multiple regions, run selection on the entire group
-                    deduped_features.extend(feature_selector.select_features(region_features))
-                else:
-                    # Not an overlap between regions group these features using tile size to identify overlaps
-                    features_grouped_by_tile = ModelRunner.group_features_by_overlap(
-                        region_features, tile_size, overlap, region_origin
-                    )
-
-                    for tile_key, tile_features in features_grouped_by_tile.items():
-                        if tile_key[0] != tile_key[1] or tile_key[2] != tile_key[3]:
-                            # Group contains contributions from multiple tiles, run selection
-                            deduped_features.extend(feature_selector.select_features(tile_features))
-                        else:
-                            # No overlap between tiles, features can be added directly to the result
-                            total_skipped += len(tile_features)
-                            deduped_features.extend(tile_features)
-
-            logger.debug(
-                f"FeatureSelection: Skipped processing of {total_skipped} of {len(features)} features. "
-                "They were not inside an overlap region."
+            deduped_features = self.tiling_strategy.cleanup_duplicate_features(
+                processing_bounds, region_size, tile_size, overlap, features, feature_selector
             )
 
             return deduped_features
