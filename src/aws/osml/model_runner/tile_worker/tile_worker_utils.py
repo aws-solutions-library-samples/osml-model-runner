@@ -15,15 +15,16 @@ from osgeo import gdal
 from aws.osml.features import Geolocator, ImagedFeaturePropertyAccessor
 from aws.osml.gdal import GDALConfigEnv
 from aws.osml.image_processing.gdal_tile_factory import GDALTileFactory
-from aws.osml.model_runner.api import RegionRequest
-from aws.osml.model_runner.app_config import MetricLabels, ServiceConfig
-from aws.osml.model_runner.common import ImageDimensions, ImageRegion, Timer, get_credentials_for_assumed_role
-from aws.osml.model_runner.database import FeatureTable
-from aws.osml.model_runner.tile_worker import TileWorker
 from aws.osml.photogrammetry import ElevationModel, SensorModel
 
+from ..api import RegionRequest
+from ..app_config import MetricLabels, ServiceConfig
+from ..common import Timer, get_credentials_for_assumed_role
+from ..database import FeatureTable
 from ..inference.endpoint_factory import FeatureDetectorFactory
 from .exceptions import ProcessTilesException, SetupTileWorkersException
+from .tile_worker import TileWorker
+from .tiling_strategy import TilingStrategy
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +85,7 @@ def setup_tile_workers(
 
 
 def process_tiles(
+    tiling_strategy: TilingStrategy,
     region_request: RegionRequest,
     tile_queue: Queue,
     tile_workers: List[TileWorker],
@@ -93,6 +95,7 @@ def process_tiles(
     """
     Loads a GDAL dataset into memory and processes it with a pool of tile workers.
 
+    :param tiling_strategy: the approach used to decompose the region into tiles for the ML model
     :param region_request: RegionRequest = the region request to update.
     :param tile_queue: Queue = keeps the image in the queue for processing
     :param tile_workers: List[Tileworker] = the list of tile workers
@@ -102,10 +105,8 @@ def process_tiles(
     :return: Tuple[int, int] = number of tiles processed, number of tiles with an error
     """
 
-    tile_array = generate_crops(
-        region_request.region_bounds,
-        region_request.tile_size,
-        region_request.tile_overlap,
+    tile_array = tiling_strategy.compute_tiles(
+        region_request.region_bounds, region_request.tile_size, region_request.tile_overlap
     )
     total_tile_count = len(tile_array)
     try:
@@ -251,52 +252,3 @@ def sizeof_fmt(num: float, suffix: str = "B") -> str:
             return "%3.1f%s%s" % (num, unit, suffix)
         num /= 1024.0
     return "%.1f%s%s" % (num, "Yi", suffix)
-
-
-def generate_crops(region: ImageRegion, chip_size: ImageDimensions, overlap: ImageDimensions) -> List[ImageRegion]:
-    """
-    Yields a list of overlapping chip bounding boxes for the given region. Chips will start
-    in the upper left corner of the region (i.e. region[0][0], region[0][1]) and will be spaced
-    such that they have the specified horizontal and vertical overlap.
-
-    :param region: ImageDimensions = a tuple for the bounding box of the region ((ul_r, ul_c), (width, height))
-    :param chip_size: ImageDimensions = a tuple for the chip dimensions (width, height)
-    :param overlap: ImageDimensions = a tuple for the overlap (width, height)
-
-    :return: List[ImageRegion] = an iterable list of tuples for the chip bounding boxes [((ul_r, ul_c), (w, h)), ...]
-    """
-    if overlap[0] >= chip_size[0] or overlap[1] >= chip_size[1]:
-        raise ValueError("Overlap must be less than chip size! chip_size = " + str(chip_size) + " overlap = " + str(overlap))
-
-    # Calculate the spacing for the chips taking into account the horizontal and vertical overlap
-    # and how many are needed to cover the region
-    stride_x = chip_size[0] - overlap[0]
-    stride_y = chip_size[1] - overlap[1]
-    num_x = ceildiv(region[1][0], stride_x)
-    num_y = ceildiv(region[1][1], stride_y)
-
-    crops = []
-    for r in range(0, num_y):
-        for c in range(0, num_x):
-            # Calculate the bounds of the chip ensuring that the chip does not extend
-            # beyond the edge of the requested region
-            ul_x = region[0][1] + c * stride_x
-            ul_y = region[0][0] + r * stride_y
-            w = min(chip_size[0], (region[0][1] + region[1][0]) - ul_x)
-            h = min(chip_size[1], (region[0][0] + region[1][1]) - ul_y)
-            if w > overlap[0] and h > overlap[1]:
-                crops.append(((ul_y, ul_x), (w, h)))
-
-    return crops
-
-
-def ceildiv(a: int, b: int) -> int:
-    """
-    Integer ceiling division
-
-    :param a: int = numerator
-    :param b: int = denominator
-
-    :return: ceil(a/b)
-    """
-    return -(-a // b)
