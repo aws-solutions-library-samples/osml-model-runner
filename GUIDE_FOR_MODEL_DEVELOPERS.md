@@ -53,14 +53,26 @@ async def health_check(request: Request):
 
 An OversightML image processing request contains the following parameters that determine what kind of image gets sent to the model container:
 
-* **imageProcessorTileSize**: The maximum dimensions of the image in pixels that should be sent to the model. Note that tiles at the edges of the image may be less than this maximum size.
-* **imageProcessorTileOverlap**: The overlap between tiles in pixels
+* **imageProcessorTileSize**: The maximum dimensions of the image in pixels that should be sent to the model. Note that if the full image size is small the delivered tiles may be less than this maximum size.
+* **imageProcessorTileOverlap**: The minimum requested overlap between tiles in pixels. We will adjust this as needed to deliver full tiles to the model whenever possible.
 * **imageProcessorTileFormat**: The image format to send to the model. The following options are supported: “NITF”, “JPEG”, “PNG”, “GTIFF”.
 * **imageProcessorTileCompression**: The compression method to use which is dependent on the format chosen. For NITF images the valid options are: “J2K”, “JPEG”, and “NONE”. GeoTIFF images support “LZW”, “JPEG”, and “NONE”.
 
-![Image Tiling](images/image-tiling.png)
+Model Runner will decompose the image into tiles of the size requested by the model. The overlap will be increased as
+needed to deliver full tiles whenever possible. Note that this means the horizontal and vertical overlap may differ
+depending on image dimensions and requested tile size but we will always use at least the minimum overlap requested.
 
-**Figure 1:** Use of tile size and overlap parameters to break a full image into chunks small enough for a CV model.
+![Image Tiling Full Image](images/tiling-example-full-image.png)
+
+**Figure 1:** Example Tiles Normal Image - This shows the tiling results for a 25000x12000 image processed with a 4096
+tile size and a minimum of a 100 pixel overlap.Note that horizontal and vertical overlap vary independently and have been
+adjusted to accommodate generation of full tiles across the image.
+
+![Image Tiling Small Image](images/tiling-example-small-image.png)
+
+**Figure 2:** Example Tiles a Narrow Image - This shows the tiling results for a 12000x2000 processed with the 4096 tile
+size and 100 pixel overlap. Note that the narrow image height forces us to return partial tiles but we will still honor
+the size request when possible (width).
 
 For images that contain substantial metadata (NITF, SICD) the Model Runner will update any fields necessary to identify
 this image as a chip of a larger image and pass along all the other metadata as is. For NITFs that involves adding an
