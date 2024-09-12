@@ -62,7 +62,7 @@ from .inference import FeatureSelector, calculate_processing_bounds, get_source_
 from .queue import RequestQueue
 from .sink import SinkFactory
 from .status import StatusMonitor
-from .tile_worker import TilingStrategy, VariableTileTilingStrategy, process_tiles, setup_tile_workers
+from .tile_worker import TilingStrategy, VariableOverlapTilingStrategy, process_tiles, setup_tile_workers
 
 # Set up metrics configuration
 build_embedded_metrics_config()
@@ -78,7 +78,7 @@ class ModelRunner:
     finally aggregates all the results into a single output which can be deposited into the desired output sinks.
     """
 
-    def __init__(self, tiling_strategy: TilingStrategy = VariableTileTilingStrategy()) -> None:
+    def __init__(self, tiling_strategy: TilingStrategy = VariableOverlapTilingStrategy()) -> None:
         """
         Initialize a model runner with the injectable behaviors.
 
