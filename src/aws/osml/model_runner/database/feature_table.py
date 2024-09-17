@@ -162,11 +162,11 @@ class FeatureTable(DDBHelper):
     def get_features(self, image_id: str, metrics: MetricsLogger = None) -> List[Feature]:
         """
         Parallelized version to query the database for all items with a given image_id,
-        then convert them into feature items, and group the features per tile.
+        then convert them into feature items.
 
         :param image_id: The image_id to aggregate features from DDB for.
         :param metrics: MetricsLogger = the metrics logger to use to report metrics.
-        :return: List of features aggregates from the DDB table.
+        :return: List of features aggregated from the DDB table.
         """
 
         def process_query(index: int):
@@ -189,23 +189,19 @@ class FeatureTable(DDBHelper):
             logger=logger,
             metrics_logger=metrics,
         ):
-            with ThreadPoolExecutor(max_workers=5) as executor:
+            with ThreadPoolExecutor(max_workers=10) as executor:
                 # Create a range of tasks to query the database for the salted image hash
                 futures = [executor.submit(process_query, i) for i in range(1, self.hash_salt + 1)]
 
-                # For each of the salted index processes the returned items
+                # For each of the salted index processes, add the features to the list
                 for future in as_completed(futures):
                     feature_items = future.result()
-                    grouped_items = self.group_items_by_tile_id(feature_items)
-                    for group in grouped_items:
-                        batch_features = []
-                        for item in grouped_items[group]:
-                            if item.features:
-                                for feature in item.features:
-                                    batch_features.append(geojson.loads(feature))
-                            else:
-                                logger.warning(f"Found FeatureTable item: {item.range_key} with no features!")
-                        features.extend(batch_features)
+                    for item in feature_items:
+                        if item.features:
+                            for feature in item.features:
+                                features.append(geojson.loads(feature))
+                        else:
+                            logger.warning(f"Found FeatureTable item: {item.range_key} with no features!")
 
         return features
 
@@ -222,22 +218,6 @@ class FeatureTable(DDBHelper):
             key = self.generate_tile_key(feature)
             result.setdefault(key, []).append(feature)
         return result
-
-    @staticmethod
-    def group_items_by_tile_id(items: List[FeatureItem]) -> Dict[str, List[FeatureItem]]:
-        """
-        Group all the feature items by tile id
-
-        :param items: The list of feature items
-        :return: A unique tile id and within tile id contains a list of features
-        """
-        grouped_items: Dict[str, List[FeatureItem]] = {}
-        for item in items:
-            if item.tile_id:
-                grouped_items.setdefault(item.tile_id, []).append(item)
-            else:
-                logger.warning(f"Found FeatureTable item: {item.range_key} with no tile_id!")
-        return grouped_items
 
     def generate_tile_key(self, feature: Feature) -> str:
         """
