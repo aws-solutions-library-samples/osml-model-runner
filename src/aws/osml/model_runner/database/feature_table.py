@@ -9,7 +9,6 @@ from secrets import token_hex
 from typing import Dict, List, Optional
 
 import geojson
-from _decimal import Decimal
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_embedded_metrics.metric_scope import metric_scope
 from aws_embedded_metrics.unit import Unit
@@ -53,14 +52,14 @@ class FeatureItem(DDBItem):
         range_key: str
         tile_id: str
         features: [str]
-        expire_time: Optional[Decimal] = None
+        expire_time: Optional[int] = None
     """
 
     hash_key: str
     range_key: Optional[str] = None
     tile_id: Optional[str] = None
     features: Optional[List[str]] = None
-    expire_time: Optional[Decimal] = None
+    expire_time: Optional[int] = None
 
     def __post_init__(self):
         self.ddb_key = DDBKey(
@@ -100,7 +99,7 @@ class FeatureTable(DDBHelper):
         # These records are temporary and will expire 24 hours after creation. Jobs should take
         # minutes to run, so this time should be conservative enough to let a team debug an urgent
         # issue without leaving a ton of state leftover in the system.
-        expire_time_epoch_sec = Decimal(int(start_time_millisec / 1000) + (2 * 60 * 60))
+        expire_time_epoch_sec = int((start_time_millisec / 1000) + (2 * 60 * 60))
         with Timer(
             task_str="Add image features",
             metric_name=MetricLabels.DURATION,

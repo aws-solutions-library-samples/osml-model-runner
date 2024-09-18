@@ -22,7 +22,7 @@ echo "/_/  /_/_/ |_|   \____/\____/_/ /_/\__/\__,_/_/_/ /_/\___/_/ ";
 
 # Inputs
 PATTERN="${1:-"MRDataplane"}"
-IMAGE_NAME=PATTERN="${2:-"osml-model-runner:local"}"
+IMAGE_NAME="${2:-"osml-model-runner:local"}"
 AWS_REGION="${3:-"us-west-2"}"
 
 # Get the latest task definition ARN based on a string pattern

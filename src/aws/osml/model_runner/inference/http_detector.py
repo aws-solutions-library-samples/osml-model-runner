@@ -27,9 +27,14 @@ logger = logging.getLogger(__name__)
 
 
 class CountingRetry(urllib3.Retry):
+    """
+    A custom Retry class that counts the number of retries during HTTP requests.
+    Inherits from urllib3's Retry class to implement retry logic with an additional retry count.
+    """
+
     def __init__(self, *args, **kwargs):
         """
-        Retry class implementation that counts the number of retries.
+        Initializes the CountingRetry class with retry settings.
 
         :return: None
         """
@@ -37,7 +42,11 @@ class CountingRetry(urllib3.Retry):
         self.retry_counts = 0
 
     def increment(self, *args, **kwargs) -> Retry:
-        # Call the parent's increment function
+        """
+        Increments the retry count and calls the parent class's increment method.
+
+        :return: Retry = A Retry object with updated retry count.
+        """
         result = super(CountingRetry, self).increment(*args, **kwargs)
         result.retry_counts = self.retry_counts + 1
 
@@ -45,11 +54,15 @@ class CountingRetry(urllib3.Retry):
 
     @classmethod
     def from_retry(cls, retry_instance: Retry) -> "CountingRetry":
-        """Create a CountingRetry instance from a Retry instance."""
-        if isinstance(retry_instance, cls):
-            return retry_instance  # No conversion needed if it's already a CountingRetry instance
+        """
+        Creates a CountingRetry instance from an existing Retry instance.
 
-        # Create a CountingRetry instance with the same configurations
+        :param retry_instance: Retry = The Retry instance to convert.
+        :return: CountingRetry = A new CountingRetry object with the same configurations as the provided Retry instance.
+        """
+        if isinstance(retry_instance, cls):
+            return retry_instance
+
         return cls(
             total=retry_instance.total,
             connect=retry_instance.connect,
@@ -69,48 +82,57 @@ class CountingRetry(urllib3.Retry):
 
 
 class HTTPDetector(Detector):
+    """
+    HTTPDetector is responsible for invoking HTTP-based model endpoints to run model inference.
+
+    This class interacts with a model endpoint over HTTP to send a payload for feature detection and retrieves
+    geojson-formatted feature detection results. It supports retry logic with exponential backoff for network-related
+    issues.
+    """
+
     def __init__(self, endpoint: str, name: Optional[str] = None, retry: Optional[urllib3.Retry] = None) -> None:
         """
-        An HTTP model endpoint interface object, intended to query sagemaker endpoints.
+        Initializes the HTTPDetector with the model endpoint URL, optional name, and retry policy.
 
-        :param endpoint: Full url to invoke the model
-        :param name: Name to give the model endpoint
-        :param retry: Retry policy to use when invoking the model
-
-        :return: None
+        :param endpoint: str = The full URL of the model endpoint to invoke.
+        :param name: Optional[str] = A name for the model endpoint.
+        :param retry: Optional[Retry] = Retry policy for network requests.
         """
-        # Setup Retry with exponential backoff
-        # - We will retry for a maximum of eight times.
-        # - We start with a backoff of 1 second.
-        # - We will double the backoff after each failed retry attempt.
-        # - We cap the maximum backoff time to 255 seconds.
-        # - We can adjust these values as required.
         if retry is None:
             self.retry = CountingRetry(total=8, backoff_factor=1, raise_on_status=True)
         else:
             self.retry = CountingRetry.from_retry(retry)
         self.http_pool = urllib3.PoolManager(cert_reqs="CERT_NONE", retries=self.retry)
-        if name:
-            self.name = name
-        else:
-            self.name = "http"
+        self.name = name or "http"
         super().__init__(endpoint=endpoint)
 
     @property
     def mode(self) -> ModelInvokeMode:
+        """
+        Defines the invocation mode for the detector as HTTP endpoint.
+
+        :return: ModelInvokeMode.HTTP_ENDPOINT
+        """
         return ModelInvokeMode.HTTP_ENDPOINT
 
     @metric_scope
     def find_features(self, payload: BufferedReader, metrics: MetricsLogger) -> FeatureCollection:
         """
-        Query the established endpoint mode to find features based on a payload
+        Invokes the HTTP model endpoint to detect features from the given payload.
 
-        :param payload: BufferedReader object that holds the data that will be sent to the feature generator
-        :param metrics: Metrics logger object to capture the log data on the system
+        This method sends a payload to the HTTP model endpoint and retrieves feature detection results
+        in the form of a geojson FeatureCollection. If configured, it logs metrics about the invocation process.
 
-        :return: GeoJSON FeatureCollection containing the center point of a tile
+        :param payload: BufferedReader = The data to be sent to the HTTP model for feature detection.
+        :param metrics: MetricsLogger = The metrics logger to capture system performance and log metrics.
+
+        :return: FeatureCollection = A geojson FeatureCollection containing the detected features.
+
+        :raises RetryError: Raised if the request fails after retries.
+        :raises MaxRetryError: Raised if the maximum retry attempts are reached.
+        :raises JSONDecodeError: Raised if there is an error decoding the model's response.
         """
-        logger.info(f"Invoking Model: {self.name}")
+        logger.debug(f"Invoking Model: {self.name}")
         if isinstance(metrics, MetricsLogger):
             metrics.set_dimensions()
             metrics.put_dimensions(
@@ -131,7 +153,6 @@ class HTTPDetector(Detector):
                 logger=logger,
                 metrics_logger=metrics,
             ):
-                # If we are not running against a real model
                 if self.endpoint == ServiceConfig.noop_geom_model_name:
                     return create_mock_feature_collection(payload, geom=True)
                 elif self.endpoint == ServiceConfig.noop_bounds_model_name:
@@ -142,25 +163,25 @@ class HTTPDetector(Detector):
                         url=self.endpoint,
                         body=payload,
                     )
-                    # get the history of retries and count them
                     retry_count = self.retry.retry_counts
                     if isinstance(metrics, MetricsLogger):
                         metrics.put_metric(MetricLabels.RETRIES, retry_count, str(Unit.COUNT.value))
+
                     return geojson.loads(response.data.decode("utf-8"))
+
         except RetryError as err:
-            self.error_count += 1
             if isinstance(metrics, MetricsLogger):
                 metrics.put_metric(MetricLabels.ERRORS, 1, str(Unit.COUNT.value))
             logger.error(f"Retry failed - failed due to {err}")
             logger.exception(err)
+            raise err
         except MaxRetryError as err:
-            self.error_count += 1
             if isinstance(metrics, MetricsLogger):
                 metrics.put_metric(MetricLabels.ERRORS, 1, str(Unit.COUNT.value))
             logger.error(f"Max retries reached - failed due to {err.reason}")
             logger.exception(err)
+            raise err
         except JSONDecodeError as err:
-            self.error_count += 1
             if isinstance(metrics, MetricsLogger):
                 metrics.put_metric(MetricLabels.ERRORS, 1, str(Unit.COUNT.value))
             logger.error(
@@ -170,20 +191,32 @@ class HTTPDetector(Detector):
                 )
             )
             logger.exception(err)
-
-        # Return an empty feature collection if the process errored out
-        return FeatureCollection([])
+            raise err
 
 
 class HTTPDetectorBuilder(FeatureEndpointBuilder):
-    def __init__(
-        self,
-        endpoint: str,
-    ):
+    """
+    HTTPDetectorBuilder is responsible for building an HTTPDetector configured with an HTTP model endpoint.
+
+    This builder constructs an HTTPDetector instance that can send payloads to HTTP-based model endpoints for feature
+    detection.
+    """
+
+    def __init__(self, endpoint: str):
+        """
+        Initializes the HTTPDetectorBuilder with the model endpoint URL.
+
+        :param endpoint: str = The full URL of the model endpoint to be used.
+        """
         super().__init__()
         self.endpoint = endpoint
 
     def build(self) -> Optional[Detector]:
+        """
+        Builds and returns an HTTPDetector based on the configured parameters.
+
+        :return: Optional[Detector] = An HTTPDetector instance configured for the specified HTTP model endpoint.
+        """
         return HTTPDetector(
             endpoint=self.endpoint,
         )

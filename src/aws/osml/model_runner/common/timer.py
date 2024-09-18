@@ -47,7 +47,7 @@ class Timer(object):
         self.normalizing_unit = normalizing_unit
 
     def __enter__(self):
-        self.logger.info(f"Starting: {self.str}")
+        self.logger.debug(f"Starting: {self.str}")
         self.start_time = time.time()
         return self
 
@@ -58,11 +58,11 @@ class Timer(object):
         try:
             if self.metrics_logger:
                 self.metrics_logger.put_metric(self.metric_name, total_time, time_unit)
-                self.logger.info(f"{self.str} took {str(total_time)} {time_unit.lower()}.")
+                self.logger.debug(f"{self.str} took {str(total_time)} {time_unit.lower()}.")
                 if self.normalizing_factor and self.normalizing_unit:
                     time_per_unit = total_time / self.normalizing_factor
                     self.metrics_logger.put_metric(f"{self.metric_name}Per{self.normalizing_unit}", time_per_unit, time_unit)
-                    self.logger.info(
+                    self.logger.debug(
                         f"{self.str} took {str(time_per_unit)} {time_unit.lower()} " f"per {self.normalizing_unit}."
                     )
         except Exception as e:

@@ -35,7 +35,7 @@ class ImageFormats(str, AutoStringEnum):
     GTIFF = auto()
 
 
-class ImageRequestStatus(str, AutoStringEnum):
+class RequestStatus(str, AutoStringEnum):
     """
     Enumeration defining the image request status
     """
@@ -47,18 +47,6 @@ class ImageRequestStatus(str, AutoStringEnum):
     FAILED = auto()
 
 
-class RegionRequestStatus(str, AutoStringEnum):
-    """
-    Enumeration defining status for region
-    """
-
-    STARTING = auto()
-    PARTIAL = auto()
-    IN_PROGRESS = auto()
-    SUCCESS = auto()
-    FAILED = auto()
-
-
 class GeojsonDetectionField(str, Enum):
     """
     Enumeration defining the model geojson field to index depending on the shape
@@ -66,6 +54,11 @@ class GeojsonDetectionField(str, Enum):
 
     BOUNDS = "bounds_imcoords"
     GEOM = "geom_imcoords"
+
+
+class TileState(str, Enum):
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
 
 
 VALID_IMAGE_COMPRESSION = [item.value for item in ImageCompression]

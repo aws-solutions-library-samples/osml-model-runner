@@ -1,9 +1,11 @@
 #  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
 
 import json
+from json import JSONDecodeError
 from unittest import TestCase
 from unittest.mock import patch
 
+import pytest
 from urllib3.response import HTTPResponse
 
 MOCK_RESPONSE = HTTPResponse(
@@ -60,8 +62,8 @@ class TestSMDetector(TestCase):
         mock_pool_manager.return_value.request.side_effect = RetryError("test RetryError")
 
         with open("./test/data/small.ntf", "rb") as image_file:
-            feature_detector.find_features(image_file)
-            assert feature_detector.error_count == 1
+            with pytest.raises(RetryError):
+                feature_detector.find_features(image_file)
 
     @patch("aws.osml.model_runner.inference.http_detector.urllib3.PoolManager", autospec=True)
     def test_find_features_MaxRetryError(self, mock_pool_manager):
@@ -75,8 +77,8 @@ class TestSMDetector(TestCase):
         mock_pool_manager.return_value.request.side_effect = MaxRetryError("test MaxRetryError", url=mock_endpoint)
 
         with open("./test/data/small.ntf", "rb") as image_file:
-            feature_detector.find_features(image_file)
-            assert feature_detector.error_count == 1
+            with pytest.raises(MaxRetryError):
+                feature_detector.find_features(image_file)
 
     @patch("aws.osml.model_runner.inference.http_detector.urllib3.PoolManager", autospec=True)
     def test_find_features_JSONDecodeError(self, mock_pool_manager):
@@ -88,5 +90,5 @@ class TestSMDetector(TestCase):
         mock_pool_manager.return_value.request.return_value = MOCK_BAD_JSON_RESPONSE
 
         with open("./test/data/small.ntf", "rb") as image_file:
-            feature_detector.find_features(image_file)
-            assert feature_detector.error_count == 1
+            with pytest.raises(JSONDecodeError):
+                feature_detector.find_features(image_file)

@@ -35,6 +35,6 @@ from .typing import (
     ImageDimensions,
     ImageFormats,
     ImageRegion,
-    ImageRequestStatus,
-    RegionRequestStatus,
+    RequestStatus,
+    TileState,
 )

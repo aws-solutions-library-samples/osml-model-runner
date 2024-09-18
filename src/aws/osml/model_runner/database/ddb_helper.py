@@ -4,6 +4,7 @@ import logging
 import random
 import time
 from dataclasses import asdict, dataclass, field, fields
+from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
 import boto3
@@ -19,13 +20,13 @@ logger = logging.getLogger(__name__)
 @dataclass
 class DDBKey:
     """
-    DDBItem is a dataclass meant to represent a single item in a DynamoDB table via a key-value pair
+    DDBKey is a dataclass meant to represent a single item in a DynamoDB table via a key-value pair.
 
-    The data schema is defined as follows:
-    key: str = the table key to index on
-    value: str = the value of the item (given a key) to use
-    range_key: str = the sort key to index on
-    range_value: str = the value of the item (given a key + range key) to use
+    Attributes:
+        hash_key (str): The name of the hash key (partition key) used to identify the item in the DynamoDB table.
+        hash_value (str): The value of the hash key (partition key) that uniquely identifies the item in the table.
+        range_key (Optional[str]): The name of the range key (sort key) used to further refine the item's location.
+        range_value (Optional[str]): The value of the range key (sort key) that, together with the hash key, identifies.
     """
 
     hash_key: str
@@ -37,13 +38,10 @@ class DDBKey:
 @dataclass
 class DDBItem:
     """
-    DDBItem is a dataclass meant to represent a single item in a DynamoDB table via a key-value pair
+    DDBItem is a dataclass meant to represent a single item in a DynamoDB table via a key-value pair.
 
-    The data schema is defined as follows:
-    key: str = the table key to index on
-    value: str = the value of the item (given a key) to use
-    range_key: str = the sort key to index on
-    range_value: str = the value of the item (given a key + range key) to use
+    Attributes:
+        ddb_key (DDBKey): The key object representing the hash and range key pair for this DynamoDB item.
     """
 
     ddb_key: DDBKey = field(init=False)
@@ -66,12 +64,11 @@ class DDBItem:
 class DDBHelper:
     """
     DDBHelper is a class meant to help OSML with accessing and interacting with DynamoDB tables.
-    Generally, this class should be inherited by downstream specific table classes to build on top
-    of such as the FeatureTable and JobTable classes.
 
-    :param table_name: str = the name of the table to interact with
-
-    :return: None
+    Attributes:
+        table_name (str): The name of the DynamoDB table to interact with.
+        client (boto3.resources.factory.dynamodb.ServiceResource): A DynamoDB service resource instance used.
+        table (boto3.resources.factory.dynamodb.Table): A reference to the DynamoDB table for performing operations.
     """
 
     def __init__(self, table_name: str) -> None:
@@ -82,13 +79,15 @@ class DDBHelper:
 
     def get_ddb_item(self, ddb_item: DDBItem) -> Dict[str, Any]:
         """
-        Get a DynamoDB item from table
+        Get a DynamoDB item from table and convert Decimal values to native types
 
         :param ddb_item: DDBItem = item that we want to get (required)
 
         :return: Dict[str, Any] = response from the get_item request
         """
-        return self.table.get_item(Key=self.get_keys(ddb_item=ddb_item))["Item"]
+        response = self.table.get_item(Key=self.get_keys(ddb_item=ddb_item))
+        item = response.get("Item", {})
+        return self.convert_decimal(item)
 
     def put_ddb_item(self, ddb_item: DDBItem, condition_expression: str = None) -> Dict[str, Any]:
         """
@@ -108,14 +107,36 @@ class DDBHelper:
 
     def batch_write_items(self, ddb_items: List[DDBItem], max_retries: int = 500, max_delay: float = 8) -> None:
         """
-        Write multiple DynamoDB items in a batch with a jitter-delayed retry logic for unprocessed items.
-        :param ddb_items: List[DDBItem] = List of items that we want to write.
-        :param max_retries: int = Maximum number of retries for unprocessed items.
-        :param max_delay: Maximum delay in seconds between retries.
+        Write multiple DynamoDB items in a batch with jitter-delayed retry logic for unprocessed items.
+
+        This method splits the provided list of `ddb_items` into batches of up to 25 items (the maximum batch size
+        supported by DynamoDB). Each batch is written to the table, and if unprocessed items are returned,
+        the method retries the operation with an exponential backoff with jitter. The number of retries and the
+        maximum delay between retries are configurable.
+
+        :param ddb_items: List[DDBItem] = List of items that we want to write in batch mode to the DynamoDB table.
+        :param max_retries: int = Maximum number of retries for unprocessed items. Defaults to 500.
+        :param max_delay: float = Maximum delay in seconds between retries, applied with jitter. Defaults to 8 seconds.
+
         :return: None
         """
 
         def _batch_write(items: Dict[str, Any], retries: int = 0, initial_delay: float = 0.125):
+            """
+            Execute a batch write operation to DynamoDB with jitter-delayed retry logic for unprocessed items.
+
+            This method performs a batch write operation using the provided `items`. If any items remain unprocessed,
+            it retries the operation using exponential backoff with jitter. The method limits the number of retries
+            and applies a maximum delay between retries.
+
+            :param items: Dict[str, Any] = A dictionary containing the items to write in the batch.
+            :param retries: int = The number of retries attempted for unprocessed items. Defaults to 0.
+            :param initial_delay: float = The initial delay before the first retry, with jitter applied on subsequent
+            retries. Defaults to 0.125 seconds.
+
+            :raises DDBBatchWriteException: Raised if items remain unprocessed after the retry limit is exceeded.
+            :raises Exception: Raised if an error occurs that is not related to unprocessed items.
+            """
             # Calculate smart jitter backoff for retries
             delay = random.uniform(0, min(max_delay, initial_delay * 2**retries))
             try:
@@ -131,7 +152,7 @@ class DDBHelper:
 
                 logger.debug("Successfully batch wrote items to table.")
             except Exception as err:
-                # If we failed to call the write try again
+                # If we failed to call the write, try again
                 if retries < max_retries:
                     time.sleep(delay)
                     _batch_write(items, retries + 1)
@@ -194,8 +215,8 @@ class DDBHelper:
                 ReturnValues="ALL_NEW",
             )
 
-            # Return the updated items attributes
-            return response["Attributes"]
+            # Convert any decimal values in the response
+            return self.convert_decimal(response["Attributes"])
         else:
             raise DDBUpdateException("Failed to produce update expression or attributes for DDB update!")
 
@@ -216,7 +237,7 @@ class DDBHelper:
         # Grab all the items from the table
         items: List[dict] = []
         while not all_items_retrieved:
-            items.extend(response["Items"])
+            items.extend(self.convert_decimal(response["Items"]))
 
             if "LastEvaluatedKey" in response:
                 response = self.table.query(
@@ -268,3 +289,20 @@ class DDBHelper:
                 ddb_item.ddb_key.hash_key: ddb_item.ddb_key.hash_value,
                 ddb_item.ddb_key.range_key: ddb_item.ddb_key.range_value,
             }
+
+    @staticmethod
+    def convert_decimal(data: Any) -> Any:
+        """
+        Convert any Decimal values in the data to int or float, depending on the value.
+
+        :param data: Any = the data to convert
+        :returns: Any = the converted data
+        """
+        if isinstance(data, list):
+            return [DDBHelper.convert_decimal(item) for item in data]
+        elif isinstance(data, dict):
+            return {k: DDBHelper.convert_decimal(v) for k, v in data.items()}
+        elif isinstance(data, Decimal):
+            return int(data) if data % 1 == 0 else float(data)
+        else:
+            return data

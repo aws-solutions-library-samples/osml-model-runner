@@ -8,7 +8,8 @@ from unittest import TestCase
 from unittest.mock import Mock, patch
 
 import boto3
-import botocore
+import pytest
+from botocore.exceptions import ClientError
 from botocore.stub import ANY, Stubber
 
 MOCK_RESPONSE = {
@@ -92,11 +93,8 @@ class TestSMDetector(TestCase):
         sm_runtime_stub.activate()
 
         with open("./test/data/GeogToWGS84GeoKey5.tif", "rb") as image_file:
-            encoded_image = image_file.read()
-            feature_collection = feature_detector.find_features(encoded_image)
-            assert feature_collection["type"] == "FeatureCollection"
-            assert len(feature_collection) == 2
-            assert len(feature_collection["features"]) == 0
+            with pytest.raises(JSONDecodeError):
+                feature_detector.find_features(image_file)
 
     def test_find_features_throw_client_exception(self):
         from aws.osml.model_runner.inference import SMDetector
@@ -110,20 +108,15 @@ class TestSMDetector(TestCase):
             expected_params={"EndpointName": "test-endpoint", "Body": ANY},
             service_response=MOCK_RESPONSE,
         )
-        sm_client_stub.add_client_error(
-            botocore.exceptions.ClientError({"Error": {"Code": 500, "Message": "ClientError"}}, "update_item")
-        )
+        sm_client_stub.add_client_error(str(ClientError({"Error": {"Code": 500, "Message": "ClientError"}}, "update_item")))
         feature_detector.sm_client.invoke_endpoint = Mock(
-            side_effect=botocore.exceptions.ClientError({"Error": {"Code": 500, "Message": "ClientError"}}, "send_message")
+            side_effect=ClientError({"Error": {"Code": 500, "Message": "ClientError"}}, "send_message")
         )
         sm_client_stub.activate()
 
         with open("./test/data/GeogToWGS84GeoKey5.tif", "rb") as image_file:
-            encoded_image = image_file.read()
-            feature_collection = feature_detector.find_features(encoded_image)
-            assert feature_collection["type"] == "FeatureCollection"
-            assert len(feature_collection) == 2
-            assert len(feature_collection["features"]) == 0
+            with pytest.raises(ClientError):
+                feature_detector.find_features(image_file)
 
     def test_sm_name_generation(self):
         from aws.osml.model_runner.api.inference import ModelInvokeMode

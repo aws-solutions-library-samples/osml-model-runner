@@ -45,10 +45,10 @@ class SNSHelper:
         if self.sns_client is not None:
             try:
                 response = self.sns_client.publish(TopicArn=self.topic_arn, Message=message, MessageAttributes=att_dict)
-                logger.info("Published message with attributes %s to topic %s.", attributes, self.topic_arn)
+                logger.debug("Published message with attributes %s to topic %s.", attributes, self.topic_arn)
                 return response.get("MessageId")
             except Exception as err:
                 raise SNSPublishException(f"Failed to publish message {message} to SNS topic {self.topic_arn}") from err
         else:
-            logger.info("SNS disabled! Did not send message with attributes %s.", attributes)
+            logger.warning("SNS disabled! Did not send message with attributes %s.", attributes)
             return None

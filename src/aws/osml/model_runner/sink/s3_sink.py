@@ -77,7 +77,7 @@ class S3Sink(Sink):
                     ExtraArgs={"ACL": "bucket-owner-full-control"},
                 )
 
-            logger.info(f"Wrote aggregate feature collection for Image '{image_id}' to s3://{self.bucket}/{object_key}")
+            logger.debug(f"Wrote aggregate feature collection for Image '{image_id}' to s3://{self.bucket}/{object_key}")
             return True
         else:
             return False

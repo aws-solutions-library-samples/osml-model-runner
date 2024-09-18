@@ -58,26 +58,26 @@ class TestRegionRequestTable(unittest.TestCase):
         """
         Validate we can start a region, and it gets created in the table
         """
-        from aws.osml.model_runner.common import RegionRequestStatus
+        from aws.osml.model_runner.common import RequestStatus
 
         self.region_request_table.start_region_request(self.region_request_item)
         resulting_region_request_item = self.region_request_table.get_region_request(TEST_REGION_ID, TEST_IMAGE_ID)
         assert resulting_region_request_item.image_id == TEST_IMAGE_ID
         assert resulting_region_request_item.region_id == TEST_REGION_ID
         assert resulting_region_request_item.job_id == TEST_JOB_ID
-        assert resulting_region_request_item.region_status == RegionRequestStatus.STARTING
+        assert resulting_region_request_item.region_status == RequestStatus.STARTED
 
     def test_region_complete_success(self):
         """
         Validate that when we complete a region successfully it updates the ddb item
         """
-        from aws.osml.model_runner.common import RegionRequestStatus
+        from aws.osml.model_runner.common import RequestStatus
 
         self.region_request_table.start_region_request(self.region_request_item)
-        self.region_request_table.complete_region_request(self.region_request_item, RegionRequestStatus.SUCCESS)
+        self.region_request_table.complete_region_request(self.region_request_item, RequestStatus.SUCCESS)
         resulting_region_request_item = self.region_request_table.get_region_request(TEST_REGION_ID, TEST_IMAGE_ID)
 
-        assert resulting_region_request_item.region_status == RegionRequestStatus.SUCCESS
+        assert resulting_region_request_item.region_status == RequestStatus.SUCCESS
         assert resulting_region_request_item.last_updated_time is not None
         assert resulting_region_request_item.end_time is not None
 
@@ -97,13 +97,13 @@ class TestRegionRequestTable(unittest.TestCase):
         """
         Validate that when we complete a region successfully it updates the ddb item
         """
-        from aws.osml.model_runner.common import RegionRequestStatus
+        from aws.osml.model_runner.common import RequestStatus
 
         self.region_request_table.start_region_request(self.region_request_item)
-        self.region_request_table.complete_region_request(self.region_request_item, RegionRequestStatus.FAILED)
+        self.region_request_table.complete_region_request(self.region_request_item, RequestStatus.FAILED)
         resulting_region_request_item = self.region_request_table.get_region_request(TEST_REGION_ID, TEST_IMAGE_ID)
 
-        assert resulting_region_request_item.region_status == RegionRequestStatus.FAILED
+        assert resulting_region_request_item.region_status == RequestStatus.FAILED
         assert resulting_region_request_item.last_updated_time is not None
         assert resulting_region_request_item.end_time is not None
 
