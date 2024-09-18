@@ -66,6 +66,7 @@ class TestTileWorkerUtils(TestCase):
     ):
         from aws.osml.gdal.gdal_utils import load_gdal_dataset
         from aws.osml.model_runner.api import RegionRequest
+        from aws.osml.model_runner.database import RegionRequestItem
         from aws.osml.model_runner.tile_worker import VariableTileTilingStrategy
         from aws.osml.model_runner.tile_worker.tile_worker_utils import process_tiles, setup_tile_workers
 
@@ -79,24 +80,26 @@ class TestTileWorkerUtils(TestCase):
                 "region_bounds": ((0, 0), (50, 50)),
                 "model_invoke_mode": "SM_ENDPOINT",
                 "image_extension": "fake",
+                "failed_tiles": [],
             }
         )
+        region_request_item = RegionRequestItem.from_region_request(mock_region_request)
 
         ds, sensor_model = load_gdal_dataset("./test/data/small.ntf")
         mock_elevation_model = None
         work_queue, tile_worker_list = setup_tile_workers(mock_region_request, sensor_model, mock_elevation_model)
 
-        completed_tiles, failed_tiles = process_tiles(
+        total_tile_count, tile_error_count = process_tiles(
             tiling_strategy=VariableTileTilingStrategy(),
-            region_request=mock_region_request,
+            region_request_item=region_request_item,
             tile_queue=work_queue,
             tile_workers=tile_worker_list,
             raster_dataset=ds,
             sensor_model=sensor_model,
         )
 
-        assert completed_tiles == 25
-        assert failed_tiles == 0
+        assert total_tile_count == 25
+        assert tile_error_count == 0
 
     def test_next_greater_multiple(self):
         assert 16 == self.next_greater_multiple(1, 16)

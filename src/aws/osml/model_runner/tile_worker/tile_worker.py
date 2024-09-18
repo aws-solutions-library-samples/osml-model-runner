@@ -15,8 +15,8 @@ from shapely.affinity import translate
 
 from aws.osml.features import Geolocator, ImagedFeaturePropertyAccessor
 from aws.osml.model_runner.app_config import MetricLabels
-from aws.osml.model_runner.common import ThreadingLocalContextFilter, Timer
-from aws.osml.model_runner.database import FeatureTable
+from aws.osml.model_runner.common import ThreadingLocalContextFilter, TileState, Timer
+from aws.osml.model_runner.database import FeatureTable, RegionRequestTable
 from aws.osml.model_runner.inference import Detector
 
 logger = logging.getLogger(__name__)
@@ -29,13 +29,16 @@ class TileWorker(Thread):
         feature_detector: Detector,
         geolocator: Optional[Geolocator],
         feature_table: FeatureTable,
+        region_request_table: RegionRequestTable,
     ) -> None:
         super().__init__()
         self.in_queue = in_queue
         self.feature_detector = feature_detector
         self.geolocator = geolocator
         self.feature_table = feature_table
+        self.region_request_table = region_request_table
         self.property_accessor = ImagedFeaturePropertyAccessor()
+        self.failed_tile_count: int = 0
 
     def run(self) -> None:
         thread_event_loop = asyncio.new_event_loop()
@@ -45,11 +48,11 @@ class TileWorker(Thread):
             ThreadingLocalContextFilter.set_context(image_info)
 
             if image_info is None:
-                logging.info("All images processed. Stopping tile worker.")
-                logging.info(
+                logging.debug("All images processed. Stopping tile worker.")
+                logging.debug(
                     (
                         f"Feature Detector Stats: {self.feature_detector.request_count} requests "
-                        f"with {self.feature_detector.error_count} errors"
+                        f"with {self.failed_tile_count} failed tiles."
                     )
                 )
                 break
@@ -100,10 +103,15 @@ class TileWorker(Thread):
                 if len(features) > 0:
                     self.feature_table.add_features(features)
 
+                self.region_request_table.add_tile(
+                    image_info.get("image_id"), image_info.get("region_id"), image_info.get("region"), TileState.SUCCEEDED
+                )
         except Exception as e:
-            logging.error("Failed to process region tile!")
-            logging.exception(e)
-            self.feature_detector.error_count += 1  # borrow the feature detector error count to tally other errors
+            self.failed_tile_count += 1
+            logging.error(f"Failed to process region tile with error: {e.with_traceback()}")
+            self.region_request_table.add_tile(
+                image_info.get("image_id"), image_info.get("region_id"), image_info.get("region"), TileState.FAILED
+            )
             if isinstance(metrics, MetricsLogger):
                 metrics.put_metric(MetricLabels.ERRORS, 1, str(Unit.COUNT.value))
 
@@ -140,7 +148,7 @@ class TileWorker(Thread):
             ulx = image_info["region"][0][1]
             uly = image_info["region"][0][0]
             if isinstance(feature_collection, dict) and "features" in feature_collection:
-                logging.info(f"SM Model returned {len(feature_collection['features'])} features")
+                logging.debug(f"SM Model returned {len(feature_collection['features'])} features")
                 for feature in feature_collection["features"]:
                     # Check to see if there is a bbox defined in image coordinates. If so, update it to
                     # use full image coordinates and store the updated value in the feature properties.
@@ -155,7 +163,7 @@ class TileWorker(Thread):
                     # Note that this property search will be deprecated and removed in a future release.
                     tiled_image_geometry = self.property_accessor.get_image_geometry(feature)
                     if tiled_image_bbox is None and tiled_image_geometry is None:
-                        logging.info(f"Feature may be using deprecated attributes: {feature}")
+                        logging.debug("Feature may be using deprecated attributes.")
                         tiled_image_geometry = self.property_accessor.find_image_geometry(feature)
                         if tiled_image_geometry is None:
                             logging.warning(f"There isn't a valid detection shape for feature: {feature}")
@@ -177,13 +185,13 @@ class TileWorker(Thread):
                     TileWorker.convert_deprecated_feature_properties(feature)
 
                     features.append(feature)
-            logging.info(f"# Features Created: {len(features)}")
+            logging.debug(f"# Features Created: {len(features)}")
             if len(features) > 0:
                 if self.geolocator is not None:
                     # Create a geometry for each feature in the result. The geographic coordinates of these
                     # features are computed using the sensor model provided in the image metadata
                     self.geolocator.geolocate_features(features)
-                    logging.info(f"Created Geographic Coordinates for {len(features)} features")
+                    logging.debug(f"Created Geographic Coordinates for {len(features)} features")
 
         return features
 

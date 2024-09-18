@@ -5,6 +5,7 @@
 # flake8: noqa
 
 from .exceptions import SNSPublishException, StatusMonitorException
-from .image_request_status import ImageRequestStatusMessage
+from .image_status_monitor import ImageStatusMonitor
+from .region_status_monitor import RegionStatusMonitor
 from .sns_helper import SNSHelper
-from .status_monitor import StatusMonitor
+from .status_message import StatusMessage

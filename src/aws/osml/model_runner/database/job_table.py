@@ -2,7 +2,6 @@
 
 import time
 from dataclasses import dataclass
-from decimal import Decimal
 from typing import Optional
 
 from dacite import from_dict
@@ -20,20 +19,31 @@ from .exceptions import (
 @dataclass
 class JobItem(DDBItem):
     """
-    JobItem is a dataclass meant to represent a single item in the JobStatus table
+    JobItem is a dataclass meant to represent a single item in the JobStatus table.
 
     The data schema is defined as follows:
-    image_id: str = unique image_id for the job
-    start_time: Optional[Decimal] = time in epoch milliseconds when the job started
-    expire_time: Optional[Decimal] = time in epoch seconds when the job will expire
-    end_time: Optional[Decimal] = time in epoch milliseconds when the job ended
-    region_success: Optional[Decimal] = current count of regions that have succeeded for this image
-    region_error: Optional[Decimal] = current count of regions that have errored for this image
-    region_count: Optional[Decimal] = total count of regions expected for this image
-    width: Optional[Decimal] = width of the image
-    height: Optional[Decimal] = height of the image
-    feature_distillation_options: Optional[str] = the options used in selecting features (NMS/SOFT_NMS, thresholds, etc.)
-    roi_wkt: a Well Known Text representation of the requested processing bounds
+    image_id: str = unique identifier for the image associated with the job
+    job_id: Optional[str] = unique identifier for the job
+    image_url: Optional[str] = S3 URL or another source location for the image
+    image_read_role: Optional[str] = IAM role ARN for accessing the image from its source
+    model_invoke_mode: Optional[str] = mode in which the model is invoked (e.g., batch or streaming)
+    start_time: Optional[int] = time in epoch milliseconds when the job started
+    expire_time: Optional[int] = time in epoch seconds when the job will expire
+    end_time: Optional[int] = time in epoch milliseconds when the job ended
+    region_success: Optional[int] = current count of regions that have successfully processed for this image
+    region_error: Optional[int] = current count of regions that have errored during processing
+    region_count: Optional[int] = total count of regions expected for this image
+    width: Optional[int] = width of the image in pixels
+    height: Optional[int] = height of the image in pixels
+    extents: Optional[str] = string representation of the image extents
+    tile_size: Optional[str] = size of the tiles used during processing
+    tile_overlap: Optional[str] = overlap between tiles during processing
+    model_name: Optional[str] = name of the model used for processing
+    outputs: Optional[str] = details about the job output
+    processing_duration: Optional[int] = time in seconds taken to complete processing
+    feature_properties: Optional[str] = additional feature properties or metadata from the image processing
+    feature_distillation_option: Optional[str] = the options used in selecting features (e.g., NMS/SOFT_NMS, thresholds)
+    roi_wkt: Optional[str] = a Well-Known Text (WKT) representation of the requested processing bounds
     """
 
     image_id: str
@@ -41,20 +51,20 @@ class JobItem(DDBItem):
     image_url: Optional[str] = None
     image_read_role: Optional[str] = None
     model_invoke_mode: Optional[str] = None
-    start_time: Optional[Decimal] = None
-    expire_time: Optional[Decimal] = None
-    end_time: Optional[Decimal] = None
-    region_success: Optional[Decimal] = None
-    region_error: Optional[Decimal] = None
-    region_count: Optional[Decimal] = None
-    width: Optional[Decimal] = None
-    height: Optional[Decimal] = None
+    start_time: Optional[int] = None
+    expire_time: Optional[int] = None
+    end_time: Optional[int] = None
+    region_success: Optional[int] = None
+    region_error: Optional[int] = None
+    region_count: Optional[int] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
     extents: Optional[str] = None
     tile_size: Optional[str] = None
     tile_overlap: Optional[str] = None
     model_name: Optional[str] = None
     outputs: Optional[str] = None
-    processing_time: Optional[Decimal] = None
+    processing_duration: Optional[int] = None
     feature_properties: Optional[str] = None
     feature_distillation_option: Optional[str] = None
     roi_wkt: Optional[str] = None
@@ -91,15 +101,15 @@ class JobTable(DDBHelper):
             # These records are temporary and will expire 24 hours after creation. Jobs should take
             # minutes to run so this time should be conservative enough to let a team debug an urgent
             # issue without leaving a ton of state leftover in the system.
-            start_time_millisec = Decimal(time.time() * 1000)
-            expire_time_epoch_sec = Decimal(int(start_time_millisec / 1000) + (24 * 60 * 60))
+            start_time_millisec = int(time.time() * 1000)
+            expire_time_epoch_sec = int(int(start_time_millisec / 1000) + (24 * 60 * 60))
 
             # Update the job item to have the correct start parameters
             image_request_item.start_time = start_time_millisec
-            image_request_item.processing_time = Decimal(0)
+            image_request_item.processing_duration = 0
             image_request_item.expire_time = expire_time_epoch_sec
-            image_request_item.region_success = Decimal(0)
-            image_request_item.region_error = Decimal(0)
+            image_request_item.region_success = 0
+            image_request_item.region_error = 0
 
             # Put the item into the table
             self.put_ddb_item(image_request_item)
@@ -124,12 +134,12 @@ class JobTable(DDBHelper):
                 # Build custom update expression for updating region_error in DDB
                 update_exp = "SET region_error = region_error + :error_count"
                 # Build custom update attributes for updating region_error in DDB
-                update_attr = {":error_count": Decimal(1)}
+                update_attr = {":error_count": int(1)}
             else:
                 # Build custom update expression for updating region_error in DDB
                 update_exp = "SET region_success = region_success + :success_count"
                 # Build custom update attributes for updating region_error in DDB
-                update_attr = {":success_count": Decimal(1)}
+                update_attr = {":success_count": int(1)}
 
             # Update item in the table and translate to a JobItem
             return from_dict(
@@ -180,7 +190,7 @@ class JobTable(DDBHelper):
             image_request_item = self.get_image_request(image_id)
 
             # Give it an end time
-            image_request_item.end_time = Decimal(time.time() * 1000)
+            image_request_item.end_time = int(time.time() * 1000)
 
             # Update the item in the table
             return self.update_image_request(image_request_item)
@@ -212,10 +222,10 @@ class JobTable(DDBHelper):
         """
         # Update the processing time on our message
         if image_request_item.start_time is not None:
-            image_request_item.processing_time = self.get_processing_time(image_request_item.start_time)
+            image_request_item.processing_duration = self.get_processing_duration(int(image_request_item.start_time))
 
         return from_dict(JobItem, self.update_ddb_item(image_request_item))
 
     @staticmethod
-    def get_processing_time(start_time: Decimal) -> Decimal:
-        return Decimal(time.time() - (float(start_time) / float(1000.0)))
+    def get_processing_duration(start_time: int) -> int:
+        return int(time.time() - (start_time / 1000))

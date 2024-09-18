@@ -23,7 +23,6 @@ class Detector(abc.ABC):
         """
         self.endpoint = endpoint
         self.request_count = 0
-        self.error_count = 0
 
     @property
     @abc.abstractmethod

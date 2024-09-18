@@ -6,10 +6,8 @@ import json
 import logging
 import math
 from dataclasses import asdict
-from decimal import Decimal
 from json import dumps
 from math import degrees
-from secrets import token_hex
 from typing import Any, Dict, List, Optional, Tuple
 
 import shapely.geometry.base
@@ -37,8 +35,7 @@ from .common import (
     GeojsonDetectionField,
     ImageDimensions,
     ImageRegion,
-    ImageRequestStatus,
-    RegionRequestStatus,
+    RequestStatus,
     ThreadingLocalContextFilter,
     Timer,
     build_embedded_metrics_config,
@@ -61,7 +58,7 @@ from .exceptions import (
 from .inference import FeatureSelector, calculate_processing_bounds, get_source_property
 from .queue import RequestQueue
 from .sink import SinkFactory
-from .status import StatusMonitor
+from .status import ImageStatusMonitor, RegionStatusMonitor
 from .tile_worker import TilingStrategy, VariableOverlapTilingStrategy, process_tiles, setup_tile_workers
 
 # Set up metrics configuration
@@ -92,7 +89,8 @@ class ModelRunner:
         self.endpoint_statistics_table = EndpointStatisticsTable(ServiceConfig.endpoint_statistics_table)
         self.region_request_queue = RequestQueue(ServiceConfig.region_queue, wait_seconds=10)
         self.region_requests_iter = iter(self.region_request_queue)
-        self.status_monitor = StatusMonitor()
+        self.image_status_monitor = ImageStatusMonitor(ServiceConfig.image_status_topic)
+        self.region_status_monitor = RegionStatusMonitor(ServiceConfig.region_status_topic)
         self.elevation_model = ModelRunner.create_elevation_model()
         self.endpoint_utils = EndpointUtils()
         self.running = False
@@ -174,15 +172,12 @@ class ModelRunner:
                             region_request.region_id, region_request.image_id
                         )
                         if region_request_item is None:
-                            region_pixel_bounds = f"{region_request.region_bounds[0]}{region_request.region_bounds[1]}"
-                            region_request_item = RegionRequestItem(
-                                image_id=region_request.image_id,
-                                job_id=region_request.job_id,
-                                region_pixel_bounds=region_pixel_bounds,
-                                region_id=region_request.region_id,
-                            )
+                            # Create a new item from the region request
+                            region_request_item = RegionRequestItem.from_region_request(region_request)
+
+                            # Add the item to the table and start it processing
                             self.region_request_table.start_region_request(region_request_item)
-                            logging.info(
+                            logging.debug(
                                 (
                                     f"Adding region request: image id: {region_request_item.image_id} - "
                                     f"region id: {region_request_item.region_id}"
@@ -243,7 +238,7 @@ class ModelRunner:
                             minimal_job_item = JobItem(
                                 image_id=min_image_id,
                                 job_id=min_job_id,
-                                processing_time=Decimal(0),
+                                processing_duration=0,
                             )
                             self.fail_image_request_send_messages(minimal_job_item, err)
                             self.image_request_queue.finish_request(receipt_handle)
@@ -273,7 +268,7 @@ class ModelRunner:
                 self.endpoint_statistics_table.upsert_endpoint(image_request.model_name, max_regions)
 
             # Update the image status to started and include relevant image meta-data
-            logger.info(f"Starting processing of {image_request.image_url}")
+            logger.debug(f"Starting processing of {image_request.image_url}")
             image_request_item = JobItem(
                 image_id=image_request.image_id,
                 job_id=image_request.job_id,
@@ -295,7 +290,7 @@ class ModelRunner:
 
             # Start the image processing
             self.job_table.start_image_request(image_request_item)
-            self.status_monitor.process_event(image_request_item, ImageRequestStatus.STARTED, "Started image request")
+            self.image_status_monitor.process_event(image_request_item, RequestStatus.STARTED, "Started image request")
 
             # Check we have a valid image request, throws if not
             self.validate_model_hosting(image_request_item)
@@ -312,9 +307,9 @@ class ModelRunner:
 
             # If we got valid outputs
             if raster_dataset and all_regions and image_extension:
-                image_request_item.region_count = Decimal(len(all_regions))
-                image_request_item.width = Decimal(raster_dataset.RasterXSize)
-                image_request_item.height = Decimal(raster_dataset.RasterYSize)
+                image_request_item.region_count = len(all_regions)
+                image_request_item.width = int(raster_dataset.RasterXSize)
+                image_request_item.height = int(raster_dataset.RasterYSize)
                 try:
                     image_request_item.extents = json.dumps(ModelRunner.get_extents(raster_dataset, sensor_model))
                 except Exception as e:
@@ -333,9 +328,9 @@ class ModelRunner:
                 image_request_item.feature_properties = json.dumps(feature_properties)
 
                 # Update the image request job to have new derived image data
-                image_request_item = self.job_table.update_image_request(image_request_item)
+                self.job_table.update_image_request(image_request_item)
 
-                self.status_monitor.process_event(image_request_item, ImageRequestStatus.IN_PROGRESS, "Processing regions")
+                self.image_status_monitor.process_event(image_request_item, RequestStatus.IN_PROGRESS, "Processing regions")
 
                 # Place the resulting region requests on the appropriate work queue
                 self.queue_region_request(all_regions, image_request, raster_dataset, sensor_model, image_extension)
@@ -348,7 +343,7 @@ class ModelRunner:
                 minimal_job_item = JobItem(
                     image_id=image_request.image_id,
                     job_id=image_request.job_id,
-                    processing_time=Decimal(0),
+                    processing_duration=0,
                 )
                 self.fail_image_request(minimal_job_item, err)
 
@@ -374,28 +369,24 @@ class ModelRunner:
         :param raster_dataset: Dataset = the raster dataset containing the region
         :param sensor_model: Optional[SensorModel] = the sensor model for this raster dataset
 
-        :return None
+        :return: None
         """
         # Set aside the first region
         first_region = all_regions.pop(0)
         for region in all_regions:
-            logger.info(f"Queueing region: {region}")
+            logger.debug(f"Queueing region: {region}")
 
-            region_pixel_bounds = f"{region[0]}{region[1]}"
-            region_id = f"{region_pixel_bounds}-{token_hex(16)}"
             region_request = RegionRequest(
-                image_request.get_shared_values(), region_bounds=region, region_id=region_id, image_extension=image_extension
+                image_request.get_shared_values(),
+                region_bounds=region,
+                region_id=f"{region[0]}{region[1]}-{image_request.job_id}",
+                image_extension=image_extension,
             )
 
             # Create a new entry to the region request being started
-            region_request_item = RegionRequestItem(
-                image_id=image_request.image_id,
-                job_id=image_request.job_id,
-                region_pixel_bounds=region_pixel_bounds,
-                region_id=region_id,
-            )
+            region_request_item = RegionRequestItem.from_region_request(region_request)
             self.region_request_table.start_region_request(region_request_item)
-            logging.info(
+            logging.debug(
                 (
                     f"Adding region request: image id: {region_request_item.image_id} - "
                     f"region id: {region_request_item.region_id}"
@@ -406,32 +397,23 @@ class ModelRunner:
             self.region_request_queue.send_request(region_request.__dict__)
 
         # Go ahead and process the first region
-        logger.info(f"Processing first region {0}: {first_region}")
+        logger.debug(f"Processing first region {0}: {first_region}")
 
-        region_pixel_bounds = f"{first_region[0]}{first_region[1]}"
-        region_id = f"{region_pixel_bounds}-{token_hex(16)}"
         first_region_request = RegionRequest(
             image_request.get_shared_values(),
             region_bounds=first_region,
-            region_id=region_id,
+            region_id=f"{first_region[0]}{first_region[1]}-{image_request.job_id}",
             image_extension=image_extension,
         )
 
         # Add item to RegionRequestTable
-        region_request_item = RegionRequestItem(
-            image_id=image_request.image_id,
-            job_id=image_request.job_id,
-            region_pixel_bounds=region_pixel_bounds,
-            region_id=region_id,
-        )
-        self.region_request_table.start_region_request(region_request_item)
-        logging.info(
-            f"Adding region request: imageid: {region_request_item.image_id} - regionid: {region_request_item.region_id}"
-        )
+        first_region_request_item = RegionRequestItem.from_region_request(first_region_request)
+        self.region_request_table.start_region_request(first_region_request_item)
+        logging.debug(f"Adding region_id: {first_region_request_item.region_id}")
 
         # Processes our region request and return the updated item
         image_request_item = self.process_region_request(
-            first_region_request, region_request_item, raster_dataset, sensor_model
+            first_region_request, first_region_request_item, raster_dataset, sensor_model
         )
 
         # If the image is finished then complete it
@@ -489,7 +471,7 @@ class ModelRunner:
             if in_progress >= max_regions:
                 if isinstance(metrics, MetricsLogger):
                     metrics.put_metric(MetricLabels.THROTTLES, 1, str(Unit.COUNT.value))
-                logger.info(f"Throttling region request. (Max: {max_regions} In-progress: {in_progress}")
+                logger.warning(f"Throttling region request. (Max: {max_regions} In-progress: {in_progress}")
                 raise SelfThrottledRegionException
 
             # Increment the endpoint region counter
@@ -506,23 +488,24 @@ class ModelRunner:
                 tile_queue, tile_workers = setup_tile_workers(region_request, sensor_model, self.elevation_model)
 
                 # Process all our tiles
-                total_tile_count, tile_error_count = process_tiles(
-                    self.tiling_strategy, region_request, tile_queue, tile_workers, raster_dataset, sensor_model
+                total_tile_count, failed_tile_count = process_tiles(
+                    self.tiling_strategy, region_request_item, tile_queue, tile_workers, raster_dataset, sensor_model
                 )
 
                 # Update table w/ total tile counts
-                region_request_item.total_tiles = Decimal(total_tile_count)
-                region_request_item.completed_tiles = Decimal(total_tile_count - tile_error_count)
-                region_request_item.failed_tiles = Decimal(tile_error_count)
+                region_request_item.total_tiles = total_tile_count
+                region_request_item.succeeded_tile_count = total_tile_count - failed_tile_count
+                region_request_item.failed_tile_count = failed_tile_count
                 region_request_item = self.region_request_table.update_region_request(region_request_item)
 
             # Update the image request to complete this region
-            image_request_item = self.job_table.complete_region_request(region_request.image_id, bool(tile_error_count))
+            image_request_item = self.job_table.complete_region_request(region_request.image_id, bool(failed_tile_count))
 
             # Update region request table if that region succeeded
-            region_request_item = self.region_request_table.complete_region_request(
-                region_request_item, self.calculate_region_status(total_tile_count, tile_error_count)
-            )
+            region_status = self.region_status_monitor.get_status(region_request_item)
+            region_request_item = self.region_request_table.complete_region_request(region_request_item, region_status)
+
+            self.region_status_monitor.process_event(region_request_item, region_status, "Completed region processing")
 
             # Write CloudWatch Metrics to the Logs
             if isinstance(metrics, MetricsLogger):
@@ -590,7 +573,7 @@ class ModelRunner:
             # Bounds are: UL corner (row, column) , dimensions (w, h)
             processing_bounds = calculate_processing_bounds(raster_dataset, roi, sensor_model)
             if not processing_bounds:
-                logger.info("Requested ROI does not intersect image. Nothing to do")
+                logger.warning("Requested ROI does not intersect image. Nothing to do")
                 raise LoadImageException("Failed to create processing bounds for image!")
             else:
                 # Calculate a set of ML engine-sized regions that we need to process for this image
@@ -631,7 +614,7 @@ class ModelRunner:
         :return: None
         """
         logger.exception(f"Failed to start image processing!: {err}")
-        self.status_monitor.process_event(image_request_item, ImageRequestStatus.FAILED, str(err))
+        self.image_status_monitor.process_event(image_request_item, RequestStatus.FAILED, str(err))
 
     def complete_image_request(
         self, region_request: RegionRequest, image_format: str, raster_dataset: gdal.Dataset, sensor_model: SensorModel
@@ -641,8 +624,8 @@ class ModelRunner:
         completion logic for the associated ImageRequest.
 
         :param region_request: RegionRequest = the region request to update.
-        :param image_format: the format of the image
-        :param raster_dataset: the image data
+        :param image_format: Format of the image data
+        :param raster_dataset: the image data rater
         :param sensor_model: the image sensor model
 
         :return: None
@@ -651,14 +634,14 @@ class ModelRunner:
             # Grab the full image request item from the table
             image_request_item = self.job_table.get_image_request(region_request.image_id)
 
-            logger.info("Last region of image request was completed, aggregating features for image!")
+            logger.debug("Last region of image request was completed, aggregating features for image!")
 
             roi = None
             if image_request_item.roi_wkt:
-                logger.info(f"Using ROI from request to set processing boundary: {image_request_item.roi_wkt}")
+                logger.debug(f"Using ROI from request to set processing boundary: {image_request_item.roi_wkt}")
                 roi = shapely.wkt.loads(image_request_item.roi_wkt)
             processing_bounds = calculate_processing_bounds(raster_dataset, roi, sensor_model)
-            logger.info(f"Processing boundary from {roi} is {processing_bounds}")
+            logger.debug(f"Processing boundary from {roi} is {processing_bounds}")
 
             # Set up our feature table to work with the region quest
             feature_table = FeatureTable(ServiceConfig.feature_table, region_request.tile_size, region_request.tile_overlap)
@@ -679,9 +662,9 @@ class ModelRunner:
 
             # Ensure we have a valid start time for our record
             # TODO: Figure out why we wouldn't have a valid start time?!?!
-            if completed_image_request_item.processing_time is not None:
-                image_request_status = self.status_monitor.get_image_request_status(completed_image_request_item)
-                self.status_monitor.process_event(
+            if completed_image_request_item.processing_duration is not None:
+                image_request_status = self.image_status_monitor.get_status(completed_image_request_item)
+                self.image_status_monitor.process_event(
                     completed_image_request_item, image_request_status, "Completed image processing"
                 )
                 self.generate_image_processing_metrics(completed_image_request_item, image_format)
@@ -716,7 +699,7 @@ class ModelRunner:
                 }
             )
 
-            metrics.put_metric(MetricLabels.DURATION, float(image_request_item.processing_time), str(Unit.SECONDS.value))
+            metrics.put_metric(MetricLabels.DURATION, float(image_request_item.processing_duration), str(Unit.SECONDS.value))
             metrics.put_metric(MetricLabels.INVOCATIONS, 1, str(Unit.COUNT.value))
             if image_request_item.region_error > 0:
                 metrics.put_metric(MetricLabels.ERRORS, 1, str(Unit.COUNT.value))
@@ -738,9 +721,9 @@ class ModelRunner:
         if isinstance(metrics, MetricsLogger):
             metrics.put_metric(MetricLabels.ERRORS, 1, str(Unit.COUNT.value))
         try:
-            region_request_item = self.region_request_table.complete_region_request(
-                region_request_item, RegionRequestStatus.FAILED
-            )
+            region_status = RequestStatus.FAILED
+            region_request_item = self.region_request_table.complete_region_request(region_request_item, region_status)
+            self.region_status_monitor.process_event(region_request_item, region_status, "Completed region processing")
             return self.job_table.complete_region_request(region_request_item.image_id, error=True)
         except Exception as status_error:
             logger.error("Unable to update region status in job table")
@@ -757,9 +740,9 @@ class ModelRunner:
         """
         if not image_request.model_invoke_mode or image_request.model_invoke_mode not in VALID_MODEL_HOSTING_OPTIONS:
             error = f"Application only supports ${VALID_MODEL_HOSTING_OPTIONS} Endpoints"
-            self.status_monitor.process_event(
+            self.image_status_monitor.process_event(
                 image_request,
-                ImageRequestStatus.FAILED,
+                RequestStatus.FAILED,
                 error,
             )
             raise UnsupportedModelException(error)
@@ -791,7 +774,7 @@ class ModelRunner:
             task_str="Aggregating Features", metric_name=MetricLabels.DURATION, logger=logger, metrics_logger=metrics
         ):
             features = feature_table.get_features(image_request_item.image_id)
-            logger.info(f"Total features aggregated: {len(features)}")
+            logger.debug(f"Total features aggregated: {len(features)}")
 
         return features
 
@@ -887,7 +870,7 @@ class ModelRunner:
 
             # Ensure we have outputs defined for where to dump our features
             if image_request_item.outputs:
-                logging.info(f"Writing aggregate feature for job '{image_request_item.job_id}'")
+                logging.debug(f"Writing aggregate feature for job '{image_request_item.job_id}'")
                 for sink in SinkFactory.outputs_to_sinks(json.loads(image_request_item.outputs)):
                     if sink.mode == SinkMode.AGGREGATE and image_request_item.job_id:
                         is_write_output_succeeded = sink.write(image_request_item.job_id, features)
@@ -896,13 +879,13 @@ class ModelRunner:
                 # Log them let them know if both written to both outputs (S3 and Kinesis) or one in another
                 # If both couldn't write to either stream because both were down, return False. Otherwise True
                 if tracking_output_sinks["S3"] and not tracking_output_sinks["Kinesis"]:
-                    logging.info("OSMLModelRunner was able to write the features to S3 but not Kinesis. Continuing...")
+                    logging.debug("OSMLModelRunner was able to write the features to S3 but not Kinesis. Continuing...")
                     return True
                 elif not tracking_output_sinks["S3"] and tracking_output_sinks["Kinesis"]:
-                    logging.info("OSMLModelRunner was able to write the features to Kinesis but not S3. Continuing...")
+                    logging.debug("OSMLModelRunner was able to write the features to Kinesis but not S3. Continuing...")
                     return True
                 elif tracking_output_sinks["S3"] and tracking_output_sinks["Kinesis"]:
-                    logging.info("OSMLModelRunner was able to write the features to both S3 and Kinesis. Continuing...")
+                    logging.debug("OSMLModelRunner was able to write the features to both S3 and Kinesis. Continuing...")
                     return True
                 else:
                     logging.error("OSMLModelRunner was not able to write the features to either S3 or Kinesis. Failing...")
@@ -1003,18 +986,3 @@ class ModelRunner:
             }
         except Exception as e:
             logger.error(f"Error in getting extents: {e}")
-
-    @staticmethod
-    def calculate_region_status(total_tile_count: int, tile_error_count: int) -> RegionRequestStatus:
-        """
-        Calculate the processing status of a region upon completion
-        :param total_tile_count: number of tiles that were processed
-        :param tile_error_count: number of tiles with errors
-        :return: RegionRequestStatus
-        """
-        region_status = RegionRequestStatus.SUCCESS
-        if total_tile_count == tile_error_count:
-            region_status = RegionRequestStatus.FAILED
-        if 0 < tile_error_count < total_tile_count:
-            region_status = RegionRequestStatus.PARTIAL
-        return region_status

@@ -95,7 +95,7 @@ class TestModelRunner(TestCase):
         from aws.osml.model_runner.database.feature_table import FeatureTable
         from aws.osml.model_runner.database.job_table import JobTable
         from aws.osml.model_runner.database.region_request_table import RegionRequestTable
-        from aws.osml.model_runner.status.sns_helper import SNSHelper
+        from aws.osml.model_runner.status import ImageStatusMonitor, RegionStatusMonitor
 
         # GDAL 4.0 will begin using exceptions as the default; at this point the software is written to assume
         # no exceptions so we call this explicitly until the software can be updated to match.
@@ -223,23 +223,37 @@ class TestModelRunner(TestCase):
             StreamName=TEST_RESULTS_STREAM, StreamModeDetails={"StreamMode": "ON_DEMAND"}
         )
 
-        # Create a fake sns topic for reporting job status
+        # Create a fake image status sns topic for reporting job status
         self.sns = boto3.client("sns", config=BotoConfig.default)
-        sns_response = self.sns.create_topic(Name=os.environ["IMAGE_STATUS_TOPIC"])
-        self.mock_topic_arn = sns_response.get("TopicArn")
+        image_status_topic_arn = self.sns.create_topic(Name=os.environ["IMAGE_STATUS_TOPIC"]).get("TopicArn")
 
-        # Create a fake sqs queue to consume the sns topic events
+        # Create a fake sqs queue to consume the image status sns topic events
         self.sqs = boto3.client("sqs", config=BotoConfig.default)
-        sqs_response = self.sqs.create_queue(QueueName="mock_queue")
-        self.mock_queue_url = sqs_response.get("QueueUrl")
-        queue_attributes = self.sqs.get_queue_attributes(QueueUrl=self.mock_queue_url, AttributeNames=["QueueArn"])
-        queue_arn = queue_attributes.get("Attributes").get("QueueArn")
+        image_status_queue_url = self.sqs.create_queue(QueueName="mock_queue").get("QueueUrl")
+        image_status_queue_attributes = self.sqs.get_queue_attributes(
+            QueueUrl=image_status_queue_url, AttributeNames=["QueueArn"]
+        )
+        image_status_queue_arn = image_status_queue_attributes.get("Attributes").get("QueueArn")
 
         # Subscribe our sns topic to the queue
-        self.sns.subscribe(TopicArn=self.mock_topic_arn, Protocol="sqs", Endpoint=queue_arn)
+        self.sns.subscribe(TopicArn=image_status_topic_arn, Protocol="sqs", Endpoint=image_status_queue_arn)
 
-        # Set up our status monitor for the queue
-        self.image_status_sns = SNSHelper(self.mock_topic_arn)
+        # Set up our status monitor for the image status queue
+        self.image_status_monitor = ImageStatusMonitor(image_status_topic_arn)
+
+        # Create a fake region status sns topic for reporting job status
+        region_status_topic_arn = self.sns.create_topic(Name=os.environ["REGION_STATUS_TOPIC"]).get("TopicArn")
+        self.region_status_monitor = RegionStatusMonitor(region_status_topic_arn)
+
+        # Create a fake sqs queue to consume the region status sns topic events
+        region_status_queue_url = self.sqs.create_queue(QueueName="mock_region_queue").get("QueueUrl")
+        region_status_queue_attributes = self.sqs.get_queue_attributes(
+            QueueUrl=region_status_queue_url, AttributeNames=["QueueArn"]
+        )
+        region_status_queue_arn = region_status_queue_attributes.get("Attributes").get("QueueArn")
+
+        # Subscribe our sns topic to the queue
+        self.sns.subscribe(TopicArn=region_status_topic_arn, Protocol="sqs", Endpoint=region_status_queue_arn)
 
         # Create a fake bounds model
         self.sm = boto3.client("sagemaker", config=BotoConfig.default)
@@ -262,7 +276,8 @@ class TestModelRunner(TestCase):
         self.model_runner.job_table = self.job_table
         self.model_runner.region_request_table = self.region_request_table
         self.model_runner.endpoint_statistics_table = self.endpoint_statistics_table
-        self.model_runner.status_monitor.image_status_sns = self.image_status_sns
+        self.model_runner.image_status_monitor = self.image_status_monitor
+        self.model_runner.region_status_monitor = self.region_status_monitor
 
     def tearDown(self):
         """
@@ -279,10 +294,9 @@ class TestModelRunner(TestCase):
         self.results_bucket = None
         self.model_runner = None
         self.sns = None
-        self.mock_topic_arn = None
         self.sqs = None
-        self.mock_queue_url = None
-        self.image_status_sns = None
+        self.image_status_monitor = None
+        self.region_status_monitor = None
 
     def test_aws_osml_model_runner_importable(self):
         import aws.osml.model_runner  # noqa: F401
@@ -300,10 +314,6 @@ class TestModelRunner(TestCase):
         assert self.model_runner.running is False
 
     def test_process_bounds_image_request(self):
-        from aws.osml.model_runner.database.region_request_table import RegionRequestTable
-
-        self.model_runner.region_request_table = Mock(RegionRequestTable, autospec=True)
-
         self.model_runner.process_image_request(self.image_request)
 
         # Check to make sure the job was marked as complete
@@ -343,9 +353,7 @@ class TestModelRunner(TestCase):
 
     def test_process_geom_image_request(self):
         from aws.osml.model_runner.api.image_request import ImageRequest
-        from aws.osml.model_runner.database.region_request_table import RegionRequestTable
 
-        self.model_runner.region_request_table = Mock(RegionRequestTable, autospec=True)
         self.image_request = ImageRequest.from_external_message(
             {
                 "jobName": TEST_IMAGE_ID,
@@ -402,9 +410,7 @@ class TestModelRunner(TestCase):
 
     def test_process_additional_attributes_image_request(self):
         from aws.osml.model_runner.api.image_request import ImageRequest
-        from aws.osml.model_runner.database.region_request_table import RegionRequestTable
 
-        self.model_runner.region_request_table = Mock(RegionRequestTable, autospec=True)
         self.image_request = ImageRequest.from_external_message(
             {
                 "jobName": TEST_IMAGE_ID,
@@ -441,10 +447,9 @@ class TestModelRunner(TestCase):
         from aws.osml.model_runner.database.endpoint_statistics_table import EndpointStatisticsTable
         from aws.osml.model_runner.database.job_table import JobTable
         from aws.osml.model_runner.database.region_request_table import RegionRequestItem, RegionRequestTable
+        from aws.osml.model_runner.status import ImageStatusMonitor, RegionStatusMonitor
 
-        region_request_item = RegionRequestItem(
-            image_id=TEST_IMAGE_ID, region_id="test-region-id", region_pixel_bounds="(0, 0)(50, 50)"
-        )
+        region_request_item = RegionRequestItem(image_id=TEST_IMAGE_ID, region_id="test-region-id")
 
         # Load up our test image
         raster_dataset, sensor_model = load_gdal_dataset(self.region_request.image_url)
@@ -452,6 +457,8 @@ class TestModelRunner(TestCase):
         self.model_runner.job_table = Mock(JobTable, autospec=True)
         self.model_runner.region_request_table = Mock(RegionRequestTable, autospec=True)
         self.model_runner.endpoint_statistics_table = Mock(EndpointStatisticsTable, autospec=True)
+        self.model_runner.region_status_monitor = Mock(RegionStatusMonitor, autospec=True)
+        self.model_runner.image_status_monitor = Mock(ImageStatusMonitor, autospec=True)
         self.model_runner.endpoint_statistics_table.current_in_progress_regions.return_value = 0
         self.model_runner.fail_region_request = Mock()
 
@@ -480,9 +487,7 @@ class TestModelRunner(TestCase):
         from aws.osml.model_runner.database.job_table import JobTable
         from aws.osml.model_runner.database.region_request_table import RegionRequestItem, RegionRequestTable
 
-        region_request_item = RegionRequestItem(
-            image_id=TEST_IMAGE_ID, region_id="test-region-id", region_pixel_bounds="(0, 0)(50, 50)"
-        )
+        region_request_item = RegionRequestItem(image_id=TEST_IMAGE_ID, region_id="test-region-id")
 
         # Load up our test image
         raster_dataset, sensor_model = load_gdal_dataset(self.region_request.image_url)
@@ -531,9 +536,7 @@ class TestModelRunner(TestCase):
             }
         )
 
-        region_request_item = RegionRequestItem(
-            image_id=TEST_IMAGE_ID, region_id="test-region-id", region_pixel_bounds="(0, 0)(50, 50)"
-        )
+        region_request_item = RegionRequestItem(image_id=TEST_IMAGE_ID, region_id="test-region-id")
 
         # Load up our test image
         raster_dataset, sensor_model = load_gdal_dataset(self.region_request.image_url)
@@ -572,9 +575,7 @@ class TestModelRunner(TestCase):
         from aws.osml.model_runner.database.region_request_table import RegionRequestItem, RegionRequestTable
         from aws.osml.model_runner.exceptions import SelfThrottledRegionException
 
-        region_request_item = RegionRequestItem(
-            image_id=TEST_IMAGE_ID, region_id="test-region-id", region_pixel_bounds="(0, 0)(50, 50)"
-        )
+        region_request_item = RegionRequestItem(image_id=TEST_IMAGE_ID, region_id="test-region-id")
 
         # Load up our test image
         raster_dataset, sensor_model = load_gdal_dataset(self.region_request.image_url)
@@ -640,30 +641,6 @@ class TestModelRunner(TestCase):
 
         elevation_model = ModelRunner.create_elevation_model()
         assert not elevation_model
-
-    def test_calculate_region_status_success(self):
-        from aws.osml.model_runner.common import RegionRequestStatus
-
-        total_count = 10
-        error_count = 0
-        status = self.model_runner.calculate_region_status(total_count, error_count)
-        assert status == RegionRequestStatus.SUCCESS
-
-    def test_calculate_region_status_partial(self):
-        from aws.osml.model_runner.common import RegionRequestStatus
-
-        total_count = 10
-        error_count = 5
-        status = self.model_runner.calculate_region_status(total_count, error_count)
-        assert status == RegionRequestStatus.PARTIAL
-
-    def test_calculate_region_status_failure(self):
-        from aws.osml.model_runner.common import RegionRequestStatus
-
-        total_count = 10
-        error_count = 10
-        status = self.model_runner.calculate_region_status(total_count, error_count)
-        assert status == RegionRequestStatus.FAILED
 
     @staticmethod
     def get_dataset_and_camera():

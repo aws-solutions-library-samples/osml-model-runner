@@ -2,7 +2,6 @@
 
 import logging
 from dataclasses import dataclass
-from decimal import Decimal
 
 from boto3.dynamodb.conditions import Attr
 from botocore.exceptions import ClientError
@@ -21,15 +20,15 @@ class EndpointStatisticsItem(DDBItem):
 
     The data schema is defined as follows:
     endpoint: str = the Sagemaker endpoint to which the statistics pertain
-    regions_in_progress: Decimal = the number of regions currently being processed
+    regions_in_progress: int = the number of regions currently being processed
         for the associated endpoint
-    max_regions: Decimal = the maximum number of regions that an endpoint can concurrently
+    max_regions: int = the maximum number of regions that an endpoint can concurrently
         process before region requests should be throttled
     """
 
     endpoint: str
-    regions_in_progress: Decimal = Decimal(0)
-    max_regions: Decimal = Decimal(0)
+    regions_in_progress: int = 0
+    max_regions: int = 0
 
     def __post_init__(self):
         self.ddb_key = DDBKey(hash_key="endpoint", hash_value=self.endpoint)
@@ -66,7 +65,7 @@ class EndpointStatisticsTable(DDBHelper):
         logger.debug(f"Setting max region count for endpoint {endpoint} to {max_regions}")
         try:
             self.put_ddb_item(
-                EndpointStatisticsItem(endpoint=endpoint, max_regions=Decimal(max_regions)),
+                EndpointStatisticsItem(endpoint=endpoint, max_regions=max_regions),
                 Attr("endpoint").not_exists(),
             )
         except ClientError as e:
