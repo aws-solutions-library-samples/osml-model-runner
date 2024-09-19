@@ -192,6 +192,26 @@ class TestFeatureSelection(TestCase):
         processed_features = feature_selector.select_features(original_features)
         assert len(processed_features) == 3
 
+    def test_feature_selection_nms_point_feature(self):
+        from aws.osml.model_runner.common import FeatureDistillationNMS
+        from aws.osml.model_runner.inference import FeatureSelector
+
+        feature_selection_option = FeatureDistillationNMS()
+        feature_selector = FeatureSelector(options=feature_selection_option)
+
+        test_feature = [
+            Feature(
+                geometry=Point((85.000111, 32.983222, 0.0)),
+                id="point-feature",
+                properties={
+                    "bounds_imcoords": [409.6, 409.6, 409.6, 409.6],
+                    "featureClasses": [{"iri": "boat", "score": 0.85}],
+                },
+            )
+        ]
+        processed_features = feature_selector.select_features(test_feature)
+        assert len(processed_features) == 1
+
     def test_feature_selection_soft_nms_overlaps(self):
         from aws.osml.model_runner.common import FeatureDistillationSoftNMS
         from aws.osml.model_runner.inference import FeatureSelector

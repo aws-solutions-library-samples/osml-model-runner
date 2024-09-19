@@ -82,6 +82,22 @@ class FeatureSelector:
         for feature in feature_list:
             # [min_x, min_y, max_x, max_y]
             bounds_imcoords = get_feature_image_bounds(feature)
+
+            # This is a workaround for assumptions made by the NMS library and normalization code in this class.
+            # All of that code assumes that features have bounding boxes with a non-zero area. That assumption
+            # does not hold for features reported as a single point geometry or others that might simply be
+            # erroneously reported with a zero width or height bbox. No matter the cause, we would like those
+            # features to pass through our feature selection processing without triggering errors. Here we
+            # add 0.1 of a pixel to the width or height of any bbox if it is currently zero. This does not change
+            # the actual reported geometry of the feature in any way it just ensures the assumption of a non-zero
+            # area is true.
+            bounds_imcoords = (
+                bounds_imcoords[0],
+                bounds_imcoords[1],
+                bounds_imcoords[2] + 0.1 if bounds_imcoords[0] == bounds_imcoords[2] else bounds_imcoords[2],
+                bounds_imcoords[3] + 0.1 if bounds_imcoords[1] == bounds_imcoords[3] else bounds_imcoords[3],
+            )
+
             category, score = self._get_category_and_score_from_feature(feature)
             boxes.append(bounds_imcoords)
             categories.append(category)
