@@ -9,13 +9,20 @@ import boto3
 import geojson
 import pytest
 from botocore.stub import ANY, Stubber
+from geojson import FeatureCollection
 
 TEST_JOB_ID = "test-job-id"
 TEST_RESULTS_STREAM = "test-results-stream"
 MOCK_KINESIS_RESPONSE = {
-    "ShardId": "shardId-000000000000",
-    "SequenceNumber": "49632155903354096944077309979289188168053675801607929858",
+    "FailedRecordCount": 1,  # Bug where this has to be set to min-value of 1: https://github.com/boto/botocore/issues/2063
+    "Records": [
+        {
+            "ShardId": "shardId-000000000000",
+            "SequenceNumber": "49632155903354096944077309979289188168053675801607929858",
+        }
+    ],
 }
+
 
 MOCK_KINESIS_DESCRIBE_STREAM_RESPONSE = {
     "StreamDescription": {
@@ -98,84 +105,23 @@ class TestKinesisSink(unittest.TestCase):
                 "StreamName": TEST_RESULTS_STREAM,
             },
         )
+
+        records = [
+            {"Data": geojson.dumps(FeatureCollection(feature)), "PartitionKey": TEST_JOB_ID}
+            for feature in self.test_feature_list
+        ]
+
         kinesis_client_stub.add_response(
-            "put_record",
+            "put_records",
             MOCK_KINESIS_RESPONSE,
-            {
-                "StreamName": TEST_RESULTS_STREAM,
-                "PartitionKey": TEST_JOB_ID,
-                "Data": geojson.dumps(geojson.FeatureCollection(self.test_feature_list)),
-            },
-        )
-        kinesis_sink.write(TEST_JOB_ID, self.test_feature_list)
-        kinesis_client_stub.assert_no_pending_responses()
-
-    def test_write_features_batch_size_one(self):
-        from aws.osml.model_runner.sink.kinesis_sink import KinesisSink
-
-        kinesis_sink = KinesisSink(stream=TEST_RESULTS_STREAM, batch_size=1)
-        kinesis_client_stub = Stubber(kinesis_sink.kinesis_client)
-        kinesis_client_stub.activate()
-        kinesis_client_stub.add_response(
-            "describe_stream",
-            MOCK_KINESIS_DESCRIBE_STREAM_RESPONSE,
-            {
-                "StreamName": TEST_RESULTS_STREAM,
-            },
-        )
-        for index, feature in enumerate(self.test_feature_list):
-            kinesis_client_stub.add_response(
-                "put_record",
-                {"ShardId": "shardId-000000000000", "SequenceNumber": str(index)},
-                {
-                    "StreamName": TEST_RESULTS_STREAM,
-                    "PartitionKey": TEST_JOB_ID,
-                    "Data": geojson.dumps(geojson.FeatureCollection([feature])),
-                },
-            )
-        kinesis_sink.write(TEST_JOB_ID, self.test_feature_list)
-        kinesis_client_stub.assert_no_pending_responses()
-
-    def test_write_batch_size_three(self):
-        from aws.osml.model_runner.sink.kinesis_sink import KinesisSink
-
-        kinesis_sink = KinesisSink(stream=TEST_RESULTS_STREAM, batch_size=3)
-        kinesis_client_stub = Stubber(kinesis_sink.kinesis_client)
-        kinesis_client_stub.activate()
-        # We expect the test list to have 4 features because we're specifically
-        # testing the draining of the list here
-        assert len(self.test_feature_list) == 4
-
-        kinesis_client_stub.add_response(
-            "describe_stream",
-            MOCK_KINESIS_DESCRIBE_STREAM_RESPONSE,
-            {
-                "StreamName": TEST_RESULTS_STREAM,
-            },
+            {"StreamName": TEST_RESULTS_STREAM, "Records": records},
         )
 
-        kinesis_client_stub.add_response(
-            "put_record",
-            MOCK_KINESIS_RESPONSE,
-            {
-                "StreamName": TEST_RESULTS_STREAM,
-                "PartitionKey": TEST_JOB_ID,
-                "Data": geojson.dumps(geojson.FeatureCollection(self.test_feature_list[:3])),
-            },
-        )
-        kinesis_client_stub.add_response(
-            "put_record",
-            MOCK_KINESIS_RESPONSE,
-            {
-                "StreamName": TEST_RESULTS_STREAM,
-                "PartitionKey": TEST_JOB_ID,
-                "Data": geojson.dumps(geojson.FeatureCollection(self.test_feature_list[3:])),
-            },
-        )
         kinesis_sink.write(TEST_JOB_ID, self.test_feature_list)
         kinesis_client_stub.assert_no_pending_responses()
 
     def test_write_oversized_record(self):
+        from aws.osml.model_runner.sink.exceptions import InvalidKinesisStreamException
         from aws.osml.model_runner.sink.kinesis_sink import KinesisSink
 
         kinesis_sink = KinesisSink(TEST_RESULTS_STREAM)
@@ -190,21 +136,24 @@ class TestKinesisSink(unittest.TestCase):
             },
         )
 
+        records = [
+            {"Data": geojson.dumps(FeatureCollection(feature)), "PartitionKey": TEST_JOB_ID}
+            for feature in self.test_feature_list
+        ]
+
         kinesis_client_stub.add_client_error(
-            "put_record",
+            "put_records",
             service_error_code="ValidationException",
-            service_message="""An error occurred (ValidationException) when calling the PutRecord
-            operation: 1 validation error detected: Value at 'data' failed to satisfy constraint:
+            service_message="""Failed to write records to Kinesis stream 'test-results-stream':
+            An error occurred (ValidationException) when calling the PutRecords operation:
+            1 validation error detected: Value at 'data' failed to satisfy constraint:
             Member must have length less than or equal to 1048576.""",
-            expected_params={
-                "StreamName": TEST_RESULTS_STREAM,
-                "PartitionKey": TEST_JOB_ID,
-                "Data": geojson.dumps(geojson.FeatureCollection(self.test_feature_list)),
-            },
+            expected_params={"StreamName": TEST_RESULTS_STREAM, "Records": records},
         )
-        with pytest.raises(Exception) as e_info:
+        with pytest.raises(InvalidKinesisStreamException) as e_info:
             kinesis_sink.write(TEST_JOB_ID, self.test_feature_list)
-        assert str(e_info.value).startswith("An error occurred (ValidationException) when calling the PutRecord operation")
+
+        assert str(e_info.value).startswith("Failed to write records to Kinesis stream")
         kinesis_client_stub.assert_no_pending_responses()
 
     def test_bad_kinesis_stream_failure(self):
