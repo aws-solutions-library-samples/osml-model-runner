@@ -74,7 +74,7 @@ class KinesisSink(Sink):
         if self.validate_kinesis_stream():
             for feature in features:
                 # Serialize feature data to JSON
-                record_data = geojson.dumps(FeatureCollection(feature))
+                record_data = geojson.dumps(FeatureCollection([feature]))
 
                 # Create the record dict
                 record = {"Data": record_data, "PartitionKey": job_id}

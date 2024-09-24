@@ -107,7 +107,7 @@ class TestKinesisSink(unittest.TestCase):
         )
 
         records = [
-            {"Data": geojson.dumps(FeatureCollection(feature)), "PartitionKey": TEST_JOB_ID}
+            {"Data": geojson.dumps(FeatureCollection([feature])), "PartitionKey": TEST_JOB_ID}
             for feature in self.test_feature_list
         ]
 
@@ -137,7 +137,7 @@ class TestKinesisSink(unittest.TestCase):
         )
 
         records = [
-            {"Data": geojson.dumps(FeatureCollection(feature)), "PartitionKey": TEST_JOB_ID}
+            {"Data": geojson.dumps(FeatureCollection([feature])), "PartitionKey": TEST_JOB_ID}
             for feature in self.test_feature_list
         ]
 
