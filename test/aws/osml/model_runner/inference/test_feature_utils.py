@@ -8,6 +8,11 @@ import geojson
 import numpy as np
 import pytest
 import shapely
+from osgeo import gdal
+
+# GDAL 4.0 will begin using exceptions as the default; at this point the software is written to assume
+# no exceptions so we call this explicitly until the software can be updated to match.
+gdal.DontUseExceptions()
 
 
 class TestFeatureUtils(unittest.TestCase):
@@ -100,12 +105,13 @@ class TestFeatureUtils(unittest.TestCase):
         chip_lr = sensor_model.image_to_world(ImageCoordinate([101, 101]))
         min_vals = np.minimum(chip_ul.coordinate, chip_lr.coordinate)
         max_vals = np.maximum(chip_ul.coordinate, chip_lr.coordinate)
-        polygon_coords = []
-        polygon_coords.append([degrees(min_vals[0]), degrees(min_vals[1])])
-        polygon_coords.append([degrees(min_vals[0]), degrees(max_vals[1])])
-        polygon_coords.append([degrees(max_vals[0]), degrees(max_vals[1])])
-        polygon_coords.append([degrees(max_vals[0]), degrees(min_vals[1])])
-        polygon_coords.append([degrees(min_vals[0]), degrees(min_vals[1])])
+        polygon_coords = [
+            [degrees(min_vals[0]), degrees(min_vals[1])],
+            [degrees(min_vals[0]), degrees(max_vals[1])],
+            [degrees(max_vals[0]), degrees(max_vals[1])],
+            [degrees(max_vals[0]), degrees(min_vals[1])],
+            [degrees(min_vals[0]), degrees(min_vals[1])],
+        ]
         roi = shapely.geometry.Polygon(polygon_coords)
 
         processing_bounds = calculate_processing_bounds(ds, roi, sensor_model)
@@ -122,12 +128,13 @@ class TestFeatureUtils(unittest.TestCase):
         chip_lr = sensor_model.image_to_world(ImageCoordinate([50, 50]))
         min_vals = np.minimum(chip_ul.coordinate, chip_lr.coordinate)
         max_vals = np.maximum(chip_ul.coordinate, chip_lr.coordinate)
-        polygon_coords = []
-        polygon_coords.append([degrees(min_vals[0]), degrees(min_vals[1])])
-        polygon_coords.append([degrees(min_vals[0]), degrees(max_vals[1])])
-        polygon_coords.append([degrees(max_vals[0]), degrees(max_vals[1])])
-        polygon_coords.append([degrees(max_vals[0]), degrees(min_vals[1])])
-        polygon_coords.append([degrees(min_vals[0]), degrees(min_vals[1])])
+        polygon_coords = [
+            [degrees(min_vals[0]), degrees(min_vals[1])],
+            [degrees(min_vals[0]), degrees(max_vals[1])],
+            [degrees(max_vals[0]), degrees(max_vals[1])],
+            [degrees(max_vals[0]), degrees(min_vals[1])],
+            [degrees(min_vals[0]), degrees(min_vals[1])],
+        ]
         roi = shapely.geometry.Polygon(polygon_coords)
 
         processing_bounds = calculate_processing_bounds(ds, roi, sensor_model)

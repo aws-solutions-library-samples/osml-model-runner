@@ -14,12 +14,11 @@ from botocore.exceptions import ClientError
 from geojson import FeatureCollection
 
 from aws.osml.model_runner.api import ModelInvokeMode
-from aws.osml.model_runner.app_config import BotoConfig, MetricLabels, ServiceConfig
+from aws.osml.model_runner.app_config import BotoConfig, MetricLabels
 from aws.osml.model_runner.common import Timer
 
 from .detector import Detector
 from .endpoint_builder import FeatureEndpointBuilder
-from .feature_utils import create_mock_feature_collection
 
 logger = logging.getLogger(__name__)
 
@@ -100,20 +99,14 @@ class SMDetector(Detector):
                 logger=logger,
                 metrics_logger=metrics,
             ):
-                # Handle mock models for testing purposes
-                if self.endpoint == ServiceConfig.noop_bounds_model_name:
-                    return create_mock_feature_collection(payload)
-                elif self.endpoint == ServiceConfig.noop_geom_model_name:
-                    return create_mock_feature_collection(payload, geom=True)
-                else:
-                    # Invoke the real SageMaker model endpoint
-                    model_response = self.sm_client.invoke_endpoint(EndpointName=self.endpoint, Body=payload)
-                    retry_count = model_response.get("ResponseMetadata", {}).get("RetryAttempts", 0)
-                    if isinstance(metrics, MetricsLogger):
-                        metrics.put_metric(MetricLabels.RETRIES, retry_count, str(Unit.COUNT.value))
+                # Invoke the real SageMaker model endpoint
+                model_response = self.sm_client.invoke_endpoint(EndpointName=self.endpoint, Body=payload)
+                retry_count = model_response.get("ResponseMetadata", {}).get("RetryAttempts", 0)
+                if isinstance(metrics, MetricsLogger):
+                    metrics.put_metric(MetricLabels.RETRIES, retry_count, str(Unit.COUNT.value))
 
-                    # Parse the model's response as a geojson FeatureCollection
-                    return geojson.loads(model_response.get("Body").read())
+                # Parse the model's response as a geojson FeatureCollection
+                return geojson.loads(model_response.get("Body").read())
 
         except ClientError as ce:
             error_code = ce.response.get("Error", {}).get("Code")

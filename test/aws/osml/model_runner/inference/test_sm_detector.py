@@ -12,7 +12,7 @@ import pytest
 from botocore.exceptions import ClientError
 from botocore.stub import ANY, Stubber
 
-MOCK_RESPONSE = {
+MOCK_MODEL_RESPONSE = {
     "Body": io.StringIO(
         json.dumps(
             {
@@ -21,12 +21,13 @@ MOCK_RESPONSE = {
                     {
                         "type": "Feature",
                         "id": "1cc5e6d6-e12f-430d-adf0-8d2276ce8c5a",
-                        "geometry": {"type": "Point", "coordinates": [0.0, 0.0]},
+                        "geometry": {"type": "Point", "coordinates": [-43.679691, -22.941953]},
                         "properties": {
                             "bounds_imcoords": [429, 553, 440, 561],
-                            "feature_types": {"ground_motor_passenger_vehicle": 0.2961518168449402},
+                            "geom_imcoords": [[429, 553], [429, 561], [440, 561], [440, 553], [429, 553]],
+                            "featureClasses": [{"iri": "ground_motor_passenger_vehicle", "score": 0.2961518168449402}],
                             "detection_score": 0.2961518168449402,
-                            "image_id": "test-image-id",
+                            "image_id": "2pp5e6d6-e12f-430d-adf0-8d2276ceadf0",
                         },
                     }
                 ],
@@ -68,7 +69,7 @@ class TestSMDetector(TestCase):
         sm_runtime_stub.add_response(
             "invoke_endpoint",
             expected_params={"EndpointName": "test-endpoint", "Body": ANY},
-            service_response=MOCK_RESPONSE,
+            service_response=MOCK_MODEL_RESPONSE,
         )
         sm_runtime_stub.activate()
 
@@ -87,7 +88,7 @@ class TestSMDetector(TestCase):
         sm_runtime_stub.add_response(
             "invoke_endpoint",
             expected_params={"EndpointName": "test-endpoint", "Body": ANY},
-            service_response=MOCK_RESPONSE,
+            service_response=MOCK_MODEL_RESPONSE,
         )
         sm_runtime_stub.add_client_error(str(JSONDecodeError))
         sm_runtime_stub.activate()
@@ -106,7 +107,7 @@ class TestSMDetector(TestCase):
         sm_client_stub.add_response(
             "invoke_endpoint",
             expected_params={"EndpointName": "test-endpoint", "Body": ANY},
-            service_response=MOCK_RESPONSE,
+            service_response=MOCK_MODEL_RESPONSE,
         )
         sm_client_stub.add_client_error(str(ClientError({"Error": {"Code": 500, "Message": "ClientError"}}, "update_item")))
         feature_detector.sm_client.invoke_endpoint = Mock(

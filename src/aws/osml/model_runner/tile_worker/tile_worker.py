@@ -108,7 +108,7 @@ class TileWorker(Thread):
                 )
         except Exception as e:
             self.failed_tile_count += 1
-            logging.error(f"Failed to process region tile with error: {e.with_traceback()}")
+            logging.error(f"Failed to process region tile with error: {e}", exc_info=True)
             self.region_request_table.add_tile(
                 image_info.get("image_id"), image_info.get("region_id"), image_info.get("region"), TileState.FAILED
             )
