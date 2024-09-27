@@ -65,8 +65,6 @@ class ServiceConfig:
     kinesis_max_record_size_batch: str = "5242880"  # 5 MB in bytes
     kinesis_max_record_size: str = "1048576"  # 1 MB in bytes
     ddb_max_item_size: str = "200000"
-    noop_bounds_model_name: str = "NOOP_BOUNDS_MODEL_NAME"
-    noop_geom_model_name: str = "NOOP_GEOM_MODEL_NAME"
 
 
 @dataclass

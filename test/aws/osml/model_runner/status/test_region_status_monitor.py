@@ -2,7 +2,6 @@
 
 import os
 import unittest
-from decimal import Decimal
 
 import boto3
 from moto import mock_aws
@@ -30,12 +29,12 @@ class TestRegionStatusMonitor(unittest.TestCase):
             job_id="test-job",
             image_id="test-image",
             region_id="test-region",
-            processing_duration=Decimal(1000),
-            failed_tile_count=Decimal(0),
+            processing_duration=1000,
+            failed_tile_count=0,
             failed_tiles=[],
-            succeeded_tile_count=Decimal(0),
+            succeeded_tile_count=0,
             succeeded_tiles=[],
-            total_tiles=Decimal(10),
+            total_tiles=10,
         )
 
     def test_process_event_success(self):
@@ -61,7 +60,7 @@ class TestRegionStatusMonitor(unittest.TestCase):
             region_id="test-region",
             processing_duration=None,  # Required field
             failed_tiles=[],
-            total_tiles=Decimal(10),
+            total_tiles=10,
         )
         status = RequestStatus.FAILED
         message = "Processing failed."

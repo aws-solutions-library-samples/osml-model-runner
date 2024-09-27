@@ -16,12 +16,11 @@ from urllib3.exceptions import MaxRetryError
 from urllib3.util.retry import Retry
 
 from aws.osml.model_runner.api import ModelInvokeMode
-from aws.osml.model_runner.app_config import MetricLabels, ServiceConfig
+from aws.osml.model_runner.app_config import MetricLabels
 from aws.osml.model_runner.common import Timer
 
 from .detector import Detector
 from .endpoint_builder import FeatureEndpointBuilder
-from .feature_utils import create_mock_feature_collection
 
 logger = logging.getLogger(__name__)
 
@@ -153,21 +152,16 @@ class HTTPDetector(Detector):
                 logger=logger,
                 metrics_logger=metrics,
             ):
-                if self.endpoint == ServiceConfig.noop_geom_model_name:
-                    return create_mock_feature_collection(payload, geom=True)
-                elif self.endpoint == ServiceConfig.noop_bounds_model_name:
-                    return create_mock_feature_collection(payload)
-                else:
-                    response = self.http_pool.request(
-                        method="POST",
-                        url=self.endpoint,
-                        body=payload,
-                    )
-                    retry_count = self.retry.retry_counts
-                    if isinstance(metrics, MetricsLogger):
-                        metrics.put_metric(MetricLabels.RETRIES, retry_count, str(Unit.COUNT.value))
+                response = self.http_pool.request(
+                    method="POST",
+                    url=self.endpoint,
+                    body=payload,
+                )
+                retry_count = self.retry.retry_counts
+                if isinstance(metrics, MetricsLogger):
+                    metrics.put_metric(MetricLabels.RETRIES, retry_count, str(Unit.COUNT.value))
 
-                    return geojson.loads(response.data.decode("utf-8"))
+                return geojson.loads(response.data.decode("utf-8"))
 
         except RetryError as err:
             if isinstance(metrics, MetricsLogger):
