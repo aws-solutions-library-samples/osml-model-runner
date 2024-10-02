@@ -8,6 +8,6 @@ jobs:
   tox:
     uses: ./.github/workflows/tox.yml
     secrets: inherit
-  docker-build:
-    uses: ./.github/workflows/docker-build.yml
+  docker:
+    uses: ./.github/workflows/docker.yml
     secrets: inherit

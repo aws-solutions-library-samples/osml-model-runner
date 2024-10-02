@@ -4,6 +4,7 @@
 name: pypi
 
 on:
+  workflow_dispatch:
   workflow_call:
 
 permissions:
