@@ -1,0 +1,42 @@
+name: docker build & publish
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+
+env:
+  REGISTRY: awsosml
+  IMAGE_NAME: ${{ github.event.repository.name }}
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: 'true'
+      - name: Set Docker Push Flag
+        run: |
+          [[ "${{ github.event_name }}" =~ ^(push|release|workflow_dispatch|workflow_call)$ ]] && echo "push=true" >> $GITHUB_ENV || echo "push=false" >> $GITHUB_ENV
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable=${{ github.event_name == 'release' }}
+            type=semver,pattern={{raw}},enable=${{ github.event_name == 'release' }}
+            type=raw,value=nightly-dev,enable=${{ github.ref == 'refs/heads/main' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'}}
+            type=raw,value={{date 'YYYYMMDD-hhmmss' tz='UTC'}},enable=${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: ${{ env.push }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
