@@ -3,7 +3,7 @@
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from dacite import from_dict
 
@@ -203,7 +203,7 @@ class RegionRequestTable(DDBHelper):
             logger.warning(GetRegionRequestItemException(f"Failed to get RegionRequestItem! {err}"))
             return None
 
-    def add_tile(self, image_id: str, region_id: str, tile: ImageRegion, state: TileState) -> dict[str, Any]:
+    def add_tile(self, image_id: str, region_id: str, tile: ImageRegion, state: TileState) -> RegionRequestItem:
         """
         Append tile to the with the associated state to associated RegionRequestItem in the table.
 
@@ -229,7 +229,10 @@ class RegionRequestTable(DDBHelper):
 
             # Return the updated item
             logger.debug(f"Successfully appended {tile} to item with image_id={image_id}, region_id={region_id}.")
-            return new_item
+            return from_dict(
+                RegionRequestItem,
+                new_item,
+            )
         except Exception as err:
             logger.error(f"Failed to append {state.value} {tile} to item region_id={region_id}: {str(err)}")
             raise UpdateRegionException(f"Failed to append {state.value} {tile} to item region_id={region_id}.") from err

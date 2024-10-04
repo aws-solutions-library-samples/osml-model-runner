@@ -10,7 +10,6 @@ from .endpoint_utils import EndpointUtils
 from .exceptions import InvalidAssumedRoleException
 from .feature_utils import get_feature_image_bounds
 from .log_context import ThreadingLocalContextFilter
-from .metrics_utils import build_embedded_metrics_config
 from .mr_post_processing import (
     FeatureDistillationAlgorithm,
     FeatureDistillationAlgorithmType,

@@ -21,6 +21,7 @@ from aws.osml.model_runner.common import ImageDimensions, Timer, get_feature_ima
 
 from .ddb_helper import DDBHelper, DDBItem, DDBKey
 from .exceptions import AddFeaturesException
+from .job_table import JobItem
 
 logger = logging.getLogger(__name__)
 
@@ -245,3 +246,30 @@ class FeatureTable(DDBHelper):
             min_y_index -= 1
 
         return f"{feature['properties']['image_id']}-region-{min_x_index}:{max_x_index}:{min_y_index}:{max_y_index}"
+
+    @metric_scope
+    def aggregate_features(self, image_request_item: JobItem, metrics: MetricsLogger = None) -> List[Feature]:
+        """
+        For a given image processing job - aggregate all the features that were collected for it and
+        put them in the correct output sink locations.
+
+        :param image_request_item: JobItem = the image request
+        :param metrics: the current metrics scope
+
+        :return: List[geojson.Feature] = the list of features
+        """
+        if isinstance(metrics, MetricsLogger):
+            metrics.set_dimensions()
+            metrics.put_dimensions(
+                {
+                    MetricLabels.OPERATION_DIMENSION: MetricLabels.FEATURE_AGG_OPERATION,
+                }
+            )
+
+        with Timer(
+            task_str="Aggregating Features", metric_name=MetricLabels.DURATION, logger=logger, metrics_logger=metrics
+        ):
+            features = self.get_features(image_request_item.image_id)
+            logger.debug(f"Total features aggregated: {len(features)}")
+
+        return features
