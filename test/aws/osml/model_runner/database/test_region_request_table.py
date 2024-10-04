@@ -48,7 +48,6 @@ class TestRegionRequestTable(unittest.TestCase):
         """
         Delete virtual DDB resources/tables after each test
         """
-
         self.table.delete()
         self.ddb = None
         self.region_request_table = None
@@ -150,6 +149,69 @@ class TestRegionRequestTable(unittest.TestCase):
             "DOES-NOT-EXIST-REGION-ID", "DOES-NOT-EXIST-IMAGE-ID"
         )
         assert resulting_region_request is None
+
+    def test_add_tile_success(self):
+        """
+        Validate that tiles can be added as succeeded to the region request item
+        """
+        from aws.osml.model_runner.common import TileState
+
+        self.region_request_table.start_region_request(self.region_request_item)
+        tile = ((0, 0), (256, 256))  # Example of a valid ImageRegion tuple
+        self.region_request_table.add_tile(TEST_IMAGE_ID, TEST_REGION_ID, tile, TileState.SUCCEEDED)
+
+        success_tile_item = self.region_request_table.get_region_request(TEST_REGION_ID, TEST_IMAGE_ID)
+        assert len(success_tile_item.succeeded_tiles) == 1
+
+    def test_add_tile_failed(self):
+        """
+        Validate that tiles can be added as failed to the region request item
+        """
+        from aws.osml.model_runner.common import TileState
+
+        self.region_request_table.start_region_request(self.region_request_item)
+        tile = ((0, 0), (256, 256))  # Example of a valid ImageRegion tuple
+        self.region_request_table.add_tile(TEST_IMAGE_ID, TEST_REGION_ID, tile, TileState.FAILED)
+        failed_tile_item = self.region_request_table.get_region_request(TEST_REGION_ID, TEST_IMAGE_ID)
+
+        assert len(failed_tile_item.failed_tiles) == 1
+
+    def test_add_tile_invalid_format(self):
+        """
+        Validate that adding a tile with invalid format raises UpdateRegionException
+        """
+        from aws.osml.model_runner.common import TileState
+        from aws.osml.model_runner.database.exceptions import UpdateRegionException
+
+        self.region_request_table.start_region_request(self.region_request_item)
+        invalid_tile = "invalid_tile_format"
+
+        with self.assertRaises(UpdateRegionException):
+            self.region_request_table.add_tile(TEST_IMAGE_ID, TEST_REGION_ID, invalid_tile, TileState.SUCCEEDED)
+
+    def test_from_region_request_with_partial_data(self):
+        """
+        Validate that from_region_request handles partial data in the RegionRequest
+        """
+        from aws.osml.model_runner.api import RegionRequest
+        from aws.osml.model_runner.database import RegionRequestItem
+
+        region_request = RegionRequest(
+            region_id=TEST_REGION_ID,
+            image_id=TEST_IMAGE_ID,
+            job_id=None,  # Missing job_id
+            region_bounds=[[0, 0], [256, 256]],
+            tile_size=[256, 256],
+            tile_overlap=[0, 0],
+            tile_format="tif",
+            tile_compression="LZW",
+        )
+
+        region_request_item = RegionRequestItem.from_region_request(region_request)
+        assert region_request_item.region_id == TEST_REGION_ID
+        assert region_request_item.image_id == TEST_IMAGE_ID
+        assert region_request_item.job_id is None
+        assert region_request_item.tile_format == "tif"
 
 
 if __name__ == "__main__":

@@ -1,11 +1,15 @@
 #  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
 
+from aws_embedded_metrics.config import Configuration, get_config
 from botocore.config import Config
+
+from aws.osml.gdal import GDALDigitalElevationModelTileFactory
+from aws.osml.photogrammetry import DigitalElevationModel, ElevationModel, SRTMTileSet
 
 
 @dataclass
@@ -15,21 +19,9 @@ class ServiceConfig:
     operate that are provided through ENV variables. Note that required env parameters are enforced by the implied
     schema validation as os.environ[] is used to fetch the values. Optional parameters are fetched using, os.getenv(),
     which returns None.
-
-    The data schema is defined as follows:
-    region:  (str) The AWS region where the Model Runner is deployed.
-    job_table: (str) The name of the job processing DDB table
-    region_request_table: (str) The name of the region request processing DDB table
-    feature_table: (str) The name of the feature aggregation DDB table
-    image_queue: (str) The name of the image processing SQS queue
-    region_queue: (str) The name of the region processing SQS queue
-    workers_per_cpu: (int) The number of workers to launch per CPU
-    image_timeout:  (int) The number of seconds to wait for an image to be processed
-    region_timeout: (int) The number of seconds to wait for a region to be processed
-    cp_api_endpoint: (str) The URL of the control plane API endpoint
     """
 
-    # required env configuration
+    # Required env configuration
     aws_region: str = os.environ["AWS_DEFAULT_REGION"]
     job_table: str = os.environ["JOB_TABLE"]
     region_request_table: str = os.environ["REGION_REQUEST_TABLE"]
@@ -40,12 +32,13 @@ class ServiceConfig:
     workers_per_cpu: str = os.environ["WORKERS_PER_CPU"]
     workers: str = os.environ["WORKERS"]
 
-    # optional elevation data
+    # Optional elevation data
     elevation_data_location: Optional[str] = os.getenv("ELEVATION_DATA_LOCATION")
     elevation_data_extension: str = os.getenv("ELEVATION_DATA_EXTENSION", ".tif")
     elevation_data_version: str = os.getenv("ELEVATION_DATA_VERSION", "1arc_v3")
+    elevation_model: Optional[ElevationModel] = field(init=False, default=None)
 
-    # optional env configuration
+    # Optional env configuration
     image_status_topic: Optional[str] = os.getenv("IMAGE_STATUS_TOPIC")
     region_status_topic: Optional[str] = os.getenv("REGION_STATUS_TOPIC")
     cp_api_endpoint: Optional[str] = os.getenv("API_ENDPOINT")
@@ -53,18 +46,55 @@ class ServiceConfig:
         os.getenv("SM_SELF_THROTTLING", "False") == "True" or os.getenv("SM_SELF_THROTTLING", "False") == "true"
     )
 
-    # optional + defaulted configuration
+    # Optional + defaulted configuration
     region_size: str = os.getenv("REGION_SIZE", "(10240, 10240)")
     throttling_vcpu_scale_factor: str = os.getenv("THROTTLING_SCALE_FACTOR", "10")
-    # Time in seconds to set region request visibility timeout when a request
-    # is self throttled
     throttling_retry_timeout: str = os.getenv("THROTTLING_RETRY_TIMEOUT", "10")
 
-    # constant configuration
+    # Constant configuration
     kinesis_max_record_per_batch: str = "500"
     kinesis_max_record_size_batch: str = "5242880"  # 5 MB in bytes
     kinesis_max_record_size: str = "1048576"  # 1 MB in bytes
     ddb_max_item_size: str = "200000"
+
+    # Metrics configuration
+    metrics_config: Configuration = field(init=False, default=None)
+
+    def __post_init__(self):
+        """
+        Post-initialization method to set up the elevation model.
+        """
+        self.elevation_model = self.create_elevation_model()
+        self.metrics_config = self.configure_metrics()
+
+    def create_elevation_model(self) -> Optional[ElevationModel]:
+        """
+        Create an elevation model if the relevant options are set in the service configuration.
+
+        :return: Optional[ElevationModel] = the elevation model or None if not configured
+        """
+        if self.elevation_data_location:
+            return DigitalElevationModel(
+                SRTMTileSet(
+                    version=self.elevation_data_version,
+                    format_extension=self.elevation_data_extension,
+                ),
+                GDALDigitalElevationModelTileFactory(self.elevation_data_location),
+            )
+        return None
+
+    @staticmethod
+    def configure_metrics():
+        """
+        Embedded metrics configuration
+        """
+        metrics_config = get_config()
+        metrics_config.service_name = "OSML"
+        metrics_config.log_group_name = "/aws/OSML/MRService"
+        metrics_config.namespace = "OSML/ModelRunner"
+        metrics_config.environment = "local"
+
+        return metrics_config
 
 
 @dataclass

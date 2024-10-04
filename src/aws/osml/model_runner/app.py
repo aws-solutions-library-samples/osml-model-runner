@@ -18,14 +18,8 @@ from geojson import Feature
 from osgeo import gdal
 from osgeo.gdal import Dataset
 
-from aws.osml.gdal import (
-    GDALConfigEnv,
-    GDALDigitalElevationModelTileFactory,
-    get_image_extension,
-    load_gdal_dataset,
-    set_gdal_default_configuration,
-)
-from aws.osml.photogrammetry import DigitalElevationModel, ElevationModel, ImageCoordinate, SensorModel, SRTMTileSet
+from aws.osml.gdal import GDALConfigEnv, get_image_extension, load_gdal_dataset, set_gdal_default_configuration
+from aws.osml.photogrammetry import ImageCoordinate, SensorModel
 
 from .api import VALID_MODEL_HOSTING_OPTIONS, ImageRequest, InvalidImageRequestException, RegionRequest, SinkMode
 from .app_config import MetricLabels, ServiceConfig
@@ -38,7 +32,6 @@ from .common import (
     RequestStatus,
     ThreadingLocalContextFilter,
     Timer,
-    build_embedded_metrics_config,
     get_credentials_for_assumed_role,
     mr_post_processing_options_factory,
 )
@@ -61,11 +54,12 @@ from .sink import SinkFactory
 from .status import ImageStatusMonitor, RegionStatusMonitor
 from .tile_worker import TilingStrategy, VariableOverlapTilingStrategy, process_tiles, setup_tile_workers
 
-# Set up metrics configuration
-build_embedded_metrics_config()
-
 # Set up logging configuration
 logger = logging.getLogger(__name__)
+
+# GDAL 4.0 will begin using exceptions as the default; at this point the software is written to assume
+# no exceptions so we call this explicitly until the software can be updated to match.
+gdal.UseExceptions()
 
 
 class ModelRunner:
@@ -81,17 +75,17 @@ class ModelRunner:
 
         :param tiling_strategy: class defining how a larger image will be broken into chunks for processing
         """
+        self.config = ServiceConfig()
         self.tiling_strategy = tiling_strategy
-        self.image_request_queue = RequestQueue(ServiceConfig.image_queue, wait_seconds=0)
+        self.image_request_queue = RequestQueue(self.config.image_queue, wait_seconds=0)
         self.image_requests_iter = iter(self.image_request_queue)
-        self.job_table = JobTable(ServiceConfig.job_table)
-        self.region_request_table = RegionRequestTable(ServiceConfig.region_request_table)
-        self.endpoint_statistics_table = EndpointStatisticsTable(ServiceConfig.endpoint_statistics_table)
-        self.region_request_queue = RequestQueue(ServiceConfig.region_queue, wait_seconds=10)
+        self.job_table = JobTable(self.config.job_table)
+        self.region_request_table = RegionRequestTable(self.config.region_request_table)
+        self.endpoint_statistics_table = EndpointStatisticsTable(self.config.endpoint_statistics_table)
+        self.region_request_queue = RequestQueue(self.config.region_queue, wait_seconds=10)
         self.region_requests_iter = iter(self.region_request_queue)
-        self.image_status_monitor = ImageStatusMonitor(ServiceConfig.image_status_topic)
-        self.region_status_monitor = RegionStatusMonitor(ServiceConfig.region_status_topic)
-        self.elevation_model = ModelRunner.create_elevation_model()
+        self.image_status_monitor = ImageStatusMonitor(self.config.image_status_topic)
+        self.region_status_monitor = RegionStatusMonitor(self.config.region_status_topic)
         self.endpoint_utils = EndpointUtils()
         self.running = False
 
@@ -110,24 +104,6 @@ class ModelRunner:
         :return: None
         """
         self.running = False
-
-    @staticmethod
-    def create_elevation_model() -> Optional[ElevationModel]:
-        """
-        Create an elevation model if the relevant options are set in the service configuration.
-
-        :return: Optional[ElevationModel] = the elevation model or None if not configured
-        """
-        if ServiceConfig.elevation_data_location:
-            return DigitalElevationModel(
-                SRTMTileSet(
-                    version=ServiceConfig.elevation_data_version,
-                    format_extension=ServiceConfig.elevation_data_extension,
-                ),
-                GDALDigitalElevationModelTileFactory(ServiceConfig.elevation_data_location),
-            )
-
-        return None
 
     def monitor_work_queues(self) -> None:
         """
@@ -201,7 +177,7 @@ class ModelRunner:
                     except SelfThrottledRegionException:
                         self.region_request_queue.reset_request(
                             receipt_handle,
-                            visibility_timeout=int(ServiceConfig.throttling_retry_timeout),
+                            visibility_timeout=int(self.config.throttling_retry_timeout),
                         )
                     except Exception as err:
                         logger.error(f"There was a problem processing the region request: {err}")
@@ -260,7 +236,7 @@ class ModelRunner:
         """
         image_request_item = None
         try:
-            if ServiceConfig.self_throttling:
+            if self.config.self_throttling:
                 max_regions = self.endpoint_utils.calculate_max_regions(
                     image_request.model_name, image_request.model_invocation_role
                 )
@@ -302,7 +278,7 @@ class ModelRunner:
 
             if sensor_model is None:
                 logging.warning(
-                    f"Dataset {image_request_item.image_id} did not have a geo transform. Results are not geo-referenced."
+                    f"Dataset {image_request_item.image_id} has no geo transform. Results are not geo-referenced."
                 )
 
             # If we got valid outputs
@@ -460,7 +436,7 @@ class ModelRunner:
                 }
             )
 
-        if ServiceConfig.self_throttling:
+        if self.config.self_throttling:
             max_regions = self.endpoint_utils.calculate_max_regions(
                 region_request.model_name, region_request.model_invocation_role
             )
@@ -485,7 +461,7 @@ class ModelRunner:
                 metrics_logger=metrics,
             ):
                 # Set up our threaded tile worker pool
-                tile_queue, tile_workers = setup_tile_workers(region_request, sensor_model, self.elevation_model)
+                tile_queue, tile_workers = setup_tile_workers(region_request, sensor_model, self.config.elevation_model)
 
                 # Process all our tiles
                 total_tile_count, failed_tile_count = process_tiles(
@@ -520,11 +496,11 @@ class ModelRunner:
             logger.error(failed_msg)
             # update the table to take in that exception
             region_request_item.message = failed_msg
-            return self.fail_region_request(region_request_item, metrics)
+            return self.fail_region_request(region_request_item)
 
         finally:
             # Decrement the endpoint region counter
-            if ServiceConfig.self_throttling:
+            if self.config.self_throttling:
                 self.endpoint_statistics_table.decrement_region_count(region_request.model_name)
 
     def load_image_request(
@@ -579,7 +555,7 @@ class ModelRunner:
                 # Calculate a set of ML engine-sized regions that we need to process for this image
                 # Region size chosen to break large images into pieces that can be handled by a
                 # single tile worker
-                region_size: ImageDimensions = ast.literal_eval(ServiceConfig.region_size)
+                region_size: ImageDimensions = ast.literal_eval(self.config.region_size)
                 tile_size: ImageDimensions = ast.literal_eval(image_request_item.tile_size)
                 if not image_request_item.tile_overlap:
                     minimum_overlap = (0, 0)
@@ -644,9 +620,9 @@ class ModelRunner:
             logger.debug(f"Processing boundary from {roi} is {processing_bounds}")
 
             # Set up our feature table to work with the region quest
-            feature_table = FeatureTable(ServiceConfig.feature_table, region_request.tile_size, region_request.tile_overlap)
+            feature_table = FeatureTable(self.config.feature_table, region_request.tile_size, region_request.tile_overlap)
             # Aggregate all the features from our job
-            features = self.aggregate_features(image_request_item, feature_table)
+            features = feature_table.aggregate_features(image_request_item)
             features = self.select_features(image_request_item, features, processing_bounds)
             features = self.add_properties_to_features(image_request_item, features)
 
@@ -728,7 +704,7 @@ class ModelRunner:
         except Exception as status_error:
             logger.error("Unable to update region status in job table")
             logger.exception(status_error)
-        raise ProcessRegionException("Failed to process image region!")
+            raise ProcessRegionException("Failed to process image region!")
 
     def validate_model_hosting(self, image_request: JobItem):
         """
@@ -746,37 +722,6 @@ class ModelRunner:
                 error,
             )
             raise UnsupportedModelException(error)
-
-    @staticmethod
-    @metric_scope
-    def aggregate_features(
-        image_request_item: JobItem, feature_table: FeatureTable, metrics: MetricsLogger = None
-    ) -> List[Feature]:
-        """
-        For a given image processing job - aggregate all the features that were collected for it and
-        put them in the correct output sink locations.
-
-        :param image_request_item: JobItem = the image request
-        :param feature_table: FeatureTable = the table storing features from all completed regions
-        :param metrics: the current metrics scope
-
-        :return: List[geojson.Feature] = the list of features
-        """
-        if isinstance(metrics, MetricsLogger):
-            metrics.set_dimensions()
-            metrics.put_dimensions(
-                {
-                    MetricLabels.OPERATION_DIMENSION: MetricLabels.FEATURE_AGG_OPERATION,
-                }
-            )
-
-        with Timer(
-            task_str="Aggregating Features", metric_name=MetricLabels.DURATION, logger=logger, metrics_logger=metrics
-        ):
-            features = feature_table.get_features(image_request_item.image_id)
-            logger.debug(f"Total features aggregated: {len(features)}")
-
-        return features
 
     @metric_scope
     def select_features(
@@ -826,7 +771,7 @@ class ModelRunner:
             feature_distillation_option = FeatureDistillationDeserializer().deserialize(feature_distillation_option_dict)
             feature_selector = FeatureSelector(feature_distillation_option)
 
-            region_size = ast.literal_eval(ServiceConfig.region_size)
+            region_size = ast.literal_eval(self.config.region_size)
             tile_size = ast.literal_eval(image_request_item.tile_size)
             overlap = ast.literal_eval(image_request_item.tile_overlap)
             deduped_features = self.tiling_strategy.cleanup_duplicate_features(

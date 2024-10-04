@@ -455,16 +455,14 @@ class TestModelRunner(TestCase):
         import aws.osml.model_runner.app_config
 
         reload(aws.osml.model_runner.app_config)
-        reload(aws.osml.model_runner.app)
         from aws.osml.gdal.gdal_dem_tile_factory import GDALDigitalElevationModelTileFactory
-        from aws.osml.model_runner.app import ModelRunner
         from aws.osml.model_runner.app_config import ServiceConfig
         from aws.osml.photogrammetry.digital_elevation_model import DigitalElevationModel
         from aws.osml.photogrammetry.srtm_dem_tile_set import SRTMTileSet
 
         assert ServiceConfig.elevation_data_location == TEST_CONFIG["ELEVATION_DATA_LOCATION"]
-
-        elevation_model = ModelRunner.create_elevation_model()
+        config = ServiceConfig()
+        elevation_model = config.create_elevation_model()
         assert elevation_model
         assert isinstance(elevation_model, DigitalElevationModel)
         assert isinstance(elevation_model.tile_set, SRTMTileSet)
@@ -485,13 +483,12 @@ class TestModelRunner(TestCase):
         import aws.osml.model_runner.app_config
 
         reload(aws.osml.model_runner.app_config)
-        reload(aws.osml.model_runner.app)
-        from aws.osml.model_runner.app import ModelRunner
         from aws.osml.model_runner.app_config import ServiceConfig
 
         assert ServiceConfig.elevation_data_location is None
+        config = ServiceConfig()
+        elevation_model = config.create_elevation_model()
 
-        elevation_model = ModelRunner.create_elevation_model()
         assert not elevation_model
 
     @staticmethod
