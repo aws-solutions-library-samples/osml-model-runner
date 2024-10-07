@@ -12,8 +12,8 @@ from botocore.exceptions import ClientError
 from geojson import Feature, FeatureCollection
 
 from aws.osml.model_runner.api import SinkMode, SinkType
-from aws.osml.model_runner.app_config import BotoConfig
 from aws.osml.model_runner.common import get_credentials_for_assumed_role
+from aws.osml.model_runner.config import BotoConfig
 
 from .sink import Sink
 

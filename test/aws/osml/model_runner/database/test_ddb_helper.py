@@ -15,7 +15,7 @@ TEST_IMAGE_ID = "test-image-id"
 @mock_aws
 class TestDDBHelper(TestCase):
     def setUp(self):
-        from aws.osml.model_runner.app_config import BotoConfig
+        from aws.osml.model_runner.config import BotoConfig
         from aws.osml.model_runner.database.ddb_helper import DDBItem, DDBKey
         from aws.osml.model_runner.database.job_table import JobItem
 

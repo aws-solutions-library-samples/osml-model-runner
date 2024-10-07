@@ -32,12 +32,12 @@ class TestModelRunner(TestCase):
         """
         from aws.osml.model_runner.api import RegionRequest
         from aws.osml.model_runner.api.image_request import ImageRequest
-        from aws.osml.model_runner.app import ModelRunner
-        from aws.osml.model_runner.app_config import BotoConfig
+        from aws.osml.model_runner.config import BotoConfig
         from aws.osml.model_runner.database.endpoint_statistics_table import EndpointStatisticsTable
         from aws.osml.model_runner.database.feature_table import FeatureTable
         from aws.osml.model_runner.database.job_table import JobTable
         from aws.osml.model_runner.database.region_request_table import RegionRequestTable
+        from aws.osml.model_runner.model_runner import ModelRunner
         from aws.osml.model_runner.status import ImageStatusMonitor, RegionStatusMonitor
 
         # Required to avoid warnings from GDAL
@@ -256,7 +256,7 @@ class TestModelRunner(TestCase):
         with patch("aws.osml.model_runner.inference.sm_detector.boto3") as mock_boto3:
             # Build stubbed model client for ModelRunner to interact with
             mock_boto3.client.return_value = self.get_stubbed_sm_client()
-            self.model_runner.process_image_request(self.image_request)
+            self.model_runner.image_request_handler.process_image_request(self.image_request)
 
             # Ensure that the single region was processed successfully
             image_request_item = self.job_table.get_image_request(self.image_request.image_id)
@@ -284,11 +284,11 @@ class TestModelRunner(TestCase):
             assert actual_source_metadata == expected_source_metadata
 
             # Default scale factor set to 10 and workers per cpu is 1 so: floor((10 * 1 * 48) / 1) = 480
-            regions = self.model_runner.endpoint_utils.calculate_max_regions(endpoint_name=TEST_CONFIG["MODEL_ENDPOINT"])
+            regions = self.model_runner.endpoint_utils.calculate_max_regions(TEST_CONFIG["MODEL_ENDPOINT"])
             assert 480 == regions
 
-    @patch("aws.osml.model_runner.app.setup_tile_workers")
-    @patch("aws.osml.model_runner.app.process_tiles")
+    @patch("aws.osml.model_runner.region_request_handler.setup_tile_workers")
+    @patch("aws.osml.model_runner.region_request_handler.process_tiles")
     def test_process_region_request(self, mock_process_tiles: Mock, mock_setup_tile_workers: Mock) -> None:
         """
         Test the process of handling a region request, ensuring that tiles are processed correctly,
@@ -317,7 +317,9 @@ class TestModelRunner(TestCase):
         mock_setup_tile_workers.return_value = (Queue(), [])
         mock_process_tiles.return_value = (10, 10)
 
-        self.model_runner.process_region_request(self.region_request, region_request_item, raster_dataset, sensor_model)
+        self.model_runner.region_request_handler.process_region_request(
+            self.region_request, region_request_item, raster_dataset, sensor_model
+        )
 
         mock_process_tiles.assert_called_once()
         self.model_runner.fail_region_request.assert_not_called()
@@ -326,8 +328,8 @@ class TestModelRunner(TestCase):
         self.model_runner.endpoint_statistics_table.increment_region_count.assert_called_once_with(model)
         self.model_runner.endpoint_statistics_table.decrement_region_count.assert_called_once_with(model)
 
-    @patch("aws.osml.model_runner.app.setup_tile_workers")
-    @patch("aws.osml.model_runner.app.process_tiles")
+    @patch("aws.osml.model_runner.region_request_handler.setup_tile_workers")
+    @patch("aws.osml.model_runner.region_request_handler.process_tiles")
     def test_process_region_request_exception(self, mock_process_tiles: Mock, mock_setup_tile_workers: Mock) -> None:
         """
         Test that an exception during tile processing in a region request is properly handled.
@@ -351,7 +353,9 @@ class TestModelRunner(TestCase):
         mock_setup_tile_workers.return_value = (Queue(), [])
         mock_process_tiles.side_effect = Exception("Mock processing exception")
 
-        self.model_runner.process_region_request(self.region_request, region_request_item, raster_dataset, sensor_model)
+        self.model_runner.region_request_handler.process_region_request(
+            self.region_request, region_request_item, raster_dataset, sensor_model
+        )
 
         mock_process_tiles.assert_called_once()
         self.model_runner.fail_region_request.assert_called_once()
@@ -360,8 +364,8 @@ class TestModelRunner(TestCase):
         self.model_runner.endpoint_statistics_table.increment_region_count.assert_called_once_with(model)
         self.model_runner.endpoint_statistics_table.decrement_region_count.assert_called_once_with(model)
 
-    @patch("aws.osml.model_runner.app.setup_tile_workers")
-    @patch("aws.osml.model_runner.app.process_tiles")
+    @patch("aws.osml.model_runner.region_request_handler.setup_tile_workers")
+    @patch("aws.osml.model_runner.region_request_handler.process_tiles")
     def test_process_region_request_invalid(self, mock_process_tiles: Mock, mock_setup_tile_workers: Mock) -> None:
         """
         Test handling of an invalid region request, ensuring the appropriate exception is raised.
@@ -399,7 +403,7 @@ class TestModelRunner(TestCase):
         mock_process_tiles.return_value = (10, 10)
 
         with self.assertRaises(ValueError):
-            self.model_runner.process_region_request(
+            self.model_runner.region_request_handler.process_region_request(
                 invalid_region_request, region_request_item, raster_dataset, sensor_model
             )
 
@@ -433,7 +437,9 @@ class TestModelRunner(TestCase):
         self.model_runner.endpoint_statistics_table.current_in_progress_regions.return_value = 10000
 
         with self.assertRaises(SelfThrottledRegionException):
-            self.model_runner.process_region_request(self.region_request, region_request_item, raster_dataset, sensor_model)
+            self.model_runner.region_request_handler.process_region_request(
+                self.region_request, region_request_item, raster_dataset, sensor_model
+            )
 
         self.model_runner.endpoint_statistics_table.increment_region_count.assert_not_called()
         self.model_runner.endpoint_statistics_table.decrement_region_count.assert_not_called()
@@ -452,11 +458,11 @@ class TestModelRunner(TestCase):
         The import and reload statements are necessary to force the ServiceConfig to update with the
         patched environment variables.
         """
-        import aws.osml.model_runner.app_config
+        import aws.osml.model_runner.config
 
-        reload(aws.osml.model_runner.app_config)
+        reload(aws.osml.model_runner.config)
         from aws.osml.gdal.gdal_dem_tile_factory import GDALDigitalElevationModelTileFactory
-        from aws.osml.model_runner.app_config import ServiceConfig
+        from aws.osml.model_runner.config import ServiceConfig
         from aws.osml.photogrammetry.digital_elevation_model import DigitalElevationModel
         from aws.osml.photogrammetry.srtm_dem_tile_set import SRTMTileSet
 
@@ -480,10 +486,10 @@ class TestModelRunner(TestCase):
         The import and reload statements are necessary to force the ServiceConfig to update with the
         patched environment variables.
         """
-        import aws.osml.model_runner.app_config
+        import aws.osml.model_runner.config
 
-        reload(aws.osml.model_runner.app_config)
-        from aws.osml.model_runner.app_config import ServiceConfig
+        reload(aws.osml.model_runner.config)
+        from aws.osml.model_runner.config import ServiceConfig
 
         assert ServiceConfig.elevation_data_location is None
         config = ServiceConfig()

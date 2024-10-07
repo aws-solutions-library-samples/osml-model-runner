@@ -258,7 +258,7 @@ class TestModelRunnerAPI(TestCase):
     def test_image_request_invalid_image_path(self):
         from aws.osml.model_runner.api.exceptions import InvalidS3ObjectException
         from aws.osml.model_runner.api.image_request import ImageRequest
-        from aws.osml.model_runner.app_config import BotoConfig
+        from aws.osml.model_runner.config import BotoConfig
 
         s3_client = boto3.client("s3", config=BotoConfig.default)
         s3_client_stub = Stubber(s3_client)

@@ -11,8 +11,8 @@ from typing import Optional
 from codeguru_profiler_agent import Profiler
 from pythonjsonlogger import jsonlogger
 
-from aws.osml.model_runner.app import ModelRunner
 from aws.osml.model_runner.common import ThreadingLocalContextFilter
+from aws.osml.model_runner.model_runner import ModelRunner
 
 
 def handler_stop_signals(signal_num: int, frame: Optional[FrameType], model_runner: ModelRunner) -> None:

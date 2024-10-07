@@ -19,8 +19,8 @@ from aws.osml.model_runner.database import RegionRequestItem, RegionRequestTable
 from aws.osml.photogrammetry import ElevationModel, SensorModel
 
 from ..api import RegionRequest
-from ..app_config import MetricLabels, ServiceConfig
 from ..common import Timer, get_credentials_for_assumed_role
+from ..config import MetricLabels, ServiceConfig
 from ..database import FeatureTable
 from ..inference.endpoint_factory import FeatureDetectorFactory
 from .exceptions import ProcessTilesException, SetupTileWorkersException

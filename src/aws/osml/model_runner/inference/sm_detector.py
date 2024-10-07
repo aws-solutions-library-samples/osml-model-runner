@@ -14,8 +14,8 @@ from botocore.exceptions import ClientError
 from geojson import FeatureCollection
 
 from aws.osml.model_runner.api import ModelInvokeMode
-from aws.osml.model_runner.app_config import BotoConfig, MetricLabels
 from aws.osml.model_runner.common import Timer
+from aws.osml.model_runner.config import BotoConfig, MetricLabels
 
 from .detector import Detector
 from .endpoint_builder import FeatureEndpointBuilder

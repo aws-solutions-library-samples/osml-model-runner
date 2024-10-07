@@ -9,7 +9,6 @@ import shapely.geometry
 import shapely.wkt
 from shapely.geometry.base import BaseGeometry
 
-from aws.osml.model_runner.app_config import BotoConfig
 from aws.osml.model_runner.common import (
     FeatureDistillationAlgorithm,
     FeatureDistillationNMS,
@@ -21,6 +20,7 @@ from aws.osml.model_runner.common import (
     deserialize_post_processing_list,
     get_credentials_for_assumed_role,
 )
+from aws.osml.model_runner.config import BotoConfig
 
 from .exceptions import InvalidS3ObjectException
 from .inference import ModelInvokeMode

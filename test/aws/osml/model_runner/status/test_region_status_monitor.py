@@ -6,8 +6,8 @@ import unittest
 import boto3
 from moto import mock_aws
 
-from aws.osml.model_runner.app_config import BotoConfig, ServiceConfig
 from aws.osml.model_runner.common import RequestStatus
+from aws.osml.model_runner.config import BotoConfig, ServiceConfig
 from aws.osml.model_runner.database.region_request_table import RegionRequestItem
 from aws.osml.model_runner.status.exceptions import StatusMonitorException
 from aws.osml.model_runner.status.region_status_monitor import RegionStatusMonitor

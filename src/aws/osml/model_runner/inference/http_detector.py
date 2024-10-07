@@ -16,8 +16,8 @@ from urllib3.exceptions import MaxRetryError
 from urllib3.util.retry import Retry
 
 from aws.osml.model_runner.api import ModelInvokeMode
-from aws.osml.model_runner.app_config import MetricLabels
 from aws.osml.model_runner.common import Timer
+from aws.osml.model_runner.config import MetricLabels
 
 from .detector import Detector
 from .endpoint_builder import FeatureEndpointBuilder

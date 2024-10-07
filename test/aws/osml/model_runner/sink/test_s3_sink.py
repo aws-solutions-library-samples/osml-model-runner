@@ -168,7 +168,7 @@ class TestS3Sink(unittest.TestCase):
     @mock.patch("boto3.s3.transfer.S3Transfer.upload_file", autospec=True)
     @mock.patch("sys.getsizeof", return_value=6 * 1024**3)  # Mock geojson_size to be 6 GB
     def test_write_triggers_multipart_upload(self, mock_getsizeof, mock_upload_file):
-        from aws.osml.model_runner.app_config import BotoConfig
+        from aws.osml.model_runner.config import BotoConfig
         from aws.osml.model_runner.sink.s3_sink import S3Sink
 
         s3_client = boto3.client("s3", config=BotoConfig.default)

@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import boto3
 from boto3.dynamodb.conditions import Key
 
-from aws.osml.model_runner.app_config import BotoConfig
+from aws.osml.model_runner.config import BotoConfig
 
 from .exceptions import DDBBatchWriteException, DDBUpdateException
 

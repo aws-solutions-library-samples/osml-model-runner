@@ -16,7 +16,7 @@ TEST_MOCK_PUBLISH_EXCEPTION = Mock(side_effect=ClientError({"Error": {"Code": 50
 @mock_aws
 class TestSnsHelper(TestCase):
     def setUp(self):
-        from aws.osml.model_runner.app_config import BotoConfig
+        from aws.osml.model_runner.config import BotoConfig
         from aws.osml.model_runner.status.sns_helper import SNSHelper
 
         self.sns = boto3.client("sns", config=BotoConfig.default)

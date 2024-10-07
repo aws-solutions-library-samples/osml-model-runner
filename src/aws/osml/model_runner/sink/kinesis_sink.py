@@ -9,8 +9,8 @@ import geojson
 from geojson import Feature, FeatureCollection
 
 from aws.osml.model_runner.api import SinkMode, SinkType
-from aws.osml.model_runner.app_config import BotoConfig, ServiceConfig
 from aws.osml.model_runner.common import get_credentials_for_assumed_role
+from aws.osml.model_runner.config import BotoConfig, ServiceConfig
 
 from .exceptions import InvalidKinesisStreamException
 from .sink import Sink

@@ -29,7 +29,7 @@ class TestRegionRequestTable(unittest.TestCase):
         """
         Set up virtual DDB resources/tables for each test to use
         """
-        from aws.osml.model_runner.app_config import BotoConfig
+        from aws.osml.model_runner.config import BotoConfig
         from aws.osml.model_runner.database.region_request_table import RegionRequestItem, RegionRequestTable
 
         # Prepare something ahead of all tests

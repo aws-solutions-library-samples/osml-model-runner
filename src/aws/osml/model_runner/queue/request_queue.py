@@ -7,7 +7,7 @@ from typing import Dict
 import boto3
 from botocore.exceptions import ClientError
 
-from aws.osml.model_runner.app_config import BotoConfig
+from aws.osml.model_runner.config import BotoConfig
 
 
 class RequestQueue:

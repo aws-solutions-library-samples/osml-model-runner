@@ -8,7 +8,7 @@ from typing import Optional
 import boto3
 from cachetools import TTLCache, cachedmethod
 
-from aws.osml.model_runner.app_config import BotoConfig, ServiceConfig
+from aws.osml.model_runner.config import BotoConfig, ServiceConfig
 
 from .credentials_utils import get_credentials_for_assumed_role
 

@@ -31,7 +31,7 @@ TEST_MOCK_CLIENT_EXCEPTION = Mock(
 @mock_aws
 class TestRequestQueue(unittest.TestCase):
     def setUp(self):
-        from aws.osml.model_runner.app_config import BotoConfig
+        from aws.osml.model_runner.config import BotoConfig
         from aws.osml.model_runner.queue.request_queue import RequestQueue
 
         self.sqs = boto3.resource("sqs", config=BotoConfig.default)

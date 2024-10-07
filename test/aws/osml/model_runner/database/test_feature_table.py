@@ -69,7 +69,7 @@ class TestFeatureTable(unittest.TestCase):
         """
         Set up virtual DDB resources/tables for each test to use
         """
-        from aws.osml.model_runner.app_config import BotoConfig
+        from aws.osml.model_runner.config import BotoConfig
         from aws.osml.model_runner.database.feature_table import FeatureTable
 
         # Prepare something ahead of all tests

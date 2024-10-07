@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional, Union
 
 import boto3
 
-from aws.osml.model_runner.app_config import BotoConfig
+from aws.osml.model_runner.config import BotoConfig
 
 from .exceptions import SNSPublishException
 

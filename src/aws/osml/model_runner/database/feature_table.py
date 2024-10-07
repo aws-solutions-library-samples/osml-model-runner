@@ -16,8 +16,8 @@ from botocore.parsers import PROTOCOL_PARSERS
 from dacite import from_dict
 from geojson import Feature
 
-from aws.osml.model_runner.app_config import MetricLabels, ServiceConfig
 from aws.osml.model_runner.common import ImageDimensions, Timer, get_feature_image_bounds
+from aws.osml.model_runner.config import MetricLabels, ServiceConfig
 
 from .ddb_helper import DDBHelper, DDBItem, DDBKey
 from .exceptions import AddFeaturesException

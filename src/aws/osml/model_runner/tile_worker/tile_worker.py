@@ -14,8 +14,8 @@ from aws_embedded_metrics.unit import Unit
 from shapely.affinity import translate
 
 from aws.osml.features import Geolocator, ImagedFeaturePropertyAccessor
-from aws.osml.model_runner.app_config import MetricLabels
 from aws.osml.model_runner.common import ThreadingLocalContextFilter, TileState, Timer
+from aws.osml.model_runner.config import MetricLabels
 from aws.osml.model_runner.database import FeatureTable, RegionRequestTable
 from aws.osml.model_runner.inference import Detector
 
