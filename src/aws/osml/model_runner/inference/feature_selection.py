@@ -3,7 +3,6 @@
 from collections import OrderedDict
 from typing import List, Tuple
 
-from ensemble_boxes import nms, soft_nms
 from geojson import Feature
 
 from aws.osml.model_runner.common import (
@@ -11,6 +10,7 @@ from aws.osml.model_runner.common import (
     FeatureDistillationAlgorithmType,
     get_feature_image_bounds,
 )
+from aws.osml.model_runner.common.ensemble_boxes_nms import nms, soft_nms
 from aws.osml.model_runner.inference.exceptions import FeatureDistillationException
 
 
