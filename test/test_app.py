@@ -2,7 +2,6 @@
 
 import os
 from importlib import reload
-from queue import Queue
 from test.configuration import MOCK_MODEL_RESPONSE, TEST_CONFIG
 from unittest import TestCase, main
 from unittest.mock import Mock, patch
@@ -205,6 +204,10 @@ class TestModelRunner(TestCase):
         self.model_runner.endpoint_statistics_table = self.endpoint_statistics_table
         self.model_runner.image_status_monitor = self.image_status_monitor
         self.model_runner.region_status_monitor = self.region_status_monitor
+        self.model_runner.region_request_handler.job_table = self.job_table
+        self.model_runner.region_request_handler.region_request_table = self.region_request_table
+        self.model_runner.region_request_handler.endpoint_statistics_table = self.endpoint_statistics_table
+        self.model_runner.region_request_handler.region_status_monitor = self.region_status_monitor
 
     def tearDown(self) -> None:
         """
@@ -247,7 +250,7 @@ class TestModelRunner(TestCase):
         self.model_runner.stop()
         assert self.model_runner.running is False
 
-    def test_process_image_request(self) -> None:
+    def test_integration(self) -> None:
         """
         Test the process of handling an image request, ensuring that jobs are marked as complete,
         features are created, and the correct metadata is stored in S3. Checks that we calculated
@@ -286,164 +289,6 @@ class TestModelRunner(TestCase):
             # Default scale factor set to 10 and workers per cpu is 1 so: floor((10 * 1 * 48) / 1) = 480
             regions = self.model_runner.endpoint_utils.calculate_max_regions(endpoint_name=TEST_CONFIG["MODEL_ENDPOINT"])
             assert 480 == regions
-
-    @patch("aws.osml.model_runner.app.setup_tile_workers")
-    @patch("aws.osml.model_runner.app.process_tiles")
-    def test_process_region_request(self, mock_process_tiles: Mock, mock_setup_tile_workers: Mock) -> None:
-        """
-        Test the process of handling a region request, ensuring that tiles are processed correctly,
-        region counts are updated, and errors are properly handled. We're testing a single region
-        here so expecting a single call to both increment and decrement for the model associated with
-        the region
-        """
-        from aws.osml.gdal.gdal_utils import load_gdal_dataset
-        from aws.osml.model_runner.database.endpoint_statistics_table import EndpointStatisticsTable
-        from aws.osml.model_runner.database.job_table import JobTable
-        from aws.osml.model_runner.database.region_request_table import RegionRequestItem, RegionRequestTable
-        from aws.osml.model_runner.status import ImageStatusMonitor, RegionStatusMonitor
-
-        region_request_item = RegionRequestItem(image_id=TEST_CONFIG["IMAGE_ID"], region_id="test-region-id")
-
-        raster_dataset, sensor_model = load_gdal_dataset(self.region_request.image_url)
-
-        self.model_runner.job_table = Mock(JobTable, autospec=True)
-        self.model_runner.region_request_table = Mock(RegionRequestTable, autospec=True)
-        self.model_runner.endpoint_statistics_table = Mock(EndpointStatisticsTable, autospec=True)
-        self.model_runner.region_status_monitor = Mock(RegionStatusMonitor, autospec=True)
-        self.model_runner.image_status_monitor = Mock(ImageStatusMonitor, autospec=True)
-        self.model_runner.endpoint_statistics_table.current_in_progress_regions.return_value = 0
-        self.model_runner.fail_region_request = Mock()
-
-        mock_setup_tile_workers.return_value = (Queue(), [])
-        mock_process_tiles.return_value = (10, 10)
-
-        self.model_runner.process_region_request(self.region_request, region_request_item, raster_dataset, sensor_model)
-
-        mock_process_tiles.assert_called_once()
-        self.model_runner.fail_region_request.assert_not_called()
-
-        model = TEST_CONFIG["MODEL_ENDPOINT"]
-        self.model_runner.endpoint_statistics_table.increment_region_count.assert_called_once_with(model)
-        self.model_runner.endpoint_statistics_table.decrement_region_count.assert_called_once_with(model)
-
-    @patch("aws.osml.model_runner.app.setup_tile_workers")
-    @patch("aws.osml.model_runner.app.process_tiles")
-    def test_process_region_request_exception(self, mock_process_tiles: Mock, mock_setup_tile_workers: Mock) -> None:
-        """
-        Test that an exception during tile processing in a region request is properly handled.
-        We're testing a single region here so expecting a single call to both increment and decrement
-        for the model associated with the region
-        """
-        from aws.osml.gdal.gdal_utils import load_gdal_dataset
-        from aws.osml.model_runner.database.endpoint_statistics_table import EndpointStatisticsTable
-        from aws.osml.model_runner.database.job_table import JobTable
-        from aws.osml.model_runner.database.region_request_table import RegionRequestItem, RegionRequestTable
-
-        region_request_item = RegionRequestItem(image_id=TEST_CONFIG["IMAGE_ID"], region_id="test-region-id")
-
-        raster_dataset, sensor_model = load_gdal_dataset(self.region_request.image_url)
-
-        self.model_runner.job_table = Mock(JobTable, autospec=True)
-        self.model_runner.region_request_table = Mock(RegionRequestTable, autospec=True)
-        self.model_runner.endpoint_statistics_table = Mock(EndpointStatisticsTable, autospec=True)
-        self.model_runner.endpoint_statistics_table.current_in_progress_regions.return_value = 0
-        self.model_runner.fail_region_request = Mock()
-        mock_setup_tile_workers.return_value = (Queue(), [])
-        mock_process_tiles.side_effect = Exception("Mock processing exception")
-
-        self.model_runner.process_region_request(self.region_request, region_request_item, raster_dataset, sensor_model)
-
-        mock_process_tiles.assert_called_once()
-        self.model_runner.fail_region_request.assert_called_once()
-
-        model = TEST_CONFIG["MODEL_ENDPOINT"]
-        self.model_runner.endpoint_statistics_table.increment_region_count.assert_called_once_with(model)
-        self.model_runner.endpoint_statistics_table.decrement_region_count.assert_called_once_with(model)
-
-    @patch("aws.osml.model_runner.app.setup_tile_workers")
-    @patch("aws.osml.model_runner.app.process_tiles")
-    def test_process_region_request_invalid(self, mock_process_tiles: Mock, mock_setup_tile_workers: Mock) -> None:
-        """
-        Test handling of an invalid region request, ensuring the appropriate exception is raised.
-        We're testing a single region here so expecting a single call to both increment and decrement
-        for the model associated with the region
-        """
-        from aws.osml.gdal.gdal_utils import load_gdal_dataset
-        from aws.osml.model_runner.api import RegionRequest
-        from aws.osml.model_runner.database.endpoint_statistics_table import EndpointStatisticsTable
-        from aws.osml.model_runner.database.job_table import JobTable
-        from aws.osml.model_runner.database.region_request_table import RegionRequestItem, RegionRequestTable
-
-        invalid_region_request = RegionRequest(
-            {
-                "tile_size": (10, 10),
-                "tile_overlap": (1, 1),
-                "tile_format": "NITF",
-                "image_id": TEST_CONFIG["IMAGE_ID"],
-                "image_url": TEST_CONFIG["IMAGE_FILE"],
-                "region_bounds": ((0, 0), (50, 50)),
-                "model_invoke_mode": "SM_ENDPOINT",
-                "image_extension": TEST_CONFIG["IMAGE_EXTENSION"],
-            }
-        )
-
-        region_request_item = RegionRequestItem(image_id=TEST_CONFIG["IMAGE_ID"], region_id="test-region-id")
-
-        raster_dataset, sensor_model = load_gdal_dataset(self.region_request.image_url)
-
-        self.model_runner.job_table = Mock(JobTable, autospec=True)
-        self.model_runner.region_request_table = Mock(RegionRequestTable, autospec=True)
-        self.model_runner.endpoint_statistics_table = Mock(EndpointStatisticsTable, autospec=True)
-        self.model_runner.endpoint_statistics_table.current_in_progress_regions.return_value = 0
-        mock_setup_tile_workers.return_value = (Queue(), [])
-        mock_process_tiles.return_value = (10, 10)
-
-        with self.assertRaises(ValueError):
-            self.model_runner.process_region_request(
-                invalid_region_request, region_request_item, raster_dataset, sensor_model
-            )
-
-        self.model_runner.endpoint_statistics_table.increment_region_count.assert_not_called()
-        self.model_runner.endpoint_statistics_table.decrement_region_count.assert_not_called()
-
-    @patch("aws.osml.model_runner.tile_worker.tile_worker_utils.FeatureDetectorFactory", autospec=True)
-    @patch("aws.osml.model_runner.tile_worker.tile_worker_utils.FeatureTable", autospec=True)
-    @patch("aws.osml.model_runner.tile_worker.tile_worker_utils.TileWorker", autospec=True)
-    @patch("aws.osml.model_runner.tile_worker.tile_worker_utils.Queue", autospec=True)
-    def test_process_region_request_throttled(
-        self, mock_queue: Mock, mock_tile_worker: Mock, mock_feature_table: Mock, mock_feature_detector: Mock
-    ) -> None:
-        """
-        Test handling of a self-throttled region request due to resource limits, ensuring
-        the request is not processed and appropriate counts are not incremented.
-        """
-        from aws.osml.gdal.gdal_utils import load_gdal_dataset
-        from aws.osml.model_runner.database.endpoint_statistics_table import EndpointStatisticsTable
-        from aws.osml.model_runner.database.job_table import JobTable
-        from aws.osml.model_runner.database.region_request_table import RegionRequestItem, RegionRequestTable
-        from aws.osml.model_runner.exceptions import SelfThrottledRegionException
-
-        region_request_item = RegionRequestItem(image_id=TEST_CONFIG["IMAGE_ID"], region_id="test-region-id")
-
-        raster_dataset, sensor_model = load_gdal_dataset(self.region_request.image_url)
-
-        self.model_runner.job_table = Mock(JobTable, autospec=True)
-        self.model_runner.region_request_table = Mock(RegionRequestTable, autospec=True)
-        self.model_runner.endpoint_statistics_table = Mock(EndpointStatisticsTable, autospec=True)
-        self.model_runner.endpoint_statistics_table.current_in_progress_regions.return_value = 10000
-
-        with self.assertRaises(SelfThrottledRegionException):
-            self.model_runner.process_region_request(self.region_request, region_request_item, raster_dataset, sensor_model)
-
-        self.model_runner.endpoint_statistics_table.increment_region_count.assert_not_called()
-        self.model_runner.endpoint_statistics_table.decrement_region_count.assert_not_called()
-
-        assert mock_tile_worker.call_count == 0
-        assert mock_feature_detector.call_count == 0
-        assert mock_feature_table.call_count == 0
-
-        # Check to make sure a queue was created and populated with appropriate region requests
-        mock_queue.assert_not_called()
 
     @patch.dict("os.environ", values={"ELEVATION_DATA_LOCATION": TEST_CONFIG["ELEVATION_DATA_LOCATION"]})
     def test_create_elevation_model(self) -> None:
@@ -490,18 +335,6 @@ class TestModelRunner(TestCase):
         elevation_model = config.create_elevation_model()
 
         assert not elevation_model
-
-    @staticmethod
-    def get_dataset_and_camera() -> tuple:
-        """
-        Retrieve a GDAL dataset and sensor model for testing.
-
-        :return: A tuple of GDAL dataset and sensor model.
-        """
-        from aws.osml.gdal.gdal_utils import load_gdal_dataset
-
-        ds, sensor_model = load_gdal_dataset("./test/data/GeogToWGS84GeoKey5.tif")
-        return ds, sensor_model
 
     @staticmethod
     def get_stubbed_sm_client() -> boto3.client:
