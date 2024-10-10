@@ -1,32 +1,26 @@
 #  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
 
 import ast
-import functools
 import json
 import logging
-import math
 from dataclasses import asdict
 from json import dumps
-from math import degrees
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import shapely.geometry.base
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_embedded_metrics.metric_scope import metric_scope
 from aws_embedded_metrics.unit import Unit
-from geojson import Feature
 from osgeo import gdal
 from osgeo.gdal import Dataset
 
 from aws.osml.gdal import GDALConfigEnv, get_image_extension, load_gdal_dataset, set_gdal_default_configuration
-from aws.osml.photogrammetry import ImageCoordinate, SensorModel
+from aws.osml.photogrammetry import SensorModel
 
-from .api import VALID_MODEL_HOSTING_OPTIONS, ImageRequest, InvalidImageRequestException, RegionRequest, SinkMode
+from .api import VALID_MODEL_HOSTING_OPTIONS, ImageRequest, InvalidImageRequestException, RegionRequest
 from .app_config import MetricLabels, ServiceConfig
 from .common import (
     EndpointUtils,
-    FeatureDistillationDeserializer,
-    GeojsonDetectionField,
     ImageDimensions,
     ImageRegion,
     RequestStatus,
@@ -39,7 +33,6 @@ from .database import EndpointStatisticsTable, FeatureTable, JobItem, JobTable, 
 from .exceptions import (
     AggregateFeaturesException,
     AggregateOutputFeaturesException,
-    InvalidFeaturePropertiesException,
     InvalidImageURLException,
     LoadImageException,
     ProcessImageException,
@@ -47,12 +40,13 @@ from .exceptions import (
     SelfThrottledRegionException,
     UnsupportedModelException,
 )
-from .inference import FeatureSelector, calculate_processing_bounds, get_source_property
+from .inference import calculate_processing_bounds, get_extents, get_source_property
+from .inference.feature_utils import add_properties_to_features
 from .queue import RequestQueue
 from .region_request_handler import RegionRequestHandler
 from .sink import SinkFactory
 from .status import ImageStatusMonitor, RegionStatusMonitor
-from .tile_worker import TilingStrategy, VariableOverlapTilingStrategy
+from .tile_worker import TilingStrategy, VariableOverlapTilingStrategy, select_features
 
 # Set up logging configuration
 logger = logging.getLogger(__name__)
@@ -297,7 +291,7 @@ class ModelRunner:
                 image_request_item.width = int(raster_dataset.RasterXSize)
                 image_request_item.height = int(raster_dataset.RasterYSize)
                 try:
-                    image_request_item.extents = json.dumps(ModelRunner.get_extents(raster_dataset, sensor_model))
+                    image_request_item.extents = json.dumps(get_extents(raster_dataset, sensor_model))
                 except Exception as e:
                     logger.warning(f"Could not get extents for image: {image_request_item.image_id}")
                     logger.exception(e)
@@ -496,8 +490,14 @@ class ModelRunner:
         logger.exception(f"Failed to start image processing!: {err}")
         self.image_status_monitor.process_event(image_request_item, RequestStatus.FAILED, str(err))
 
+    @metric_scope
     def complete_image_request(
-        self, region_request: RegionRequest, image_format: str, raster_dataset: gdal.Dataset, sensor_model: SensorModel
+        self,
+        region_request: RegionRequest,
+        image_format: str,
+        raster_dataset: gdal.Dataset,
+        sensor_model: SensorModel,
+        metrics: MetricsLogger = None,
     ) -> None:
         """
         Runs after every region has completed processing to check if that was the last region and run required
@@ -507,6 +507,7 @@ class ModelRunner:
         :param image_format: Format of the image data
         :param raster_dataset: the image data rater
         :param sensor_model: the image sensor model
+        :param metrics: the current metric scope
 
         :return: None
         """
@@ -527,15 +528,57 @@ class ModelRunner:
             feature_table = FeatureTable(self.config.feature_table, region_request.tile_size, region_request.tile_overlap)
             # Aggregate all the features from our job
             features = feature_table.aggregate_features(image_request_item)
-            features = self.select_features(image_request_item, features, processing_bounds)
-            features = self.add_properties_to_features(image_request_item, features)
-
-            # Sink the features into the right outputs
-            is_write_succeeded = self.sink_features(image_request_item, features)
-            if not is_write_succeeded:
-                raise AggregateOutputFeaturesException(
-                    "Failed to write features to S3 or Kinesis! Please check the " "log..."
+            if isinstance(metrics, MetricsLogger):
+                metrics.set_dimensions()
+                metrics.put_dimensions(
+                    {
+                        MetricLabels.OPERATION_DIMENSION: MetricLabels.FEATURE_SELECTION_OPERATION,
+                    }
                 )
+                metrics.put_metric(MetricLabels.INVOCATIONS, 1, str(Unit.COUNT.value))
+
+            with Timer(
+                task_str="Select (deduplicate) image features",
+                metric_name=MetricLabels.DURATION,
+                logger=logger,
+                metrics_logger=metrics,
+            ):
+                features = select_features(
+                    image_request_item.feature_distillation_option,
+                    features,
+                    processing_bounds,
+                    self.config.region_size,
+                    image_request_item.tile_size,
+                    image_request_item.tile_overlap,
+                    self.tiling_strategy,
+                )
+                features = add_properties_to_features(
+                    image_request_item.job_id, image_request_item.feature_properties, features
+                )
+
+                # Sink the features into the right outputs
+                if isinstance(metrics, MetricsLogger):
+                    metrics.set_dimensions()
+                    metrics.put_dimensions(
+                        {
+                            MetricLabels.OPERATION_DIMENSION: MetricLabels.FEATURE_DISSEMINATE_OPERATION,
+                        }
+                    )
+                    metrics.put_metric(MetricLabels.INVOCATIONS, 1, str(Unit.COUNT.value))
+
+                with Timer(
+                    task_str="Sink image features",
+                    metric_name=MetricLabels.DURATION,
+                    logger=logger,
+                    metrics_logger=metrics,
+                ):
+                    is_write_succeeded = SinkFactory.sink_features(
+                        image_request_item.job_id, image_request_item.outputs, features
+                    )
+                    if not is_write_succeeded:
+                        raise AggregateOutputFeaturesException(
+                            "Failed to write features to S3 or Kinesis! Please check the " "log..."
+                        )
 
             # Put our end time on our image_request_item
             completed_image_request_item = self.job_table.end_image_request(image_request_item.image_id)
@@ -600,212 +643,3 @@ class ModelRunner:
                 error,
             )
             raise UnsupportedModelException(error)
-
-    @metric_scope
-    def select_features(
-        self,
-        image_request_item: JobItem,
-        features: List[Feature],
-        processing_bounds: Optional[ImageRegion],
-        metrics: MetricsLogger = None,
-    ) -> List[Feature]:
-        """
-        Selects the desired features using the options in the JobItem (NMS, SOFT_NMS, etc.).
-        This code applies a feature selector only to the features that came from regions of the image
-        that were processed multiple times. First features are grouped based on the region they were
-        processed in. Any features found in the overlap area between regions are run through the
-        FeatureSelector. If they were not part of an overlap area between regions, they will be grouped
-        based on tile boundaries. Any features that fall into the overlap of adjacent tiles are filtered
-        by the FeatureSelector. All other features should not be duplicates; they are added to the result
-        without additional filtering.
-
-        Computationally, this implements two critical factors that lower the overall processing time for the
-        O(N^2) selection algorithms. First, it will filter out the majority of features that couldn't possibly
-        have duplicates generated by our tiled image processing; Second, it runs the selection algorithms
-        incrementally on much smaller groups of features.
-
-        :param image_request_item: JobItem = the image request
-        :param features: List[Feature] = the list of geojson features to process
-        :param processing_bounds: the requested area of the image
-        :param metrics: MetricsLogger = the metrics logger to use to report metrics.
-        :return: List[Feature] = the list of geojson features after processing
-        """
-        if isinstance(metrics, MetricsLogger):
-            metrics.set_dimensions()
-            metrics.put_dimensions(
-                {
-                    MetricLabels.OPERATION_DIMENSION: MetricLabels.FEATURE_SELECTION_OPERATION,
-                }
-            )
-            metrics.put_metric(MetricLabels.INVOCATIONS, 1, str(Unit.COUNT.value))
-
-        with Timer(
-            task_str="Select (deduplicate) image features",
-            metric_name=MetricLabels.DURATION,
-            logger=logger,
-            metrics_logger=metrics,
-        ):
-            feature_distillation_option_dict = json.loads(image_request_item.feature_distillation_option)
-            feature_distillation_option = FeatureDistillationDeserializer().deserialize(feature_distillation_option_dict)
-            feature_selector = FeatureSelector(feature_distillation_option)
-
-            region_size = ast.literal_eval(self.config.region_size)
-            tile_size = ast.literal_eval(image_request_item.tile_size)
-            overlap = ast.literal_eval(image_request_item.tile_overlap)
-            deduped_features = self.tiling_strategy.cleanup_duplicate_features(
-                processing_bounds, region_size, tile_size, overlap, features, feature_selector
-            )
-
-            return deduped_features
-
-    @staticmethod
-    @metric_scope
-    def sink_features(image_request_item: JobItem, features: List[Feature], metrics: MetricsLogger = None) -> bool:
-        """
-        Writing the features output to S3 and/or Kinesis Stream
-
-        :param image_request_item: JobItem = the job table item for an image request
-        :param features: List[Features] = the list of features to update
-        :param metrics: the current metrics scope
-
-        :return: bool = if it has successfully written to an output sink
-        """
-
-        if isinstance(metrics, MetricsLogger):
-            metrics.set_dimensions()
-            metrics.put_dimensions(
-                {
-                    MetricLabels.OPERATION_DIMENSION: MetricLabels.FEATURE_DISSEMINATE_OPERATION,
-                }
-            )
-            metrics.put_metric(MetricLabels.INVOCATIONS, 1, str(Unit.COUNT.value))
-
-        with Timer(
-            task_str="Sink image features",
-            metric_name=MetricLabels.DURATION,
-            logger=logger,
-            metrics_logger=metrics,
-        ):
-            tracking_output_sinks = {
-                "S3": False,
-                "Kinesis": False,
-            }  # format: job_id = {"s3": true, "kinesis": true}
-
-            # Ensure we have outputs defined for where to dump our features
-            if image_request_item.outputs:
-                logging.debug(f"Writing aggregate feature for job '{image_request_item.job_id}'")
-                for sink in SinkFactory.outputs_to_sinks(json.loads(image_request_item.outputs)):
-                    if sink.mode == SinkMode.AGGREGATE and image_request_item.job_id:
-                        is_write_output_succeeded = sink.write(image_request_item.job_id, features)
-                        tracking_output_sinks[sink.name()] = is_write_output_succeeded
-
-                # Log them let them know if both written to both outputs (S3 and Kinesis) or one in another
-                # If both couldn't write to either stream because both were down, return False. Otherwise True
-                if tracking_output_sinks["S3"] and not tracking_output_sinks["Kinesis"]:
-                    logging.debug("OSMLModelRunner was able to write the features to S3 but not Kinesis. Continuing...")
-                    return True
-                elif not tracking_output_sinks["S3"] and tracking_output_sinks["Kinesis"]:
-                    logging.debug("OSMLModelRunner was able to write the features to Kinesis but not S3. Continuing...")
-                    return True
-                elif tracking_output_sinks["S3"] and tracking_output_sinks["Kinesis"]:
-                    logging.debug("OSMLModelRunner was able to write the features to both S3 and Kinesis. Continuing...")
-                    return True
-                else:
-                    logging.error("OSMLModelRunner was not able to write the features to either S3 or Kinesis. Failing...")
-                    return False
-            else:
-                raise InvalidImageRequestException("No output destinations were defined for this image request!")
-
-    def add_properties_to_features(self, image_request_item: JobItem, features: List[Feature]) -> List[Feature]:
-        """
-        Add arbitrary and controlled property dictionaries to geojson feature properties
-
-        :param image_request_item: JobItem = the job table item for an image request
-        :param features: List[geojson.Feature] = the list of features to update
-
-        :return: List[geojson.Feature] = updated list of features
-        """
-        try:
-            feature_properties: List[dict] = json.loads(image_request_item.feature_properties)
-            for feature in features:
-                # Update the features with their inference metadata
-                feature["properties"].update(
-                    self.get_inference_metadata_property(image_request_item, feature["properties"]["inferenceTime"])
-                )
-
-                # For the custom provided feature properties, update
-                for feature_property in feature_properties:
-                    feature["properties"].update(feature_property)
-
-                # Remove unneeded feature properties if they are present
-                if feature.get("properties", {}).get("inferenceTime"):
-                    del feature["properties"]["inferenceTime"]
-                if feature.get("properties", {}).get(GeojsonDetectionField.BOUNDS):
-                    del feature["properties"][GeojsonDetectionField.BOUNDS]
-                if feature.get("properties", {}).get(GeojsonDetectionField.GEOM):
-                    del feature["properties"][GeojsonDetectionField.GEOM]
-                if feature.get("properties", {}).get("detection_score"):
-                    del feature["properties"]["detection_score"]
-                if feature.get("properties", {}).get("feature_types"):
-                    del feature["properties"]["feature_types"]
-                if feature.get("properties", {}).get("image_id"):
-                    del feature["properties"]["image_id"]
-                if feature.get("properties", {}).get("adjusted_feature_types"):
-                    del feature["properties"]["adjusted_feature_types"]
-
-        except Exception as err:
-            logging.exception(err)
-            raise InvalidFeaturePropertiesException("Could not apply custom properties to features!")
-        return features
-
-    @staticmethod
-    def get_inference_metadata_property(image_request_item: JobItem, inference_time: str) -> Dict[str, Any]:
-        """
-        Create an inference dictionary property to append to geojson features
-
-        :param image_request_item: JobItem = the job table item for an image request
-        :param inference_time: str = the time the inference was made in epoch millisec
-
-        :return: Dict[str, Any] = an inference metadata dictionary property to attach to features
-        """
-        inference_metadata_property = {
-            "inferenceMetadata": {
-                "jobId": image_request_item.job_id,
-                "inferenceDT": inference_time,
-            }
-        }
-        return inference_metadata_property
-
-    @staticmethod
-    def get_extents(ds: gdal.Dataset, sm: SensorModel) -> Dict[str, Any]:
-        """
-        Returns the geographic extents of the given GDAL dataset.
-
-        :param ds: GDAL dataset.
-        :param sm: OSML Sensor Model imputed for dataset
-        :return: Dictionary with keys 'north', 'south', 'east', 'west' representing the extents.
-        """
-        try:
-            # Compute WGS-84 world coordinates for each image corners to impute the extents for visualizations
-            image_corners = [[0, 0], [ds.RasterXSize, 0], [ds.RasterXSize, ds.RasterYSize], [0, ds.RasterYSize]]
-            geo_image_corners = [sm.image_to_world(ImageCoordinate(corner)) for corner in image_corners]
-            locations = [(degrees(p.latitude), degrees(p.longitude)) for p in geo_image_corners]
-            feature_bounds = functools.reduce(
-                lambda prev, f: [
-                    min(f[0], prev[0]),
-                    min(f[1], prev[1]),
-                    max(f[0], prev[2]),
-                    max(f[1], prev[3]),
-                ],
-                locations,
-                [math.inf, math.inf, -math.inf, -math.inf],
-            )
-
-            return {
-                "north": feature_bounds[2],
-                "south": feature_bounds[0],
-                "east": feature_bounds[3],
-                "west": feature_bounds[1],
-            }
-        except Exception as e:
-            logger.error(f"Error in getting extents: {e}")
