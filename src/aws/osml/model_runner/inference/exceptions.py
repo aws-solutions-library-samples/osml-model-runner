@@ -7,3 +7,7 @@
 
 class FeatureDistillationException(Exception):
     pass
+
+
+class InvalidFeaturePropertiesException(Exception):
+    pass

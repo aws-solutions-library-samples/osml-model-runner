@@ -34,9 +34,5 @@ class SelfThrottledRegionException(Exception):
     pass
 
 
-class InvalidFeaturePropertiesException(Exception):
-    pass
-
-
 class AggregateOutputFeaturesException(Exception):
     pass

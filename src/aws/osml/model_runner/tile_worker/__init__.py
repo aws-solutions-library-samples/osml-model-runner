@@ -5,7 +5,7 @@
 # flake8: noqa
 
 from .tile_worker import TileWorker
-from .tile_worker_utils import process_tiles, setup_tile_workers
+from .tile_worker_utils import process_tiles, select_features, setup_tile_workers
 from .tiling_strategy import TilingStrategy
 from .variable_overlap_tiling_strategy import VariableOverlapTilingStrategy
 from .variable_tile_tiling_strategy import VariableTileTilingStrategy
