@@ -1,20 +1,27 @@
 #  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
 
+import functools
+import json
 import logging
+import math
 from datetime import datetime
 from io import BufferedReader
 from json import dumps
-from math import radians
+from math import degrees, radians
 from secrets import token_hex
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import shapely
 from geojson import Feature, FeatureCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon, loads
 from osgeo import gdal
 from shapely.geometry.base import BaseGeometry
 
-from aws.osml.model_runner.common import ImageDimensions
-from aws.osml.photogrammetry import GeodeticWorldCoordinate, SensorModel
+from aws.osml.model_runner.common import GeojsonDetectionField, ImageDimensions
+from aws.osml.photogrammetry import GeodeticWorldCoordinate, ImageCoordinate, SensorModel
+
+from .exceptions import InvalidFeaturePropertiesException
+
+logger = logging.getLogger(__name__)
 
 
 def features_to_image_shapes(sensor_model: SensorModel, features: List[Feature]) -> List[BaseGeometry]:
@@ -253,3 +260,93 @@ def get_source_property(image_location: str, image_extension: str, dataset: gdal
     else:
         logging.warning(f"Source metadata not available for {image_extension} image extension!")
         return None
+
+
+def get_extents(ds: gdal.Dataset, sm: SensorModel) -> Dict[str, Any]:
+    """
+    Returns the geographic extents of the given GDAL dataset.
+
+    :param ds: GDAL dataset.
+    :param sm: OSML Sensor Model imputed for dataset
+    :return: Dictionary with keys 'north', 'south', 'east', 'west' representing the extents.
+    """
+    # Compute WGS-84 world coordinates for each image corners to impute the extents for visualizations
+    image_corners = [[0, 0], [ds.RasterXSize, 0], [ds.RasterXSize, ds.RasterYSize], [0, ds.RasterYSize]]
+    geo_image_corners = [sm.image_to_world(ImageCoordinate(corner)) for corner in image_corners]
+    locations = [(degrees(p.latitude), degrees(p.longitude)) for p in geo_image_corners]
+    feature_bounds = functools.reduce(
+        lambda prev, f: [
+            min(f[0], prev[0]),
+            min(f[1], prev[1]),
+            max(f[0], prev[2]),
+            max(f[1], prev[3]),
+        ],
+        locations,
+        [math.inf, math.inf, -math.inf, -math.inf],
+    )
+
+    return {
+        "north": feature_bounds[2],
+        "south": feature_bounds[0],
+        "east": feature_bounds[3],
+        "west": feature_bounds[1],
+    }
+
+
+def add_properties_to_features(job_id: str, feature_properties: str, features: List[Feature]) -> List[Feature]:
+    """
+    Add arbitrary and controlled property dictionaries to geojson feature properties
+    :param job_id: str = unique identifier for the job
+    :param feature_properties: str = additional feature properties or metadata from the image processing
+    :param features: List[geojson.Feature] = the list of features to update
+
+    :return: List[geojson.Feature] = updated list of features
+    """
+    try:
+        feature_properties: List[dict] = json.loads(feature_properties)
+        for feature in features:
+            # Update the features with their inference metadata
+            feature["properties"].update(get_inference_metadata_property(job_id, feature["properties"]["inferenceTime"]))
+
+            # For the custom provided feature properties, update
+            for feature_property in feature_properties:
+                feature["properties"].update(feature_property)
+
+            # Remove unneeded feature properties if they are present
+            if feature.get("properties", {}).get("inferenceTime"):
+                del feature["properties"]["inferenceTime"]
+            if feature.get("properties", {}).get(GeojsonDetectionField.BOUNDS):
+                del feature["properties"][GeojsonDetectionField.BOUNDS]
+            if feature.get("properties", {}).get(GeojsonDetectionField.GEOM):
+                del feature["properties"][GeojsonDetectionField.GEOM]
+            if feature.get("properties", {}).get("detection_score"):
+                del feature["properties"]["detection_score"]
+            if feature.get("properties", {}).get("feature_types"):
+                del feature["properties"]["feature_types"]
+            if feature.get("properties", {}).get("image_id"):
+                del feature["properties"]["image_id"]
+            if feature.get("properties", {}).get("adjusted_feature_types"):
+                del feature["properties"]["adjusted_feature_types"]
+
+    except Exception as err:
+        logging.exception(err)
+        raise InvalidFeaturePropertiesException("Could not apply custom properties to features!")
+    return features
+
+
+def get_inference_metadata_property(job_id: str, inference_time: str) -> Dict[str, Any]:
+    """
+    Create an inference dictionary property to append to geojson features
+
+    :param job_id: str = unique identifier for the job
+    :param inference_time: str = the time the inference was made in epoch millisec
+
+    :return: Dict[str, Any] = an inference metadata dictionary property to attach to features
+    """
+    inference_metadata_property = {
+        "inferenceMetadata": {
+            "jobId": job_id,
+            "inferenceDT": inference_time,
+        }
+    }
+    return inference_metadata_property
