@@ -7,6 +7,7 @@
 from .auto_string_enum import AutoStringEnum
 from .credentials_utils import get_credentials_for_assumed_role
 from .endpoint_utils import EndpointUtils
+from .ensemble_boxes_nms import nms, nms_method, prepare_boxes, soft_nms
 from .exceptions import InvalidAssumedRoleException
 from .feature_utils import get_feature_image_bounds
 from .log_context import ThreadingLocalContextFilter
