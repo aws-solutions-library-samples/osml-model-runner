@@ -1,16 +1,20 @@
-#  Copyright 2024 Amazon.com, Inc. or its affiliates.
+# Copyright 2024 Amazon.com, Inc. or its affiliates.
 
 """
-This file contains code for performing non-maximum suppression (NMS) on bounding boxes obtained from multiple object detection models. The code was originally taken from the following GitHub repository:
+Non-Maximum Suppression (NMS) and Soft-NMS implementation for bounding boxes.
 
-https://github.com/ZFTurbo/Weighted-Boxes-Fusion/blob/master/ensemble_boxes/ensemble_boxes_nms.py
+This module implements standard NMS, linear Soft-NMS, and Gaussian Soft-NMS
+for bounding boxes with normalized coordinates. It supports weighted scores
+and multiple labels.
 
-The original author is 'ZFTurbo' (https://kaggle.com/zfturbo).
+Original implementation inspired by:
+- https://github.com/ZFTurbo/Weighted-Boxes-Fusion
 
-This implementation provides functions for standard NMS, linear soft-NMS, and gaussian soft-NMS. It also includes a method for preparing the boxes, scores, and labels before applying NMS.
+Author: ZFTurbo (https://kaggle.com/zfturbo)
+Refactored for internal use in OSML.
 """
 
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 import numpy as np
 from numba import jit
@@ -20,9 +24,9 @@ def prepare_boxes(boxes: np.ndarray, scores: np.ndarray, labels: np.ndarray) -> 
     """
     Prepare boxes by correcting invalid coordinates and removing boxes with zero area.
 
-    :param boxes: Array of shape (N, 4) with box coordinates in the format [x1, y1, x2, y2], where all values are normalized [0, 1].
-    :param scores: Array of shape (N,) with confidence scores for each box.
-    :param labels: Array of shape (N,) with labels for each box.
+    :param boxes: Array of shape (N, 4) with box coordinates, [x1, y1, x2, y2], where all values are normalized [0, 1].
+    :param scores: Array of shape (N, ) with confidence scores for each box.
+    :param labels: Array of shape (N, ) with labels for each box.
 
     :return: Tuple containing the filtered and corrected boxes, scores, and labels.
     """
@@ -58,14 +62,14 @@ def prepare_boxes(boxes: np.ndarray, scores: np.ndarray, labels: np.ndarray) -> 
     return result_boxes, scores, labels
 
 
-def cpu_soft_nms_float(dets: np.ndarray, sc: np.ndarray, Nt: float, sigma: float, thresh: float, method: int) -> np.ndarray:
+def cpu_soft_nms_float(dets: np.ndarray, sc: np.ndarray, nt: float, sigma: float, thresh: float, method: int) -> np.ndarray:
     """
     Based on: https://github.com/DocF/Soft-NMS/blob/master/soft_nms.py
     It's different from original soft-NMS because we have float coordinates on range [0; 1]
 
     :param dets: boxes format [x1, y1, x2, y2]
     :param sc: scores for boxes
-    :param Nt: required iou
+    :param nt: required iou
     :param sigma: Sigma value for Gaussian soft-NMS.
     :param thresh: Score threshold to filter boxes.
     :param method: 1 - linear soft-NMS, 2 - gaussian soft-NMS, 3 - standard NMS
@@ -74,8 +78,8 @@ def cpu_soft_nms_float(dets: np.ndarray, sc: np.ndarray, Nt: float, sigma: float
     """
 
     # indexes concatenate boxes with the last column
-    N = dets.shape[0]
-    indexes = np.array([np.arange(N)])
+    n = dets.shape[0]
+    indexes = np.array([np.arange(n)])
     dets = np.concatenate((dets, indexes.T), axis=1)
 
     # the order of boxes coordinate is [y1, x1, y2, x2]
@@ -86,15 +90,15 @@ def cpu_soft_nms_float(dets: np.ndarray, sc: np.ndarray, Nt: float, sigma: float
     scores = sc
     areas = (x2 - x1) * (y2 - y1)
 
-    for i in range(N):
+    for i in range(n):
         # intermediate parameters for later parameters exchange
-        tBD = dets[i, :].copy()
+        tbd = dets[i, :].copy()
         tscore = scores[i].copy()
         tarea = areas[i].copy()
         pos = i + 1
 
         #
-        if i != N - 1:
+        if i != n - 1:
             maxscore = np.max(scores[pos:], axis=0)
             maxpos = np.argmax(scores[pos:], axis=0)
         else:
@@ -102,16 +106,16 @@ def cpu_soft_nms_float(dets: np.ndarray, sc: np.ndarray, Nt: float, sigma: float
             maxpos = 0
         if tscore < maxscore:
             dets[i, :] = dets[maxpos + i + 1, :]
-            dets[maxpos + i + 1, :] = tBD
-            tBD = dets[i, :]
+            dets[maxpos + i + 1, :] = tbd
+            # tbd = dets[i, :]
 
             scores[i] = scores[maxpos + i + 1]
             scores[maxpos + i + 1] = tscore
-            tscore = scores[i]
+            # tscore = scores[i]
 
             areas[i] = areas[maxpos + i + 1]
             areas[maxpos + i + 1] = tarea
-            tarea = areas[i]
+            # tarea = areas[i]
 
         # IoU calculate
         xx1 = np.maximum(dets[i, 1], dets[pos:, 1])
@@ -127,12 +131,12 @@ def cpu_soft_nms_float(dets: np.ndarray, sc: np.ndarray, Nt: float, sigma: float
         # Three methods: 1.linear 2.gaussian 3.original NMS
         if method == 1:  # linear
             weight = np.ones(ovr.shape)
-            weight[ovr > Nt] = weight[ovr > Nt] - ovr[ovr > Nt]
+            weight[ovr > nt] = weight[ovr > nt] - ovr[ovr > nt]
         elif method == 2:  # gaussian
             weight = np.exp(-(ovr * ovr) / sigma)
         else:  # original NMS
             weight = np.ones(ovr.shape)
-            weight[ovr > Nt] = 0
+            weight[ovr > nt] = 0
 
         scores[pos:] = weight * scores[pos:]
 
@@ -143,7 +147,7 @@ def cpu_soft_nms_float(dets: np.ndarray, sc: np.ndarray, Nt: float, sigma: float
 
 
 @jit(nopython=True)
-def nms_float_fast(dets: np.ndarray, scores: np.ndarray, thresh: float) -> np.ndarray:
+def nms_fast(dets: np.ndarray, scores: np.ndarray, thresh: float) -> list[np.ndarray[Any, Any]]:
     """
     It's different from original nms because we have float coordinates on range [0; 1]
 
@@ -193,7 +197,8 @@ def nms_method(
     """
     Perform NMS on a list of boxes, scores, and labels from multiple models.
 
-    :param boxes: list of boxes predictions from each model, each box is 4 numbers. It has 3 dimensions (models_number, model_preds, 4). Order of boxes: x1, y1, x2, y2. We expect float normalized coordinates [0; 1].
+    :param boxes: list of boxes predictions from each model, each box is 4 numbers. It has 3 dimensions
+    (models_number, model_preds, 4). Order of boxes: x1, y1, x2, y2. We expect float normalized coordinates [0; 1].
     :param scores: list of scores for each model.
     :param labels: list of labels for each model.
     :param method: 1 - linear soft-NMS, 2 - gaussian soft-NMS, 3 - standard NMS.
@@ -204,6 +209,10 @@ def nms_method(
 
     :return: tuple of (boxes, scores, labels) after NMS.
     """
+
+    # Validate input lengths
+    if not (len(boxes) == len(scores) == len(labels)):
+        raise ValueError(f"Input lengths must match: boxes={len(boxes)}, scores={len(scores)}, labels={len(labels)}")
 
     # If weights are specified
     if weights is not None:
@@ -246,19 +255,19 @@ def nms_method(
     final_boxes = []
     final_scores = []
     final_labels = []
-    for l in unique_labels:
-        condition = labels == l
+    for label in unique_labels:
+        condition = labels == label
         boxes_by_label = boxes[condition]
         scores_by_label = scores[condition]
-        labels_by_label = np.array([l] * len(boxes_by_label))
+        labels_by_label = np.array([label] * len(boxes_by_label))
 
         if method != 3:
             keep = cpu_soft_nms_float(
-                boxes_by_label.copy(), scores_by_label.copy(), Nt=iou_thr, sigma=sigma, thresh=thresh, method=method
+                boxes_by_label.copy(), scores_by_label.copy(), nt=iou_thr, sigma=sigma, thresh=thresh, method=method
             )
         else:
             # Use faster function
-            keep = nms_float_fast(boxes_by_label, scores_by_label, thresh=iou_thr)
+            keep = nms_fast(boxes_by_label, scores_by_label, thresh=iou_thr)
 
         final_boxes.append(boxes_by_label[keep])
         final_scores.append(scores_by_label[keep])
@@ -280,7 +289,8 @@ def nms(
     """
     Short call for standard NMS
 
-    :param boxes: list of boxes predictions from each model, each box is 4 numbers. It has 3 dimensions (models_number, model_preds, 4). Order of boxes: x1, y1, x2, y2. We expect float normalized coordinates [0; 1].
+    :param boxes: list of boxes predictions from each model, each box is 4 numbers. It has 3 dimensions (models_number,
+    model_preds, 4). Order of boxes: x1, y1, x2, y2. We expect float normalized coordinates [0; 1].
     :param scores: list of scores for each model.
     :param labels: list of labels for each model.
     :param iou_thr: IoU threshold value for boxes.
@@ -304,7 +314,8 @@ def soft_nms(
     """
     Perform soft-NMS on the given set of boxes for each label.
 
-    :param boxes: list of boxes predictions from each model, each box is 4 numbers. It has 3 dimensions (models_number, model_preds, 4). Order of boxes: x1, y1, x2, y2. We expect float normalized coordinates [0; 1].
+    :param boxes: list of boxes predictions from each model, each box is 4 numbers. It has 3 dimensions
+    (models_number, model_preds, 4). Order of boxes: x1, y1, x2, y2. We expect float normalized coordinates [0; 1].
     :param scores: list of scores for each model.
     :param labels: list of labels for each model.
     :param method: 1 - linear soft-NMS, 2 - gaussian soft-NMS.
@@ -315,4 +326,4 @@ def soft_nms(
 
     :return: Tuple containing the final boxes, scores, and labels after soft-NMS.
     """
-    return nms_method(boxes, scores, labels, method=method, iou_thr=iou_thr, sigma=sigma, thresh=thresh, weights=weights)
+    return nms_method(boxes, scores, labels, method, iou_thr, sigma, thresh, weights)

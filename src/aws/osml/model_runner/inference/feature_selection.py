@@ -3,6 +3,7 @@
 from collections import OrderedDict
 from typing import List, Tuple
 
+import numpy as np
 from geojson import Feature
 
 from aws.osml.model_runner.common import (
@@ -45,9 +46,9 @@ class FeatureSelector:
         boxes_list, scores_list, labels_list = self._get_lists_from_features(feature_list)
         if self.options.algorithm_type == FeatureDistillationAlgorithmType.SOFT_NMS:
             boxes, scores, labels = soft_nms(
-                [boxes_list],
-                [scores_list],
-                [labels_list],
+                boxes=[np.array(boxes_list)],
+                scores=[np.array(scores_list)],
+                labels=[np.array(labels_list)],
                 weights=None,
                 iou_thr=self.options.iou_threshold,
                 sigma=self.options.sigma,
@@ -55,7 +56,11 @@ class FeatureSelector:
             )
         elif self.options.algorithm_type == FeatureDistillationAlgorithmType.NMS:
             boxes, scores, labels = nms(
-                [boxes_list], [scores_list], [labels_list], weights=None, iou_thr=self.options.iou_threshold
+                boxes=[np.array(boxes_list)],
+                scores=[np.array(scores_list)],
+                labels=[np.array(labels_list)],
+                weights=None,
+                iou_thr=self.options.iou_threshold,
             )
         else:
             raise FeatureDistillationException(f"Invalid feature distillation algorithm: {self.options.algorithm_type}")
@@ -122,7 +127,7 @@ class FeatureSelector:
 
         return normalized_boxes, scores, labels_indexes
 
-    def _normalize_boxes(self, boxes: List[List[int]]) -> List[List[float]]:
+    def _normalize_boxes(self, boxes: List[Tuple[float, float, float, float]]) -> List[List[float]]:
         """
         This function normalizes the bounding boxes by subtracting the minimum x and y coordinates from each
         coordinate and dividing by the range of x and y coordinates. That means that all bounding boxes coordinates
@@ -161,7 +166,7 @@ class FeatureSelector:
                 max_class = feature_class.get("iri")
         return max_class, max_score
 
-    def _get_features_from_lists(self, boxes: List, scores: List, labels: List) -> List[Feature]:
+    def _get_features_from_lists(self, boxes: np.array, scores: np.array, labels: np.array) -> List[Feature]:
         """
         This function consolidates the lists of bounding boxes, scores, and labels into the GeoJSON features.
         This happens by finding the feature with a matching bounding box and category in the original feature list
