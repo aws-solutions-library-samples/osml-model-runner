@@ -8,13 +8,14 @@ from json import dumps
 from typing import List, Optional, Tuple
 
 import shapely.geometry.base
-from aws_embedded_metrics import MetricsLogger
+from aws_embedded_metrics import MetricsLogger, metric_scope
 from aws_embedded_metrics.unit import Unit
 from geojson import Feature
 from osgeo import gdal
 from osgeo.gdal import Dataset
 
 from aws.osml.gdal import GDALConfigEnv, get_image_extension, load_gdal_dataset
+from aws.osml.model_runner.api import get_image_path
 from aws.osml.photogrammetry import SensorModel
 
 from .api import VALID_MODEL_HOSTING_OPTIONS, ImageRequest, RegionRequest
@@ -32,7 +33,6 @@ from .database import EndpointStatisticsTable, FeatureTable, JobItem, JobTable, 
 from .exceptions import (
     AggregateFeaturesException,
     AggregateOutputFeaturesException,
-    InvalidImageURLException,
     LoadImageException,
     ProcessImageException,
     UnsupportedModelException,
@@ -278,18 +278,8 @@ class ImageRequestHandler:
         # stored in S3) within this "with" statement will be made using customer credentials. At
         # the end of the "with" scope the credentials will be removed.
         with GDALConfigEnv().with_aws_credentials(assumed_credentials):
-            # Use GDAL to access the dataset and geo positioning metadata
-            if not job_item.image_url:
-                raise InvalidImageURLException("No image URL specified. Image URL is required.")
-
-            # If the image request has a valid s3 image url, otherwise this is a local file
-            if "s3:/" in job_item.image_url:
-                # Validate that image exists in S3
-                ImageRequest.validate_image_path(job_item.image_url, job_item.image_read_role)
-
-                image_path = job_item.image_url.replace("s3:/", "/vsis3", 1)
-            else:
-                image_path = job_item.image_url
+            # Extract the virtual image path from the request
+            image_path = get_image_path(job_item.image_url, job_item.image_read_role)
 
             # Use gdal to load the image url we were given
             raster_dataset, sensor_model = load_gdal_dataset(image_path)
@@ -332,12 +322,7 @@ class ImageRequestHandler:
         self.job_table.end_image_request(job_item.image_id)
 
     def complete_image_request(
-        self,
-        region_request: RegionRequest,
-        image_format: str,
-        raster_dataset: gdal.Dataset,
-        sensor_model: SensorModel,
-        metrics: MetricsLogger = None,
+        self, region_request: RegionRequest, image_format: str, raster_dataset: gdal.Dataset, sensor_model: SensorModel
     ) -> None:
         """
         Completes the image request after all regions have been processed. Aggregates and sinks the features,
@@ -347,7 +332,6 @@ class ImageRequestHandler:
         :param image_format: The format of the image file.
         :param raster_dataset: The GDAL dataset of the processed image.
         :param sensor_model: The sensor model for the image, if available.
-        :param metrics: Optional metrics logger for performance metrics.
 
         :raises AggregateFeaturesException: If feature aggregation fails.
         :return: None
@@ -373,36 +357,47 @@ class ImageRequestHandler:
             final_features = add_properties_to_features(job_item.job_id, job_item.feature_properties, deduped_features)
 
             # Sink features to target outputs
-            self.sink_features(job_item, final_features, metrics)
+            self.sink_features(job_item, final_features)
 
             # Finalize and update the job table with the completed request
-            self.end_image_request(job_item, image_format, metrics)
+            self.end_image_request(job_item, image_format)
 
         except Exception as err:
             raise AggregateFeaturesException("Failed to aggregate features for region!") from err
 
+    @metric_scope
     def deduplicate(
         self,
         job_item: JobItem,
         features: List[Feature],
         raster_dataset: gdal.Dataset,
         sensor_model: SensorModel,
+        metrics: MetricsLogger = None,
     ) -> List[Feature]:
         """
         Deduplicate the features and add additional properties to them, if applicable.
 
+        :param metrics:
         :param job_item: The image processing job item containing job-specific information.
         :param features: A list of GeoJSON features to deduplicate.
         :param raster_dataset: The GDAL dataset representing the image being processed.
         :param sensor_model: The sensor model associated with the dataset, used for georeferencing.
+        :param metrics: Optional metrics logger for tracking performance metrics.
 
         :return: A list of deduplicated features with additional properties added.
         """
+        if isinstance(metrics, MetricsLogger):
+            metrics.set_dimensions()
+            metrics.put_dimensions(
+                {
+                    MetricLabels.OPERATION_DIMENSION: MetricLabels.FEATURE_SELECTION_OPERATION,
+                }
+            )
         with Timer(
             task_str="Select (deduplicate) image features",
             metric_name=MetricLabels.DURATION,
             logger=logger,
-            metrics_logger=None,
+            metrics_logger=metrics,
         ):
             # Calculate processing bounds based on the region of interest (ROI) and sensor model
             processing_bounds = self.calculate_processing_bounds(raster_dataset, sensor_model, job_item.roi_wkt)
@@ -438,6 +433,7 @@ class ImageRequestHandler:
             )
             raise UnsupportedModelException(error)
 
+    @metric_scope
     def end_image_request(self, job_item: JobItem, image_format: str, metrics: MetricsLogger = None) -> None:
         """
         Finalizes the image request, updates the job status, and logs the necessary metrics.
@@ -455,7 +451,7 @@ class ImageRequestHandler:
         self.image_status_monitor.process_event(completed_job_item, image_request_status, "Completed image processing")
 
         # Log metrics for the image processing duration, invocation, and errors (if any)
-        if metrics:
+        if isinstance(metrics, MetricsLogger):
             metrics.set_dimensions()
             metrics.put_dimensions(
                 {
@@ -499,6 +495,7 @@ class ImageRequestHandler:
         return processing_bounds
 
     @staticmethod
+    @metric_scope
     def sink_features(job_item: JobItem, features: List[Feature], metrics: MetricsLogger = None) -> None:
         """
         Sink the deduplicated features to the specified output (e.g., S3, Kinesis, etc.).
@@ -510,6 +507,13 @@ class ImageRequestHandler:
         :raises AggregateOutputFeaturesException: If sinking the features to the output fails.
         :return: None
         """
+        if isinstance(metrics, MetricsLogger):
+            metrics.set_dimensions()
+            metrics.put_dimensions(
+                {
+                    MetricLabels.OPERATION_DIMENSION: MetricLabels.FEATURE_DISSEMINATE_OPERATION,
+                }
+            )
         with Timer(
             task_str="Sink image features",
             metric_name=MetricLabels.DURATION,
