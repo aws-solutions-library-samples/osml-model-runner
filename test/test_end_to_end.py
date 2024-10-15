@@ -14,7 +14,7 @@ from osgeo import gdal
 
 
 @mock_aws
-class TestModelRunner(TestCase):
+class TestModelRunnerEndToEnd(TestCase):
     """
     Unit tests for the ModelRunner application.
 
@@ -31,12 +31,12 @@ class TestModelRunner(TestCase):
         """
         from aws.osml.model_runner.api import RegionRequest
         from aws.osml.model_runner.api.image_request import ImageRequest
-        from aws.osml.model_runner.app import ModelRunner
         from aws.osml.model_runner.app_config import BotoConfig
         from aws.osml.model_runner.database.endpoint_statistics_table import EndpointStatisticsTable
         from aws.osml.model_runner.database.feature_table import FeatureTable
         from aws.osml.model_runner.database.job_table import JobTable
         from aws.osml.model_runner.database.region_request_table import RegionRequestTable
+        from aws.osml.model_runner.model_runner import ModelRunner
         from aws.osml.model_runner.status import ImageStatusMonitor, RegionStatusMonitor
 
         # Required to avoid warnings from GDAL

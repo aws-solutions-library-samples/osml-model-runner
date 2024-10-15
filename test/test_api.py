@@ -257,7 +257,7 @@ class TestModelRunnerAPI(TestCase):
 
     def test_image_request_invalid_image_path(self):
         from aws.osml.model_runner.api.exceptions import InvalidS3ObjectException
-        from aws.osml.model_runner.api.image_request import ImageRequest
+        from aws.osml.model_runner.api.request_utils import validate_image_path
         from aws.osml.model_runner.app_config import BotoConfig
 
         s3_client = boto3.client("s3", config=BotoConfig.default)
@@ -272,7 +272,7 @@ class TestModelRunnerAPI(TestCase):
         )
 
         with pytest.raises(InvalidS3ObjectException):
-            ImageRequest.validate_image_path(TEST_S3_FULL_BUCKET_PATH, None)
+            validate_image_path(TEST_S3_FULL_BUCKET_PATH, None)
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ from typing import Optional
 from codeguru_profiler_agent import Profiler
 from pythonjsonlogger import jsonlogger
 
-from aws.osml.model_runner.app import ModelRunner
+from aws.osml.model_runner import ModelRunner
 from aws.osml.model_runner.common import ThreadingLocalContextFilter
 
 
