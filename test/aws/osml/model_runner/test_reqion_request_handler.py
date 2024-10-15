@@ -46,8 +46,6 @@ class TestRegionRequestHandler(TestCase):
         self.mock_sensor_model = MagicMock(spec=SensorModel)
 
         # Mock the region request and dataset
-        self.mock_region_request = MagicMock(spec=RegionRequest)
-        self.mock_region_request_item = MagicMock(spec=RegionRequestItem)
         self.mock_raster_dataset = MagicMock(spec=gdal.Dataset)
         self.mock_sensor_model = MagicMock(spec=SensorModel)
 

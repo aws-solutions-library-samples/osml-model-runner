@@ -208,6 +208,12 @@ class TestModelRunner(TestCase):
         self.model_runner.region_request_handler.region_request_table = self.region_request_table
         self.model_runner.region_request_handler.endpoint_statistics_table = self.endpoint_statistics_table
         self.model_runner.region_request_handler.region_status_monitor = self.region_status_monitor
+        self.model_runner.region_request_handler.job_table = self.job_table
+        self.model_runner.image_request_handler.region_request_table = self.region_request_table
+        self.model_runner.image_request_handler.region_request_handler = self.model_runner.region_request_handler
+        self.model_runner.image_request_handler.endpoint_statistics_table = self.endpoint_statistics_table
+        self.model_runner.image_request_handler.job_table = self.job_table
+        self.model_runner.image_request_handler.image_status_monitor = self.image_status_monitor
 
     def tearDown(self) -> None:
         """
@@ -250,7 +256,7 @@ class TestModelRunner(TestCase):
         self.model_runner.stop()
         assert self.model_runner.running is False
 
-    def test_integration(self) -> None:
+    def test_end_to_end(self) -> None:
         """
         Test the process of handling an image request, ensuring that jobs are marked as complete,
         features are created, and the correct metadata is stored in S3. Checks that we calculated
@@ -259,7 +265,7 @@ class TestModelRunner(TestCase):
         with patch("aws.osml.model_runner.inference.sm_detector.boto3") as mock_boto3:
             # Build stubbed model client for ModelRunner to interact with
             mock_boto3.client.return_value = self.get_stubbed_sm_client()
-            self.model_runner.process_image_request(self.image_request)
+            self.model_runner.image_request_handler.process_image_request(self.image_request)
 
             # Ensure that the single region was processed successfully
             image_request_item = self.job_table.get_image_request(self.image_request.image_id)

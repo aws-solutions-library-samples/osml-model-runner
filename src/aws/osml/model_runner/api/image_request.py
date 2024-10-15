@@ -221,7 +221,7 @@ class ImageRequest(object):
             s3_client = boto3.client("s3", config=BotoConfig.default)
 
         try:
-            # head_object is a fastest approach to determine if it exists in S3
+            # head_object is the fastest approach to determine if it exists in S3
             # also its less expensive to do the head_object approach
             s3_client.head_object(Bucket=bucket, Key=key)
             return True

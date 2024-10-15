@@ -45,7 +45,6 @@ class RegionRequestHandler:
         :param region_status_monitor: A monitor to track region request status.
         :param endpoint_statistics_table: Table for tracking endpoint statistics.
         :param tiling_strategy: The strategy for handling image tiling.
-        :param region_request_queue: Queue to send region requests.
         :param endpoint_utils: Utility class for handling endpoint-related operations.
         :param config: Configuration settings for the service.
         """
