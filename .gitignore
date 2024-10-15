@@ -41,3 +41,6 @@ __pycache__/
 /build
 /dist
 /htmlcov
+
+# Log file outputs
+*.log
