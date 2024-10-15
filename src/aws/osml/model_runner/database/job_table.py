@@ -2,9 +2,12 @@
 
 import time
 from dataclasses import dataclass
+from json import dumps
 from typing import Optional
 
 from dacite import from_dict
+
+from aws.osml.model_runner.api import ImageRequest
 
 from .ddb_helper import DDBHelper, DDBItem, DDBKey
 from .exceptions import (
@@ -71,6 +74,29 @@ class JobItem(DDBItem):
 
     def __post_init__(self):
         self.ddb_key = DDBKey(hash_key="image_id", hash_value=self.image_id)
+
+    @classmethod
+    def from_image_request(cls, image_request: ImageRequest) -> "JobItem":
+        """
+        Create a JobItem from an ImageRequest instance.
+
+        :param image_request: ImageRequest = The image request from which to generate the JobItem.
+
+        :return: JobItem = A new JobItem instance with the relevant fields populated.
+        """
+        return cls(
+            image_id=image_request.image_id,
+            job_id=image_request.job_id,
+            tile_size=str(image_request.tile_size),
+            tile_overlap=str(image_request.tile_overlap),
+            model_name=image_request.model_name,
+            model_invoke_mode=image_request.model_invoke_mode,
+            outputs=dumps(image_request.outputs),
+            image_url=image_request.image_url,
+            image_read_role=image_request.image_read_role,
+            feature_properties=dumps(image_request.feature_properties),
+            roi_wkt=image_request.roi.wkt if image_request.roi else None,
+        )
 
 
 class JobTable(DDBHelper):
