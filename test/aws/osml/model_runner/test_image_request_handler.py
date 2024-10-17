@@ -123,8 +123,12 @@ class TestImageRequestHandler(TestCase):
         """
         Test successful completion of image request.
         """
-        # Set up mock return values
+        # Set up mock return values for our JobItem to complete
         self.mock_job_table.get_image_request.return_value = self.mock_job_item
+        self.mock_job_item.processing_duration = 1000
+        self.mock_job_item.region_error = 0
+
+        # Set up mock return values for RegionRequest to complete
         mock_region_request = MagicMock()
         mock_raster_dataset = MagicMock()
         mock_sensor_model = MagicMock()

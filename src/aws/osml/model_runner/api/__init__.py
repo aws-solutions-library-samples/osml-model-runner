@@ -8,5 +8,5 @@ from .exceptions import InvalidImageRequestException, InvalidS3ObjectException
 from .image_request import ImageRequest
 from .inference import VALID_MODEL_HOSTING_OPTIONS, ModelInvokeMode
 from .region_request import RegionRequest
-from .request_utils import shared_properties_are_valid
+from .request_utils import get_image_path, shared_properties_are_valid
 from .sink import SinkMode, SinkType
