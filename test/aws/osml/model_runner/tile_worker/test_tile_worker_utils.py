@@ -8,6 +8,10 @@ class TestTileWorkerUtils(TestCase):
     @patch("aws.osml.model_runner.tile_worker.tile_worker_utils.TileWorker", autospec=True)
     @patch("aws.osml.model_runner.tile_worker.tile_worker_utils.ServiceConfig", autospec=True)
     def test_setup_tile_workers(self, mock_service_config, mock_tile_worker):
+        """
+        Test the setup of tile workers, ensuring the correct number of workers is initialized
+        based on the configuration and that workers are started correctly.
+        """
         from aws.osml.model_runner.api import RegionRequest
         from aws.osml.model_runner.tile_worker.tile_worker_utils import setup_tile_workers
 
@@ -29,12 +33,21 @@ class TestTileWorkerUtils(TestCase):
         mock_sensor_model = None
         mock_elevation_model = None
         work_queue, tile_worker_list = setup_tile_workers(mock_region_request, mock_sensor_model, mock_elevation_model)
+
+        # Assert that the correct number of tile workers are created
         assert len(tile_worker_list) == mock_num_tile_workers
+        # Verify that each worker's start method is called
+        for worker in tile_worker_list:
+            # Assert that the mock function was called exactly 4 times
+            self.assertEqual(worker.start.call_count, 4)
 
     @patch("aws.osml.model_runner.tile_worker.tile_worker_utils.FeatureTable", autospec=True)
     @patch("aws.osml.model_runner.tile_worker.tile_worker_utils.TileWorker", autospec=True)
     @patch("aws.osml.model_runner.tile_worker.tile_worker_utils.ServiceConfig", autospec=True)
     def test_setup_tile_workers_exception(self, mock_service_config, mock_tile_worker, mock_feature_table):
+        """
+        Test that an exception during tile worker setup raises a SetupTileWorkersException.
+        """
         from aws.osml.model_runner.api import RegionRequest
         from aws.osml.model_runner.tile_worker.exceptions import SetupTileWorkersException
         from aws.osml.model_runner.tile_worker.tile_worker_utils import setup_tile_workers
@@ -58,18 +71,20 @@ class TestTileWorkerUtils(TestCase):
         mock_sensor_model = None
         mock_elevation_model = None
         with self.assertRaises(SetupTileWorkersException):
-            # with self.assertRaises(ValueError):
+            # Attempt to set up workers should fail and raise the specified exception
             setup_tile_workers(mock_region_request, mock_sensor_model, mock_elevation_model)
 
-    def test_process_tiles(
-        self,
-    ):
-        from aws.osml.gdal.gdal_utils import load_gdal_dataset
+    def test_process_tiles(self):
+        """
+        Test processing of image tiles using a tiling strategy, ensuring all expected tiles are processed
+        without errors. The test also validates successful integration with GDAL datasets.
+        """
         from aws.osml.model_runner.api import RegionRequest
         from aws.osml.model_runner.database import RegionRequestItem
         from aws.osml.model_runner.tile_worker import VariableTileTilingStrategy
         from aws.osml.model_runner.tile_worker.tile_worker_utils import process_tiles, setup_tile_workers
 
+        # Mock the RegionRequest and RegionRequestItem
         mock_region_request = RegionRequest(
             {
                 "tile_size": (10, 10),
@@ -85,10 +100,13 @@ class TestTileWorkerUtils(TestCase):
         )
         region_request_item = RegionRequestItem.from_region_request(mock_region_request)
 
-        ds, sensor_model = load_gdal_dataset("./test/data/small.ntf")
-        mock_elevation_model = None
-        work_queue, tile_worker_list = setup_tile_workers(mock_region_request, sensor_model, mock_elevation_model)
+        # Load the testing Dataset and SensorModel
+        ds, sensor_model = self.get_dataset_and_camera()
 
+        # Setup tile workers
+        work_queue, tile_worker_list = setup_tile_workers(mock_region_request, sensor_model, None)
+
+        # Execute process_tiles
         total_tile_count, tile_error_count = process_tiles(
             tiling_strategy=VariableTileTilingStrategy(),
             region_request_item=region_request_item,
@@ -98,10 +116,14 @@ class TestTileWorkerUtils(TestCase):
             sensor_model=sensor_model,
         )
 
+        # Verify expected results
         assert total_tile_count == 25
         assert tile_error_count == 0
 
     def test_next_greater_multiple(self):
+        """
+        Test finding the next greater multiple of a number.
+        """
         assert 16 == self.next_greater_multiple(1, 16)
         assert 16 == self.next_greater_multiple(15, 16)
         assert 16 == self.next_greater_multiple(16, 16)
@@ -111,6 +133,9 @@ class TestTileWorkerUtils(TestCase):
         assert 528 == self.next_greater_multiple(513, 16)
 
     def test_next_greater_power_of_two(self):
+        """
+        Test finding the next greater power of two for a given number.
+        """
         assert 1 == self.next_greater_power_of_two(1)
         assert 2 == self.next_greater_power_of_two(2)
         assert 4 == self.next_greater_power_of_two(3)
@@ -121,60 +146,44 @@ class TestTileWorkerUtils(TestCase):
         assert 512 == self.next_greater_power_of_two(400)
 
     def test_sizeof_fmt(self):
+        """
+        Test the human-readable size formatting function.
+        """
         from aws.osml.model_runner.tile_worker.tile_worker_utils import sizeof_fmt
 
-        dummy_250_b = sizeof_fmt(250)
-        # Black formatter doesn't play well with the **'s wrapped in brackets
-        # fmt: off
-        dummy_1_gb = sizeof_fmt(1024 ** 3)
-        dummy_1_yib = sizeof_fmt(1024 ** 8)
-        # fmt: on
-        assert dummy_250_b == "250.0B"
-        assert dummy_1_gb == "1.0GiB"
-        assert dummy_1_yib == "1.0YiB"
+        assert sizeof_fmt(250) == "250.0B"
+        assert sizeof_fmt(1024**3) == "1.0GiB"
+        assert sizeof_fmt(1024**8) == "1.0YiB"
 
     @staticmethod
     def get_dataset_and_camera():
+        """
+        Utility method to load a dataset and associated sensor model from a test file.
+        """
         from aws.osml.gdal.gdal_utils import load_gdal_dataset
 
-        ds, sensor_model = load_gdal_dataset("./test/data/GeogToWGS84GeoKey5.tif")
-        return ds, sensor_model
+        return load_gdal_dataset("./test/data/GeogToWGS84GeoKey5.tif")
 
     @staticmethod
     def next_greater_multiple(n: int, m: int) -> int:
         """
         Return the minimum value that is greater than or equal to n that is evenly divisible by m.
-
-        :param n: the input value
-        :param m: the multiple
-        :return: the minimum multiple of m greater than n
         """
         if n % m == 0:
             return n
-
         return n + (m - n % m)
 
     @staticmethod
     def next_greater_power_of_two(n: int) -> int:
         """
-        Returns the number that is both a power of 2 and greater than or equal to the input parameter.
-        For example input 100 returns 128.
-
-        :param n: the input integer
-        :return: power of 2 greater than or equal to input
+        Returns the smallest power of 2 that is greater than or equal to the input parameter.
         """
-
         count = 0
-
-        # First n in the below condition is for the case where n is 0
-        # Second condition is only true if n is already a power of 2
         if n and not (n & (n - 1)):
             return n
-
         while n != 0:
             n >>= 1
             count += 1
-
         return 1 << count
 
 
