@@ -5,14 +5,11 @@ import json
 import logging
 import math
 from datetime import datetime
-from io import BufferedReader
-from json import dumps
 from math import degrees, radians
-from secrets import token_hex
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import shapely
-from geojson import Feature, FeatureCollection, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon, loads
+from geojson import Feature, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon
 from osgeo import gdal
 from shapely.geometry.base import BaseGeometry
 
@@ -24,45 +21,67 @@ from .exceptions import InvalidFeaturePropertiesException
 logger = logging.getLogger(__name__)
 
 
-def features_to_image_shapes(sensor_model: SensorModel, features: List[Feature]) -> List[BaseGeometry]:
+def features_to_image_shapes(
+    sensor_model: SensorModel, features: List[Feature], skip: Optional[bool] = True
+) -> List[BaseGeometry]:
     """
     Convert geojson objects/shapes to shapely shapes
 
     :param sensor_model: SensorModel = the model to use for the transform
     :param features: List[geojson.Features] = the features to convert
+    :param skip: bool =  Raise an exception when a feature can't be transformed to a shape, defaults True.
 
     :return: List[BaseGeometry] = a list of shapely shapes
+
+    :raises: ValueError = Indicates one or more features could not be transformed to shapes
     """
+    # Set the list of shapes to return
     shapes: List[BaseGeometry] = []
-    if not features:
-        return shapes
-    for feature in features:
-        if "geometry" not in feature:
-            raise ValueError("Feature does not contain a valid geometry")
 
-        feature_geometry = feature["geometry"]
-
-        image_coords = convert_nested_coordinate_lists(feature_geometry["coordinates"], sensor_model.world_to_image)
-
-        feature_geometry["coordinates"] = image_coords
-
-        if isinstance(feature_geometry, Point):
-            shapes.append(shapely.geometry.Point(image_coords))
-        elif isinstance(feature_geometry, LineString):
-            shapes.append(shapely.geometry.LineString(image_coords))
-        elif isinstance(feature_geometry, Polygon):
-            shapes.append(shapely.geometry.shape(feature_geometry))
-        elif isinstance(feature_geometry, MultiPoint):
-            shapes.append(shapely.geometry.MultiPoint(image_coords))
-        elif isinstance(feature_geometry, MultiLineString):
-            shapes.append(shapely.geometry.MultiLineString(image_coords))
-        elif isinstance(feature_geometry, MultiPolygon):
-            shapes.append(shapely.geometry.shape(feature_geometry))
+    # Validate feature input
+    if features is None:
+        error = "Input features are None."
+        if skip is True:
+            logger.warning(error)
+            return shapes
         else:
-            # Unlikely to get here as we're handling all valid geojson types but if the spec
-            # ever changes or if a consumer passes in a custom dictionary that isn't valid
-            # we want to handle it gracefully
-            raise ValueError("Unable to convert feature due to unrecognized or invalid geometry")
+            raise ValueError(error)
+
+    for feature in features:
+        try:
+            # Ensure there is a geometry and coordinates set for the feature
+            if "geometry" not in feature or "coordinates" not in feature["geometry"]:
+                raise ValueError(f"Invalid feature, missing 'geometry' or 'coordinates': {feature}")
+
+            # Extract the base geometry of the GeoJSON feature
+            feature_geometry = feature["geometry"]
+
+            # Project the coordinates from world coordinates to image coordinates
+            image_coords = convert_nested_coordinate_lists(feature_geometry["coordinates"], sensor_model.world_to_image)
+            feature_geometry["coordinates"] = image_coords
+
+            # Covert to a Shapely instance and append to the returned shapes
+            if isinstance(feature_geometry, Point):
+                shapes.append(shapely.geometry.Point(image_coords))
+            elif isinstance(feature_geometry, LineString):
+                shapes.append(shapely.geometry.LineString(image_coords))
+            elif isinstance(feature_geometry, Polygon):
+                shapes.append(shapely.geometry.shape(feature_geometry))
+            elif isinstance(feature_geometry, MultiPoint):
+                shapes.append(shapely.geometry.MultiPoint(image_coords))
+            elif isinstance(feature_geometry, MultiLineString):
+                shapes.append(shapely.geometry.MultiLineString(image_coords))
+            elif isinstance(feature_geometry, MultiPolygon):
+                shapes.append(shapely.geometry.shape(feature_geometry))
+            else:
+                error = f"Invalid geometry in: {feature_geometry}"
+                raise ValueError(error)
+        except ValueError as err:
+            error = f"Failed to transform {feature} with error: {err}"
+            if skip is True:
+                logger.warning(error)
+            else:
+                raise err
 
     return shapes
 
@@ -94,71 +113,6 @@ def convert_nested_coordinate_lists(coordinates_or_lists: List, conversion_funct
         for coordinate_list in coordinates_or_lists:
             output_list.append(convert_nested_coordinate_lists(coordinate_list, conversion_function))
         return output_list
-
-
-def create_mock_feature_collection(payload: BufferedReader, geom=False) -> FeatureCollection:
-    """
-    This function allows us to emulate what we would expect a model to return to MR, a geojson formatted
-    FeatureCollection. This allows us to bypass using a real model if the NOOP_MODEL_NAME is given as the
-    model name in the image request. This is the same logic used by our current default dummy model to select
-    detection points in our pipeline.
-
-    :param payload: BufferedReader = object that holds the data that will be  sent to the feature generator
-    :param geom: Bool = whether or not to return the geom_imcoords field in the geojson
-    :return: FeatureCollection = feature collection containing the center point of a tile given as a detection point
-    """
-    logging.debug("Creating a fake feature collection to use for testing ModelRunner!")
-
-    # Use GDAL to open the image. The binary payload from the HTTP request is used to create an in-memory
-    # virtual file system for GDAL which is then opened to decode the image into a dataset which will give us
-    # access to a NumPy array for the pixels.
-    temp_ds_name = "/vsimem/" + token_hex(16)
-    gdal.FileFromMemBuffer(temp_ds_name, payload.read())
-    ds = gdal.Open(temp_ds_name)
-    height, width = ds.RasterYSize, ds.RasterXSize
-    logging.debug(f"Processing image of size: {width}x{height}")
-
-    # Create a single detection bbox that is at the center of and sized proportionally to the image
-
-    center_xy = width / 2, height / 2
-    fixed_object_size_xy = width * 0.1, height * 0.1
-    fixed_object_bbox = [
-        center_xy[0] - fixed_object_size_xy[0],
-        center_xy[1] - fixed_object_size_xy[1],
-        center_xy[0] + fixed_object_size_xy[0],
-        center_xy[1] + fixed_object_size_xy[1],
-    ]
-
-    fixed_object_polygon = [
-        (center_xy[0] - fixed_object_size_xy[0], center_xy[1] - fixed_object_size_xy[1]),
-        (center_xy[0] - fixed_object_size_xy[0], center_xy[1] + fixed_object_size_xy[1]),
-        (center_xy[0] + fixed_object_size_xy[0], center_xy[1] + fixed_object_size_xy[1]),
-        (center_xy[0] + fixed_object_size_xy[0], center_xy[1] - fixed_object_size_xy[1]),
-    ]
-
-    # Convert that bbox detection into a sample GeoJSON formatted detection. Note that the world coordinates
-    # are not normally provided by the model container, so they're defaulted to 0,0 here since GeoJSON features
-    # require a geometry.
-    json_results = {
-        "type": "FeatureCollection",
-        "features": [
-            {
-                "type": "Feature",
-                "geometry": {"coordinates": [0.0, 0.0], "type": "Point"},
-                "id": token_hex(16),
-                "properties": {
-                    "detection_score": 1.0,
-                    "feature_types": {"sample_object": 1.0},
-                    "image_id": token_hex(16),
-                },
-            }
-        ],
-    }
-    if geom is True:
-        json_results["features"][0]["properties"]["geom_imcoords"] = fixed_object_polygon
-    else:
-        json_results["features"][0]["properties"]["bounds_imcoords"] = fixed_object_bbox
-    return loads(dumps(json_results))
 
 
 def calculate_processing_bounds(
@@ -193,10 +147,9 @@ def calculate_processing_bounds(
                 world_coordinates_3d.append(coord)
             else:
                 world_coordinates_3d.append(coord + (0.0,))
-        roi_area = features_to_image_shapes(
-            sensor_model,
-            [Feature(geometry=Polygon([tuple(world_coordinates_3d)]))],
-        )[0]
+        roi_area = features_to_image_shapes(sensor_model, [Feature(geometry=Polygon([tuple(world_coordinates_3d)]))], False)[
+            0
+        ]
 
         if roi_area.intersects(full_image_area):
             area_to_process = roi_area.intersection(full_image_area)
