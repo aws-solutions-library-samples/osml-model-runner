@@ -59,7 +59,7 @@ class TestFeatureTable(unittest.TestCase):
         """
         Test that the `get_features` method correctly retrieves all features across paginated results.
         """
-        # Grab a a couple features to test with
+        # Grab a couple features to test with
         feature_1 = {
             "hash_key": {"S": TEST_IMAGE_ID},
             "range_key": {"S": "0:0:0:0-1"},
@@ -87,7 +87,6 @@ class TestFeatureTable(unittest.TestCase):
                 "L": [
                     {
                         "S": '{"type": "Feature", "id": "26c28104-4d3f-4595-b252-cb2af1dfff4b", "geometry": {"type": "Point", "coordinates": [0.0, 0.0]}, "properties": {"bounds_imcoords": [646, 1649, 654, 1658], "feature_types": {"ground_motor_passenger_vehicle": 0.25180014967918396}, "detection_score": 0.25180014967918396, "image_id": "7db12549-3bcb-49c8-acba-25d46ef5cbf3:s3://spacenet-dataset/AOIs/AOI_1_Rio/srcData/mosaic_3band/013022223131.tif"}}'  # noqa: E501
-                        # noqa: E501
                     }
                 ]
             },
