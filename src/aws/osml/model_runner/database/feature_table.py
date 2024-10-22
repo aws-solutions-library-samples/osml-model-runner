@@ -1,4 +1,5 @@
 #  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+
 import logging
 import random
 import time
@@ -226,6 +227,11 @@ class FeatureTable(DDBHelper):
         :return: The tile key associated with this list of features.
         """
         bbox = get_feature_image_bounds(feature)
+
+        # Handle cases where bounding box could not be determined
+        if not bbox or len(bbox) != 4:
+            logger.error(f"Invalid bounding box for feature: {feature}")
+            raise ValueError("Unable to generate tile key: Invalid bounding box.")
 
         # This is the size of the unique pixels in each tile
         stride_x = self.tile_size[0] - self.overlap[0]
