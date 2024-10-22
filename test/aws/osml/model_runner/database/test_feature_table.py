@@ -80,10 +80,7 @@ class TestFeatureTable(unittest.TestCase):
         }
 
         feature_2 = {
-            "hash_key": {
-                "S": TEST_IMAGE_ID
-                # noqa: E501
-            },
+            "hash_key": {"S": TEST_IMAGE_ID},
             "range_key": {"S": "0:0:1:1-1"},
             "tile_id": {"S": "0:0:1:1"},
             "features": {
