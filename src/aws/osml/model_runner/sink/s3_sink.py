@@ -21,6 +21,18 @@ logger = logging.getLogger(__name__)
 
 
 class S3Sink(Sink):
+    """
+    A sink for writing aggregated GeoJSON feature collections to an S3 bucket.
+
+    This class handles uploading GeoJSON data to a specified S3 bucket, optionally using an
+    assumed IAM role for accessing the bucket. It validates the bucket's accessibility and writes
+    the aggregated features to S3.
+
+    :param bucket: The name of the S3 bucket.
+    :param prefix: The prefix within the bucket where the files will be stored.
+    :param assumed_role: Optional IAM role ARN to assume for accessing the bucket.
+    """
+
     def __init__(
         self,
         bucket: str,
@@ -46,9 +58,26 @@ class S3Sink(Sink):
 
     @property
     def mode(self) -> SinkMode:
+        """
+        The mode of the sink, which is aggregate.
+
+        :return: The `SinkMode` enumeration value representing the aggregate mode.
+        """
         return SinkMode.AGGREGATE
 
     def write(self, image_id: str, features: List[Feature]) -> bool:
+        """
+        Write aggregated GeoJSON feature collection to the S3 bucket.
+
+        Validates if the S3 bucket is accessible and uploads a temporary file containing
+        the aggregated features. The object key is derived from the `image_id`.
+
+        :param image_id: The identifier for the image, used to generate the S3 object key.
+        :param features: A list of GeoJSON features to be aggregated and written to S3.
+        :return: `True` if the upload was successful, `False` otherwise.
+
+        :raises ClientError: If there are errors while uploading the file to S3.
+        """
         features_collection = FeatureCollection(features)
 
         # validate if S3 bucket exists and accessible
@@ -77,16 +106,18 @@ class S3Sink(Sink):
                     ExtraArgs={"ACL": "bucket-owner-full-control"},
                 )
 
-            logger.debug(f"Wrote aggregate feature collection for Image '{image_id}' to s3://{self.bucket}/{object_key}")
+            logger.debug(f"Wrote aggregate feature collection for '{image_id}' to s3://{self.bucket}/{object_key}")
             return True
         else:
             return False
 
     def validate_s3_bucket(self) -> bool:
         """
-        Check if Output S3 bucket exists and can be read/written to it
+        Check if the output S3 bucket exists and can be read/written to.
 
-        :return: bool = True if bucket exist and can be read/written to it
+        :return: `True` if the bucket exists and can be accessed, `False` otherwise.
+
+        :raises ClientError: If there are issues accessing the S3 bucket.
         """
         try:
             self.s3_client.head_bucket(Bucket=self.bucket)
@@ -101,4 +132,9 @@ class S3Sink(Sink):
 
     @staticmethod
     def name() -> str:
+        """
+        Retrieve the name of the sink type.
+
+        :return: The string representation of the sink type.
+        """
         return str(SinkType.S3.value)

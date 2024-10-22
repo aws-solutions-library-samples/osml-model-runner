@@ -12,7 +12,7 @@ from aws.osml.model_runner.sink import KinesisSink, S3Sink, Sink
 logger = logging.getLogger(__name__)
 
 
-class SinkFactory(Sink):
+class SinkFactory:
     """
     placeholder class as sink options grow to auto select and generator sinks
     """
