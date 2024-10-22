@@ -40,6 +40,10 @@ class TestS3Sink(unittest.TestCase):
         self.sample_feature_list = None
 
     def test_write_features_default_credentials(self):
+        """
+        Write features to S3 using default credentials.
+        Ensures that the `write` method can send a GeoJSON file correctly when default credentials are used.
+        """
         from aws.osml.model_runner.sink.s3_sink import S3Sink
 
         s3_sink = S3Sink(TEST_RESULTS_BUCKET, TEST_PREFIX)
@@ -56,7 +60,7 @@ class TestS3Sink(unittest.TestCase):
             {
                 "ACL": "bucket-owner-full-control",
                 "Bucket": TEST_RESULTS_BUCKET,
-                "Key": "{}/{}.geojson".format(TEST_PREFIX, TEST_IMAGE_ID),
+                "Key": f"{TEST_PREFIX}/{TEST_IMAGE_ID}.geojson",
                 "Body": ANY,
             },
         )
@@ -64,6 +68,10 @@ class TestS3Sink(unittest.TestCase):
         s3_client_stub.assert_no_pending_responses()
 
     def test_write_features_default_credentials_image_id_with_slash(self):
+        """
+        Write features to S3 when image ID contains slashes.
+        Ensures that slashes in the image ID are properly handled, and only the file name is used for the S3 key.
+        """
         from aws.osml.model_runner.sink.s3_sink import S3Sink
 
         image_id_with_slashes = "fake/image/123"
@@ -82,7 +90,7 @@ class TestS3Sink(unittest.TestCase):
             {
                 "ACL": "bucket-owner-full-control",
                 "Bucket": TEST_RESULTS_BUCKET,
-                "Key": "{}/123.geojson".format(TEST_PREFIX),
+                "Key": f"{TEST_PREFIX}/123.geojson",
                 "Body": ANY,
             },
         )
@@ -90,6 +98,10 @@ class TestS3Sink(unittest.TestCase):
         s3_client_stub.assert_no_pending_responses()
 
     def test_s3_bucket_404_failure(self):
+        """
+        Attempt to write to a non-existent S3 bucket (HTTP 404).
+        Validates that `write` does not proceed if the bucket cannot be found.
+        """
         from aws.osml.model_runner.sink.s3_sink import S3Sink
 
         s3_sink = S3Sink(TEST_RESULTS_BUCKET, TEST_PREFIX)
@@ -101,10 +113,14 @@ class TestS3Sink(unittest.TestCase):
             service_message="Not Found",
             expected_params={"Bucket": "test-results-bucket"},
         )
-        s3_sink.write(TEST_IMAGE_ID, self.sample_feature_list)
+        assert not s3_sink.write(TEST_IMAGE_ID, self.sample_feature_list)
         s3_client_stub.assert_no_pending_responses()
 
     def test_s3_bucket_403_failure(self):
+        """
+        Attempt to write to an S3 bucket where access is forbidden (HTTP 403).
+        Validates that `write` does not proceed if there is no permission to access the bucket.
+        """
         from aws.osml.model_runner.sink.s3_sink import S3Sink
 
         s3_sink = S3Sink(TEST_RESULTS_BUCKET, TEST_PREFIX)
@@ -116,11 +132,15 @@ class TestS3Sink(unittest.TestCase):
             service_message="Forbidden",
             expected_params={"Bucket": "test-results-bucket"},
         )
-        s3_sink.write(TEST_IMAGE_ID, self.sample_feature_list)
+        assert not s3_sink.write(TEST_IMAGE_ID, self.sample_feature_list)
         s3_client_stub.assert_no_pending_responses()
 
     @mock.patch("aws.osml.model_runner.common.credentials_utils.sts_client")
     def test_assumed_credentials(self, mock_sts):
+        """
+        Initialize S3Sink with assumed role credentials.
+        Ensures that the S3 client is correctly configured with the assumed role's credentials.
+        """
         from aws.osml.model_runner.sink.s3_sink import S3Sink
 
         test_access_key_id = "123456789"
@@ -152,12 +172,18 @@ class TestS3Sink(unittest.TestCase):
         session_patch.stop()
 
     def test_return_name(self):
+        """
+        Verify the `name` method returns the correct SinkType.
+        """
         from aws.osml.model_runner.sink.s3_sink import S3Sink
 
         s3_sink = S3Sink(TEST_RESULTS_BUCKET, TEST_PREFIX)
         assert "S3" == s3_sink.name()
 
     def test_return_mode(self):
+        """
+        Verify the `mode` method returns the correct SinkMode.
+        """
         from aws.osml.model_runner.api.sink import SinkMode
         from aws.osml.model_runner.sink.s3_sink import S3Sink
 
@@ -166,8 +192,12 @@ class TestS3Sink(unittest.TestCase):
 
     @mock_aws
     @mock.patch("boto3.s3.transfer.S3Transfer.upload_file", autospec=True)
-    @mock.patch("sys.getsizeof", return_value=6 * 1024**3)  # Mock geojson_size to be 6 GB
+    @mock.patch("sys.getsizeof", return_value=6 * 1024**3)  # Mock geojson size to be 6 GB
     def test_write_triggers_multipart_upload(self, mock_getsizeof, mock_upload_file):
+        """
+        Test multipart upload conditions when writing large GeoJSON data.
+        Ensures that multipart upload configurations are triggered when the size exceeds thresholds.
+        """
         from aws.osml.model_runner.app_config import BotoConfig
         from aws.osml.model_runner.sink.s3_sink import S3Sink
 
@@ -186,6 +216,11 @@ class TestS3Sink(unittest.TestCase):
 
     @staticmethod
     def build_feature_list() -> List[geojson.Feature]:
+        """
+        Builds a known list of testing features from a data file.
+
+        :return: A list of 6 different GeoJSON Features.
+        """
         with open("./test/data/detections.geojson", "r") as geojson_file:
             sample_features = geojson.load(geojson_file)["features"]
         return sample_features

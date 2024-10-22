@@ -47,6 +47,7 @@ class KinesisSink(Sink):
         Flushes a batch of records to the Kinesis stream.
 
         :param records: A list of records to be sent to the Kinesis stream.
+        :returns: None
         """
         try:
             self.kinesis_client.put_records(StreamName=self.stream, Records=records)
@@ -107,7 +108,7 @@ class KinesisSink(Sink):
         """
         Ensure output Kinesis stream exists/can be written to
 
-        :return: bool = True if kinesis stream exist and can be read/written to it
+        :return: True if kinesis stream exist and can be read/written to it
         """
         try:
             describe_stream_response = self.kinesis_client.describe_stream(StreamName=self.stream)
@@ -126,4 +127,9 @@ class KinesisSink(Sink):
 
     @staticmethod
     def name() -> str:
+        """
+        Ensure output Kinesis stream exists/can be written to
+
+        :return: The name of the instantiated Sink.
+        """
         return str(SinkType.KINESIS.value)
