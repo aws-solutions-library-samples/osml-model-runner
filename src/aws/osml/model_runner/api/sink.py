@@ -22,3 +22,6 @@ class SinkType(str, AutoStringEnum):
     S3 = auto()
     # Mode not set to auto due to contract having been set as "Kinesis" already
     KINESIS = "Kinesis"
+
+
+VALID_SYNC_TYPES = {sink_type.value for sink_type in SinkType}
