@@ -114,3 +114,7 @@ class TestRequestQueue(unittest.TestCase):
         (receipt_handle, request_message) = next(request_queue_iter)  # throws exception but not raised
         assert receipt_handle is None
         assert request_message is None
+
+
+if __name__ == "__main__":
+    unittest.main()
