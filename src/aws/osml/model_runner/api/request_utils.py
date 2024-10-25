@@ -1,4 +1,5 @@
 #  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+import logging
 
 import boto3
 
@@ -8,34 +9,44 @@ from aws.osml.model_runner.common import VALID_IMAGE_COMPRESSION, VALID_IMAGE_FO
 from .exceptions import InvalidS3ObjectException
 from .inference import VALID_MODEL_HOSTING_OPTIONS
 
+logger = logging.getLogger(__name__)
+
 
 def shared_properties_are_valid(request) -> bool:
     """
-    There are some attributes that are shared between ImageRequests and RegionRequests. This
-    function exists to validate if ImageRequests/RegionRequests have all the metadata info
-    in order to process it
+    Validates that the request contains all mandatory attributes with acceptable values.
 
-    :param request: an object of either ImageRequests or RegionRequests
+    This function checks attributes shared between ImageRequests and RegionRequests, ensuring
+    they contain all required metadata for processing.
 
-    :return: bool = True if the request contains all the mandatory attributes with acceptable values,
-                 False otherwise
+    :param request: An object of either ImageRequests or RegionRequests.
+    :return: True if the request is valid; False otherwise. Logs warnings for each failed validation.
     """
     if not request.image_id or not request.image_url:
+        logger.error("Validation failed: `image_id` or `image_url` is missing.")
         return False
 
     if not request.model_name:
+        logger.error("Validation failed: `model_name` is missing.")
         return False
 
     if not request.model_invoke_mode or request.model_invoke_mode not in VALID_MODEL_HOSTING_OPTIONS:
+        logger.error(
+            f"Validation failed: `model_invoke_mode` is either missing or invalid. "
+            f"Expected one of {VALID_MODEL_HOSTING_OPTIONS}, but got '{request.model_invoke_mode}'."
+        )
         return False
 
     if not request.tile_size or len(request.tile_size) != 2:
+        logger.error("Validation failed: `tile_size` is missing or does not contain two dimensions.")
         return False
 
     if request.tile_size[0] <= 0 or request.tile_size[1] <= 0:
+        logger.error("Validation failed: `tile_size` dimensions must be positive values.")
         return False
 
     if not request.tile_overlap or len(request.tile_overlap) != 2:
+        logger.error("Validation failed: `tile_overlap` is missing or does not contain two dimensions.")
         return False
 
     if (
@@ -44,18 +55,29 @@ def shared_properties_are_valid(request) -> bool:
         or request.tile_overlap[1] < 0
         or request.tile_overlap[1] >= request.tile_size[1]
     ):
+        logger.error("Validation failed: `tile_overlap` values must be non-negative and less than `tile_size` dimensions.")
         return False
 
     if not request.tile_format or request.tile_format not in VALID_IMAGE_FORMATS:
+        logger.error(
+            f"Validation failed: `tile_format` is either missing or invalid. "
+            f"Expected one of {VALID_IMAGE_FORMATS}, but got '{request.tile_format}'."
+        )
         return False
 
     if request.tile_compression and request.tile_compression not in VALID_IMAGE_COMPRESSION:
+        logger.error(
+            f"Validation failed: `tile_compression` is invalid. "
+            f"Expected one of {VALID_IMAGE_COMPRESSION}, but got '{request.tile_compression}'."
+        )
         return False
 
     if request.image_read_role and not request.image_read_role.startswith("arn:"):
+        logger.error("Validation failed: `image_read_role` does not start with 'arn:'.")
         return False
 
     if request.model_invocation_role and not request.model_invocation_role.startswith("arn:"):
+        logger.error("Validation failed: `model_invocation_role` does not start with 'arn:'.")
         return False
 
     return True
@@ -80,7 +102,7 @@ def get_image_path(image_url: str, assumed_role: str) -> str:
     return image_url
 
 
-def validate_image_path(image_url: str, assumed_role: str) -> bool:
+def validate_image_path(image_url: str, assumed_role: str = None) -> bool:
     """
     Validate if an image exists in S3 bucket
 
