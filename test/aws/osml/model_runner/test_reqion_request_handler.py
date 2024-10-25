@@ -93,7 +93,7 @@ class TestRegionRequestHandler(TestCase):
         self.mock_region_request_table.update_region_request.assert_called_once()
         self.mock_job_table.complete_region_request.assert_called_once()
         self.mock_region_status_monitor.process_event.assert_called()
-        self.assertIsInstance(result, JobItem)
+        assert isinstance(result, JobItem)
 
     def test_process_region_request_throttling(self):
         """
@@ -156,8 +156,8 @@ class TestRegionRequestHandler(TestCase):
         # Assert that fail_region_request was called due to failure
         self.mock_region_request_table.start_region_request.assert_called_once()
         self.mock_region_status_monitor.process_event.assert_called()
-        self.assertEqual(self.mock_region_request_item.message, "Failed to process image region: Tile processing failed")
-        self.assertIsInstance(result, JobItem)
+        assert self.mock_region_request_item.message == "Failed to process image region: Tile processing failed"
+        assert isinstance(result, JobItem)
 
     def test_fail_region_request(self):
         """
@@ -172,7 +172,7 @@ class TestRegionRequestHandler(TestCase):
         )
         self.mock_region_status_monitor.process_event.assert_called_once()
         self.mock_job_table.complete_region_request.assert_called_once()
-        self.assertIsInstance(result, JobItem)
+        assert isinstance(result, JobItem)
 
 
 if __name__ == "__main__":
