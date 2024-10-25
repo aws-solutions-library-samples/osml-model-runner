@@ -224,6 +224,19 @@ class VariableOverlapTilingStrategy(TilingStrategy):
     def _calculate_overlap_for_full_tiles(
         full_image_size: ImageDimensions, fixed_tile_size: ImageDimensions, minimum_overlap: ImageDimensions
     ) -> ImageDimensions:
+        """
+        Calculate the adjusted overlap for generating full tiles.
+
+        This method adjusts the minimum overlap to ensure that tiles generated from the
+        full image will align properly, minimizing any remaining space at the edges.
+
+        :param full_image_size: The dimensions of the full image (width, height) in pixels.
+        :param fixed_tile_size: The fixed dimensions of the tiles (width, height) in pixels.
+        :param minimum_overlap: The minimum overlap (width, height) between tiles in pixels.
+
+        :return: The adjusted overlap (width, height) that should be applied to the tiles.
+        """
+
         def expand_overlap(image_dimension: int, tile_dimension: int, minimum_overlap: int) -> int:
             stride = tile_dimension - minimum_overlap
             num_tiles = ceildiv(image_dimension - minimum_overlap, stride)
@@ -242,6 +255,21 @@ class VariableOverlapTilingStrategy(TilingStrategy):
     def _calculate_region_size_for_full_tiles(
         nominal_region_size: ImageDimensions, fixed_tile_size: ImageDimensions, minimum_overlap: ImageDimensions
     ) -> ImageDimensions:
+        """
+        Calculate the adjusted region size to accommodate full tiles.
+
+        This method adjusts the region size to ensure that tiles can be generated without
+        leaving any partial tiles. It considers the fixed tile size and the minimum overlap
+        between tiles.
+
+        :param nominal_region_size: The nominal region size (width, height) in pixels.
+        :param fixed_tile_size: The fixed dimensions of the tiles (width, height) in pixels.
+        :param minimum_overlap: The minimum overlap (width, height) between tiles in pixels.
+
+        :raises ValueError: If the requested overlap is greater than or equal to the tile size.
+
+        :return: The adjusted region size (width, height) that accommodates full tiles.
+        """
         if minimum_overlap[0] >= fixed_tile_size[0] or minimum_overlap[1] >= fixed_tile_size[1]:
             raise ValueError(f"Requested overlap {minimum_overlap} is invalid for tile size {fixed_tile_size}")
 
