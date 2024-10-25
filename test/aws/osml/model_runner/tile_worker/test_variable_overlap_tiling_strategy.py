@@ -6,18 +6,27 @@ from unittest.mock import Mock
 
 class TestVariableOverlapTilingStrategy(TestCase):
     def test_compute_regions_full_image(self):
+        """
+        Test that regions are correctly computed for a full-sized image
+        based on the specified nominal region size, tile size, and overlap.
+        """
         from aws.osml.model_runner.tile_worker import VariableOverlapTilingStrategy
 
         tiling_strategy = VariableOverlapTilingStrategy()
 
+        # Define image and tiling parameters
         full_image_size = (25000, 12000)
         nominal_region_size = (10000, 10000)
         overlap = (100, 100)
         tile_size = (4096, 4096)
 
-        # Check a full image
+        # Compute regions for the full image
         regions = tiling_strategy.compute_regions(((0, 0), full_image_size), nominal_region_size, tile_size, overlap)
+
+        # Verify the number of computed regions
         assert len(regions) == 8
+
+        # Verify that all computed regions match expected results
         for r in regions:
             assert r in [
                 ((0, 0), (7580, 8048)),
@@ -31,17 +40,26 @@ class TestVariableOverlapTilingStrategy(TestCase):
             ]
 
     def test_compute_regions_roi(self):
+        """
+        Test that regions are correctly computed within a specific region of interest (ROI)
+        based on the specified nominal region size, tile size, and overlap.
+        """
         from aws.osml.model_runner.tile_worker import VariableOverlapTilingStrategy
 
         tiling_strategy = VariableOverlapTilingStrategy()
 
+        # Define tiling parameters
         nominal_region_size = (10000, 10000)
         overlap = (100, 100)
         tile_size = (4096, 4096)
 
-        # Check regions generated from a subset of an image
+        # Compute regions within the ROI
         regions = tiling_strategy.compute_regions(((200, 8000), (17000, 11800)), nominal_region_size, tile_size, overlap)
+
+        # Verify the number of computed regions
         assert len(regions) == 6
+
+        # Verify that all computed regions match expected results
         for r in regions:
             assert r in [
                 ((200, 8000), (7322, 7948)),
@@ -53,28 +71,40 @@ class TestVariableOverlapTilingStrategy(TestCase):
             ]
 
     def test_compute_regions_tiny_image(self):
+        """
+        Test that regions are correctly computed for a tiny image where the
+        nominal region size is larger than the image itself.
+        """
         from aws.osml.model_runner.tile_worker import VariableOverlapTilingStrategy
 
         tiling_strategy = VariableOverlapTilingStrategy()
 
+        # Define tiling parameters
         nominal_region_size = (10000, 10000)
         overlap = (100, 100)
         tile_size = (4096, 4096)
 
-        # Check regions generated from an image that has a dimension smaller than the fixed tile size
+        # Compute regions for a tiny image
         regions = tiling_strategy.compute_regions(((0, 0), (12000, 2000)), nominal_region_size, tile_size, overlap)
+
+        # Verify the number of computed regions
         assert len(regions) == 2
+
+        # Verify that all computed regions match expected results
         for r in regions:
             assert r in [((0, 0), (8048, 2000)), ((0, 7904), (4096, 2000))]
 
     def test_compute_tiles(self):
+        """
+        Test that tiles are correctly computed within specified regions based on tile size and overlap.
+        """
         from aws.osml.model_runner.tile_worker import VariableOverlapTilingStrategy
 
         tiling_strategy = VariableOverlapTilingStrategy()
         overlap = (100, 100)
         tile_size = (4096, 4096)
 
-        # First full region
+        # Test full region tiling
         tiles = tiling_strategy.compute_tiles(((0, 0), (7580, 8048)), tile_size, overlap)
         assert len(tiles) == 4
         for t in tiles:
@@ -85,39 +115,44 @@ class TestVariableOverlapTilingStrategy(TestCase):
                 ((3952, 3484), (4096, 4096)),
             ]
 
-        # A region on the right edge of the image
+        # Test region on the right edge of the image
         tiles = tiling_strategy.compute_tiles(((0, 20904), (4096, 8048)), tile_size, overlap)
         assert len(tiles) == 2
         for t in tiles:
             assert t in [((0, 20904), (4096, 4096)), ((3952, 20904), (4096, 4096))]
 
-        # A region on the bottom edge of the image
+        # Test region on the bottom edge of the image
         tiles = tiling_strategy.compute_tiles(((7904, 13936), (7580, 4096)), tile_size, overlap)
         assert len(tiles) == 2
         for t in tiles:
             assert t in [((7904, 13936), (4096, 4096)), ((7904, 17420), (4096, 4096))]
 
-        # The bottom right corner region
+        # Test bottom right corner region
         tiles = tiling_strategy.compute_tiles(((7904, 20904), (4096, 4096)), tile_size, overlap)
         assert len(tiles) == 1
         assert tiles[0] == ((7904, 20904), (4096, 4096))
 
     def test_compute_tiles_tiny_region(self):
+        """
+        Test that tiles are correctly computed for a small region that is smaller than the tile size.
+        """
         from aws.osml.model_runner.tile_worker import VariableOverlapTilingStrategy
 
         tiling_strategy = VariableOverlapTilingStrategy()
         overlap = (100, 100)
         tile_size = (4096, 4096)
 
-        # If the requested region is smaller than the actual tile size then the full region
-        # will be turned into a single tile. This is an odd edge case that we don't expect
-        # to see much but we don't want to error out and will instead just fall back to
-        # a partial tile strategy.
+        # Compute tiles for a small region
         tiles = tiling_strategy.compute_tiles(((10, 50), (1024, 2048)), tile_size, overlap)
+
+        # Verify that only a single tile is produced for the tiny region
         assert len(tiles) == 1
         assert tiles[0] == ((10, 50), (1024, 2048))
 
     def test_deconflict_features(self):
+        """
+        Test that duplicate features are properly deconflicted based on specified rules.
+        """
         from geojson import Feature
 
         from aws.osml.model_runner.inference import FeatureSelector
@@ -125,12 +160,14 @@ class TestVariableOverlapTilingStrategy(TestCase):
 
         tiling_strategy = VariableOverlapTilingStrategy()
 
+        # Define image and tiling parameters
         full_image_size = (25000, 12000)
         full_image_region = ((0, 0), full_image_size)
         nominal_region_size = (10000, 10000)
         overlap = (100, 100)
         tile_size = (4096, 4096)
 
+        # Sample feature inputs, including duplicates
         features = [
             # Duplicate features in overlap of two regions, keep 1
             Feature(properties={"imageBBox": [20904, 7904, 20924, 7924]}),
@@ -149,6 +186,7 @@ class TestVariableOverlapTilingStrategy(TestCase):
             Feature(properties={"imageBBox": [10, 10, 10, 10]}),
         ]
 
+        # Mock feature selector to deconflict overlapping features
         class DummyFeatureSelector(FeatureSelector):
             def select_features(self, features):
                 if len(features) > 0:
@@ -156,13 +194,16 @@ class TestVariableOverlapTilingStrategy(TestCase):
                 return []
 
         mock_feature_selector = Mock(wraps=DummyFeatureSelector())
+
+        # Deconflict features using the tiling strategy
         deduped_features = tiling_strategy.cleanup_duplicate_features(
             full_image_region, nominal_region_size, tile_size, overlap, features, mock_feature_selector
         )
 
-        # Check to ensure we have the correct number of features returned and that the feature selector
-        # was called once for each overlapping group
+        # Verify the correct number of deconflicted features
         assert len(deduped_features) == 6
+
+        # Verify that the feature selector was called for each overlapping group
         assert len(mock_feature_selector.method_calls) == 4
 
 
