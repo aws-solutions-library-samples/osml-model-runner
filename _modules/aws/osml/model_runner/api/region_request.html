@@ -1,0 +1,210 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.api.region_request &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.api.region_request</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.model_runner.api.region_request</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span>
+
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.common</span> <span class="kn">import</span> <span class="n">ImageCompression</span><span class="p">,</span> <span class="n">ImageDimensions</span><span class="p">,</span> <span class="n">ImageFormats</span><span class="p">,</span> <span class="n">ImageRegion</span>
+
+<span class="kn">from</span> <span class="nn">.inference</span> <span class="kn">import</span> <span class="n">ModelInvokeMode</span>
+<span class="kn">from</span> <span class="nn">.request_utils</span> <span class="kn">import</span> <span class="n">shared_properties_are_valid</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="RegionRequest">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.api.region_request.html#aws.osml.model_runner.api.region_request.RegionRequest">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">RegionRequest</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Request for the Model Runner to process a region of an image.</span>
+
+<span class="sd">    This class contains the attributes that make up a region processing request, along with</span>
+<span class="sd">    constructors used to create these requests from common constructs.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        region_id: The unique identifier for the region being processed.</span>
+<span class="sd">        image_id: The identifier for the source image from which the region is derived.</span>
+<span class="sd">        image_extension: The file extension of the image (e.g., .tif, .ntf).</span>
+<span class="sd">        job_id: The unique identifier for the image processing job.</span>
+<span class="sd">        image_url: The URL location of the image to be processed.</span>
+<span class="sd">        image_read_role: The IAM role used to read the image from the provided URL.</span>
+<span class="sd">        model_name: The name of the model to use for region processing.</span>
+<span class="sd">        model_invoke_mode: The mode in which the model is invoked, such as synchronous or asynchronous.</span>
+<span class="sd">        model_invocation_role: IAM role assumed for invoking the model.</span>
+<span class="sd">        tile_size: Dimensions of the tiles into which the region is split for processing.</span>
+<span class="sd">        tile_overlap: Overlap between tiles, defined in dimensions.</span>
+<span class="sd">        tile_format: The format of the tiles (e.g., NITF, GeoTIFF).</span>
+<span class="sd">        tile_compression: Compression type to use for the tiles (e.g., None, JPEG).</span>
+<span class="sd">        region_bounds: Bounds of the region within the image, defined as upper-left corner coordinates and dimensions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">region_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">image_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">image_extension</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">image_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">image_read_role</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">model_invoke_mode</span><span class="p">:</span> <span class="n">ModelInvokeMode</span> <span class="o">=</span> <span class="n">ModelInvokeMode</span><span class="o">.</span><span class="n">NONE</span>
+    <span class="n">model_invocation_role</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">tile_size</span><span class="p">:</span> <span class="n">ImageDimensions</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1024</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)</span>
+    <span class="n">tile_overlap</span><span class="p">:</span> <span class="n">ImageDimensions</span> <span class="o">=</span> <span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+    <span class="n">tile_format</span><span class="p">:</span> <span class="n">ImageFormats</span> <span class="o">=</span> <span class="n">ImageFormats</span><span class="o">.</span><span class="n">NITF</span>
+    <span class="n">tile_compression</span><span class="p">:</span> <span class="n">ImageCompression</span> <span class="o">=</span> <span class="n">ImageCompression</span><span class="o">.</span><span class="n">NONE</span>
+    <span class="n">region_bounds</span><span class="p">:</span> <span class="n">ImageRegion</span> <span class="o">=</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">initial_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a RegionRequest instance using a combination of dictionaries and keyword arguments.</span>
+
+<span class="sd">        :param initial_data: dictionaries containing attributes/values that map to this class&#39;s attributes.</span>
+<span class="sd">        :param kwargs: keyword arguments to set specific attributes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_attributes_from_data</span><span class="p">(</span><span class="o">*</span><span class="n">initial_data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_attributes_from_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">initial_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets attributes on the instance from initial data dictionaries and keyword arguments.</span>
+
+<span class="sd">        :param initial_data: dictionaries of attribute values.</span>
+<span class="sd">        :param kwargs: keyword arguments to set attributes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">initial_data</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_attributes_from_dict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_attributes_from_dict</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_attributes_from_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Helper method to set instance attributes based on a dictionary.</span>
+
+<span class="sd">        :param data: dictionary containing attribute-value pairs to set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RegionRequest.is_valid">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.api.region_request.html#aws.osml.model_runner.api.region_request.RegionRequest.is_valid">[docs]</a>
+    <span class="k">def</span> <span class="nf">is_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check to see if this request contains required attributes and meaningful values.</span>
+
+<span class="sd">        :return: True if the request contains all the mandatory attributes with acceptable values, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">shared_properties_are_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">region_bounds</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">region_bounds</span> <span class="o">==</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Invalid bounds in RegionRequest&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

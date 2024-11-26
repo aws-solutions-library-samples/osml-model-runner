@@ -1,0 +1,326 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.database.ddb_helper module &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.database.ddb_helper module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_apidoc/aws.osml.model_runner.database.ddb_helper.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-aws.osml.model_runner.database.ddb_helper">
+<span id="aws-osml-model-runner-database-ddb-helper-module"></span><h1>aws.osml.model_runner.database.ddb_helper module<a class="headerlink" href="#module-aws.osml.model_runner.database.ddb_helper" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.database.ddb_helper.DDBKey">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.database.ddb_helper.</span></span><span class="sig-name descname"><span class="pre">DDBKey</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hash_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">hash_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/aws/osml/model_runner/database/ddb_helper.html#DDBKey"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.database.ddb_helper.DDBKey" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>DDBKey is a dataclass meant to represent a single item in a DynamoDB table via a key-value pair.</p>
+<dl class="simple">
+<dt>Attributes:</dt><dd><p>hash_key (str): The name of the hash key (partition key) used to identify the item in the DynamoDB table.
+hash_value (str): The value of the hash key (partition key) that uniquely identifies the item in the table.
+range_key (Optional[str]): The name of the range key (sort key) used to further refine the item’s location.
+range_value (Optional[str]): The value of the range key (sort key) that, together with the hash key, identifies.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.database.ddb_helper.DDBKey.hash_key">
+<span class="sig-name descname"><span class="pre">hash_key</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#aws.osml.model_runner.database.ddb_helper.DDBKey.hash_key" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.database.ddb_helper.DDBKey.hash_value">
+<span class="sig-name descname"><span class="pre">hash_value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#aws.osml.model_runner.database.ddb_helper.DDBKey.hash_value" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.database.ddb_helper.DDBKey.range_key">
+<span class="sig-name descname"><span class="pre">range_key</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#aws.osml.model_runner.database.ddb_helper.DDBKey.range_key" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.database.ddb_helper.DDBKey.range_value">
+<span class="sig-name descname"><span class="pre">range_value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#aws.osml.model_runner.database.ddb_helper.DDBKey.range_value" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.database.ddb_helper.DDBItem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.database.ddb_helper.</span></span><span class="sig-name descname"><span class="pre">DDBItem</span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/database/ddb_helper.html#DDBItem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.database.ddb_helper.DDBItem" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>DDBItem is a dataclass meant to represent a single item in a DynamoDB table via a key-value pair.</p>
+<dl class="simple">
+<dt>Attributes:</dt><dd><p>ddb_key (DDBKey): The key object representing the hash and range key pair for this DynamoDB item.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.database.ddb_helper.DDBItem.ddb_key">
+<span class="sig-name descname"><span class="pre">ddb_key</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#aws.osml.model_runner.database.ddb_helper.DDBKey" title="aws.osml.model_runner.database.ddb_helper.DDBKey"><span class="pre">DDBKey</span></a></em><a class="headerlink" href="#aws.osml.model_runner.database.ddb_helper.DDBItem.ddb_key" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.database.ddb_helper.DDBItem.to_put">
+<span class="sig-name descname"><span class="pre">to_put</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/database/ddb_helper.html#DDBItem.to_put"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.database.ddb_helper.DDBItem.to_put" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.database.ddb_helper.DDBItem.to_update">
+<span class="sig-name descname"><span class="pre">to_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/database/ddb_helper.html#DDBItem.to_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.database.ddb_helper.DDBItem.to_update" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.database.ddb_helper.DDBHelper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.database.ddb_helper.</span></span><span class="sig-name descname"><span class="pre">DDBHelper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/aws/osml/model_runner/database/ddb_helper.html#DDBHelper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.database.ddb_helper.DDBHelper" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>DDBHelper is a class meant to help OSML with accessing and interacting with DynamoDB tables.</p>
+<dl class="simple">
+<dt>Attributes:</dt><dd><p>table_name (str): The name of the DynamoDB table to interact with.
+client (boto3.resources.factory.dynamodb.ServiceResource): A DynamoDB service resource instance used.
+table (boto3.resources.factory.dynamodb.Table): A reference to the DynamoDB table for performing operations.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.database.ddb_helper.DDBHelper.get_ddb_item">
+<span class="sig-name descname"><span class="pre">get_ddb_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ddb_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#aws.osml.model_runner.database.ddb_helper.DDBItem" title="aws.osml.model_runner.database.ddb_helper.DDBItem"><span class="pre">DDBItem</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/database/ddb_helper.html#DDBHelper.get_ddb_item"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.database.ddb_helper.DDBHelper.get_ddb_item" title="Link to this definition"></a></dt>
+<dd><p>Get a DynamoDB item from table and convert Decimal values to native types</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ddb_item</strong> – DDBItem = item that we want to get (required)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[str, Any] = response from the get_item request</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.database.ddb_helper.DDBHelper.put_ddb_item">
+<span class="sig-name descname"><span class="pre">put_ddb_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ddb_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#aws.osml.model_runner.database.ddb_helper.DDBItem" title="aws.osml.model_runner.database.ddb_helper.DDBItem"><span class="pre">DDBItem</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_expression</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/database/ddb_helper.html#DDBHelper.put_ddb_item"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.database.ddb_helper.DDBHelper.put_ddb_item" title="Link to this definition"></a></dt>
+<dd><p>Put a DynamoDB item into the table with a jitter-delayed retry logic for unprocessed items.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ddb_item</strong> – DDBItem = item that we want to put (required)</p></li>
+<li><p><strong>condition_expression</strong> – str = Condition that must be satisfied in order for a PutItem operation to succeed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[str, Any] = item from the put_item response</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.database.ddb_helper.DDBHelper.batch_write_items">
+<span class="sig-name descname"><span class="pre">batch_write_items</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ddb_items</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#aws.osml.model_runner.database.ddb_helper.DDBItem" title="aws.osml.model_runner.database.ddb_helper.DDBItem"><span class="pre">DDBItem</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_retries</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_delay</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/database/ddb_helper.html#DDBHelper.batch_write_items"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.database.ddb_helper.DDBHelper.batch_write_items" title="Link to this definition"></a></dt>
+<dd><p>Write multiple DynamoDB items in a batch with jitter-delayed retry logic for unprocessed items.</p>
+<p>This method splits the provided list of <code class="xref py py-obj docutils literal notranslate"><span class="pre">ddb_items</span></code> into batches of up to 25 items (the maximum batch size
+supported by DynamoDB). Each batch is written to the table, and if unprocessed items are returned,
+the method retries the operation with an exponential backoff with jitter. The number of retries and the
+maximum delay between retries are configurable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ddb_items</strong> – List[DDBItem] = List of items that we want to write in batch mode to the DynamoDB table.</p></li>
+<li><p><strong>max_retries</strong> – int = Maximum number of retries for unprocessed items. Defaults to 500.</p></li>
+<li><p><strong>max_delay</strong> – float = Maximum delay in seconds between retries, applied with jitter. Defaults to 8 seconds.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.database.ddb_helper.DDBHelper.delete_ddb_item">
+<span class="sig-name descname"><span class="pre">delete_ddb_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ddb_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#aws.osml.model_runner.database.ddb_helper.DDBItem" title="aws.osml.model_runner.database.ddb_helper.DDBItem"><span class="pre">DDBItem</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/database/ddb_helper.html#DDBHelper.delete_ddb_item"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.database.ddb_helper.DDBHelper.delete_ddb_item" title="Link to this definition"></a></dt>
+<dd><p>Delete a DynamoDB item from the table</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ddb_item</strong> – DDBItem = item that we want to delete (required)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[str, Any] = response from the delete_item request</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.database.ddb_helper.DDBHelper.update_ddb_item">
+<span class="sig-name descname"><span class="pre">update_ddb_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ddb_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#aws.osml.model_runner.database.ddb_helper.DDBItem" title="aws.osml.model_runner.database.ddb_helper.DDBItem"><span class="pre">DDBItem</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_exp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_attr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/database/ddb_helper.html#DDBHelper.update_ddb_item"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.database.ddb_helper.DDBHelper.update_ddb_item" title="Link to this definition"></a></dt>
+<dd><p>Update the DynamoDB item based on the contents of an input dictionary. If the user doesn’t
+provide an update expression and attributes, one will be generated from the body.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ddb_item</strong> – DDBItem = item that we want to update (required)</p></li>
+<li><p><strong>update_exp</strong> – Optional[str] = the update expression to use for the update</p></li>
+<li><p><strong>update_attr</strong> – Optional[list] = attribute string to use when updating DDB item</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[str, Any] = the new ddb item as a dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.database.ddb_helper.DDBHelper.query_items">
+<span class="sig-name descname"><span class="pre">query_items</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ddb_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#aws.osml.model_runner.database.ddb_helper.DDBItem" title="aws.osml.model_runner.database.ddb_helper.DDBItem"><span class="pre">DDBItem</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/database/ddb_helper.html#DDBHelper.query_items"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.database.ddb_helper.DDBHelper.query_items" title="Link to this definition"></a></dt>
+<dd><p>Query the table for all items of a given hash_key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ddb_item</strong> – DDBItem = the hash key we want to query the table for</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[Dict[str, Any]] = the list of dictionary responses corresponding to the items returned</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.database.ddb_helper.DDBHelper.get_update_params">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_update_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">body</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ddb_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#aws.osml.model_runner.database.ddb_helper.DDBItem" title="aws.osml.model_runner.database.ddb_helper.DDBItem"><span class="pre">DDBItem</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.13)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/database/ddb_helper.html#DDBHelper.get_update_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.database.ddb_helper.DDBHelper.get_update_params" title="Link to this definition"></a></dt>
+<dd><p>Generate an update expression and a dict of values to update a dynamodb table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>body</strong> – Dict = the body of the request that contains the updated data</p></li>
+<li><p><strong>ddb_item</strong> – DDBItem = the hash key we want to query the table for</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple[str, Dict[str, Any]] = the generated update expression and attributes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.database.ddb_helper.DDBHelper.get_keys">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ddb_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#aws.osml.model_runner.database.ddb_helper.DDBItem" title="aws.osml.model_runner.database.ddb_helper.DDBItem"><span class="pre">DDBItem</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/database/ddb_helper.html#DDBHelper.get_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.database.ddb_helper.DDBHelper.get_keys" title="Link to this definition"></a></dt>
+<dd><p>Determine to see if we need to use both keys to search an item in DDB</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ddb_item</strong> – DDBItem = the hash key we want to query the table for</p>
+</dd>
+</dl>
+<p>return Dict[str, Any] = Holding either Hash Key or both Keys (Hash and Range)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.database.ddb_helper.DDBHelper.convert_decimal">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">convert_decimal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><span class="pre">Any</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><span class="pre">Any</span></a></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/database/ddb_helper.html#DDBHelper.convert_decimal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.database.ddb_helper.DDBHelper.convert_decimal" title="Link to this definition"></a></dt>
+<dd><p>Convert any Decimal values in the data to int or float, depending on the value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> – Any = the data to convert</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any = the converted data</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

@@ -1,0 +1,130 @@
+model_runner.inference.http_detector
+====================================
+
+.. py:module:: model_runner.inference.http_detector
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.inference.http_detector.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.inference.http_detector.CountingRetry
+   model_runner.inference.http_detector.HTTPDetector
+   model_runner.inference.http_detector.HTTPDetectorBuilder
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:class:: CountingRetry(*args, **kwargs)
+
+   Bases: :py:obj:`urllib3.Retry`
+
+
+   A custom Retry class that counts the number of retries during HTTP requests.
+   Inherits from urllib3's Retry class to implement retry logic with an additional retry count.
+
+
+   .. py:attribute:: retry_counts
+      :value: 0
+
+
+
+   .. py:method:: increment(*args, **kwargs) -> urllib3.util.retry.Retry
+
+      Increments the retry count and calls the parent class's increment method.
+
+      :return: Retry = A Retry object with updated retry count.
+
+
+
+   .. py:method:: from_retry(retry_instance: urllib3.util.retry.Retry) -> CountingRetry
+      :classmethod:
+
+
+      Creates a CountingRetry instance from an existing Retry instance.
+
+      :param retry_instance: Retry = The Retry instance to convert.
+      :return: CountingRetry = A new CountingRetry object with the same configurations as the provided Retry instance.
+
+
+
+.. py:class:: HTTPDetector(endpoint: str, name: Optional[str] = None, retry: Optional[urllib3.Retry] = None)
+
+   Bases: :py:obj:`model_runner.inference.detector.Detector`
+
+
+   HTTPDetector is responsible for invoking HTTP-based model endpoints to run model inference.
+
+   This class interacts with a model endpoint over HTTP to send a payload for feature detection and retrieves
+   geojson-formatted feature detection results. It supports retry logic with exponential backoff for network-related
+   issues.
+
+
+   .. py:attribute:: http_pool
+
+
+   .. py:attribute:: name
+
+
+   .. py:property:: mode
+      :type: aws.osml.model_runner.api.ModelInvokeMode
+
+
+      Defines the invocation mode for the detector as HTTP endpoint.
+
+      :return: ModelInvokeMode.HTTP_ENDPOINT
+
+
+
+   .. py:method:: find_features(payload: io.BufferedReader, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger) -> geojson.FeatureCollection
+
+      Invokes the HTTP model endpoint to detect features from the given payload.
+
+      This method sends a payload to the HTTP model endpoint and retrieves feature detection results
+      in the form of a geojson FeatureCollection. If configured, it logs metrics about the invocation process.
+
+      :param payload: BufferedReader = The data to be sent to the HTTP model for feature detection.
+      :param metrics: MetricsLogger = The metrics logger to capture system performance and log metrics.
+
+      :return: FeatureCollection = A geojson FeatureCollection containing the detected features.
+
+      :raises RetryError: Raised if the request fails after retries.
+      :raises MaxRetryError: Raised if the maximum retry attempts are reached.
+      :raises JSONDecodeError: Raised if there is an error decoding the model's response.
+
+
+
+.. py:class:: HTTPDetectorBuilder(endpoint: str)
+
+   Bases: :py:obj:`model_runner.inference.endpoint_builder.FeatureEndpointBuilder`
+
+
+   HTTPDetectorBuilder is responsible for building an HTTPDetector configured with an HTTP model endpoint.
+
+   This builder constructs an HTTPDetector instance that can send payloads to HTTP-based model endpoints for feature
+   detection.
+
+
+   .. py:attribute:: endpoint
+
+
+   .. py:method:: build() -> Optional[model_runner.inference.detector.Detector]
+
+      Builds and returns an HTTPDetector based on the configured parameters.
+
+      :return: Optional[Detector] = An HTTPDetector instance configured for the specified HTTP model endpoint.
+
+
+

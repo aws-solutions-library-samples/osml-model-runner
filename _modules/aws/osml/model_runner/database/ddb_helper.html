@@ -1,0 +1,457 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.database.ddb_helper &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.database.ddb_helper</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.model_runner.database.ddb_helper</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">fields</span>
+<span class="kn">from</span> <span class="nn">decimal</span> <span class="kn">import</span> <span class="n">Decimal</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">boto3</span>
+<span class="kn">from</span> <span class="nn">boto3.dynamodb.conditions</span> <span class="kn">import</span> <span class="n">Key</span>
+
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.app_config</span> <span class="kn">import</span> <span class="n">BotoConfig</span>
+
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">DDBBatchWriteException</span><span class="p">,</span> <span class="n">DDBUpdateException</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="DDBKey">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.ddb_helper.html#aws.osml.model_runner.database.ddb_helper.DDBKey">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">DDBKey</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    DDBKey is a dataclass meant to represent a single item in a DynamoDB table via a key-value pair.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        hash_key (str): The name of the hash key (partition key) used to identify the item in the DynamoDB table.</span>
+<span class="sd">        hash_value (str): The value of the hash key (partition key) that uniquely identifies the item in the table.</span>
+<span class="sd">        range_key (Optional[str]): The name of the range key (sort key) used to further refine the item&#39;s location.</span>
+<span class="sd">        range_value (Optional[str]): The value of the range key (sort key) that, together with the hash key, identifies.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">hash_key</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">hash_value</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">range_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">range_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="DDBItem">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.ddb_helper.html#aws.osml.model_runner.database.ddb_helper.DDBItem">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">DDBItem</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    DDBItem is a dataclass meant to represent a single item in a DynamoDB table via a key-value pair.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        ddb_key (DDBKey): The key object representing the hash and range key pair for this DynamoDB item.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ddb_key</span><span class="p">:</span> <span class="n">DDBKey</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DDBItem.to_put">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.ddb_helper.html#aws.osml.model_runner.database.ddb_helper.DDBItem.to_put">[docs]</a>
+    <span class="k">def</span> <span class="nf">to_put</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_fields</span><span class="p">()}</span></div>
+
+
+<div class="viewcode-block" id="DDBItem.to_update">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.ddb_helper.html#aws.osml.model_runner.database.ddb_helper.DDBItem.to_update">[docs]</a>
+    <span class="k">def</span> <span class="nf">to_update</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">v</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">ddb_key</span><span class="o">.</span><span class="n">hash_key</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_fields</span><span class="p">()</span>
+        <span class="p">}</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__get_fields</span><span class="p">():</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">my_field</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">my_field</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">(</span><span class="n">DDBItem</span><span class="p">)]</span></div>
+
+
+
+<div class="viewcode-block" id="DDBHelper">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.ddb_helper.html#aws.osml.model_runner.database.ddb_helper.DDBHelper">[docs]</a>
+<span class="k">class</span> <span class="nc">DDBHelper</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    DDBHelper is a class meant to help OSML with accessing and interacting with DynamoDB tables.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        table_name (str): The name of the DynamoDB table to interact with.</span>
+<span class="sd">        client (boto3.resources.factory.dynamodb.ServiceResource): A DynamoDB service resource instance used.</span>
+<span class="sd">        table (boto3.resources.factory.dynamodb.Table): A reference to the DynamoDB table for performing operations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># build a table resource to use for accessing data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">table_name</span> <span class="o">=</span> <span class="n">table_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">resource</span><span class="p">(</span><span class="s2">&quot;dynamodb&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">BotoConfig</span><span class="o">.</span><span class="n">ddb</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">Table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DDBHelper.get_ddb_item">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.ddb_helper.html#aws.osml.model_runner.database.ddb_helper.DDBHelper.get_ddb_item">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_ddb_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ddb_item</span><span class="p">:</span> <span class="n">DDBItem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a DynamoDB item from table and convert Decimal values to native types</span>
+
+<span class="sd">        :param ddb_item: DDBItem = item that we want to get (required)</span>
+
+<span class="sd">        :return: Dict[str, Any] = response from the get_item request</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">get_item</span><span class="p">(</span><span class="n">Key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_keys</span><span class="p">(</span><span class="n">ddb_item</span><span class="o">=</span><span class="n">ddb_item</span><span class="p">))</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Item&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_decimal</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DDBHelper.put_ddb_item">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.ddb_helper.html#aws.osml.model_runner.database.ddb_helper.DDBHelper.put_ddb_item">[docs]</a>
+    <span class="k">def</span> <span class="nf">put_ddb_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ddb_item</span><span class="p">:</span> <span class="n">DDBItem</span><span class="p">,</span> <span class="n">condition_expression</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Put a DynamoDB item into the table with a jitter-delayed retry logic for unprocessed items.</span>
+
+<span class="sd">        :param ddb_item: DDBItem = item that we want to put (required)</span>
+<span class="sd">        :param condition_expression: str = Condition that must be satisfied in order for a PutItem operation to succeed.</span>
+
+<span class="sd">        :return: Dict[str, Any] = item from the put_item response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">condition_expression</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">put_item</span><span class="p">(</span><span class="n">Item</span><span class="o">=</span><span class="n">ddb_item</span><span class="o">.</span><span class="n">to_put</span><span class="p">(),</span> <span class="n">ConditionExpression</span><span class="o">=</span><span class="n">condition_expression</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">put_item</span><span class="p">(</span><span class="n">Item</span><span class="o">=</span><span class="n">ddb_item</span><span class="o">.</span><span class="n">to_put</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="n">response</span></div>
+
+
+<div class="viewcode-block" id="DDBHelper.batch_write_items">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.ddb_helper.html#aws.osml.model_runner.database.ddb_helper.DDBHelper.batch_write_items">[docs]</a>
+    <span class="k">def</span> <span class="nf">batch_write_items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ddb_items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">DDBItem</span><span class="p">],</span> <span class="n">max_retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">500</span><span class="p">,</span> <span class="n">max_delay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write multiple DynamoDB items in a batch with jitter-delayed retry logic for unprocessed items.</span>
+
+<span class="sd">        This method splits the provided list of `ddb_items` into batches of up to 25 items (the maximum batch size</span>
+<span class="sd">        supported by DynamoDB). Each batch is written to the table, and if unprocessed items are returned,</span>
+<span class="sd">        the method retries the operation with an exponential backoff with jitter. The number of retries and the</span>
+<span class="sd">        maximum delay between retries are configurable.</span>
+
+<span class="sd">        :param ddb_items: List[DDBItem] = List of items that we want to write in batch mode to the DynamoDB table.</span>
+<span class="sd">        :param max_retries: int = Maximum number of retries for unprocessed items. Defaults to 500.</span>
+<span class="sd">        :param max_delay: float = Maximum delay in seconds between retries, applied with jitter. Defaults to 8 seconds.</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_batch_write</span><span class="p">(</span><span class="n">items</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">initial_delay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.125</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Execute a batch write operation to DynamoDB with jitter-delayed retry logic for unprocessed items.</span>
+
+<span class="sd">            This method performs a batch write operation using the provided `items`. If any items remain unprocessed,</span>
+<span class="sd">            it retries the operation using exponential backoff with jitter. The method limits the number of retries</span>
+<span class="sd">            and applies a maximum delay between retries.</span>
+
+<span class="sd">            :param items: Dict[str, Any] = A dictionary containing the items to write in the batch.</span>
+<span class="sd">            :param retries: int = The number of retries attempted for unprocessed items. Defaults to 0.</span>
+<span class="sd">            :param initial_delay: float = The initial delay before the first retry, with jitter applied on subsequent</span>
+<span class="sd">            retries. Defaults to 0.125 seconds.</span>
+
+<span class="sd">            :raises DDBBatchWriteException: Raised if items remain unprocessed after the retry limit is exceeded.</span>
+<span class="sd">            :raises Exception: Raised if an error occurs that is not related to unprocessed items.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="c1"># Calculate smart jitter backoff for retries</span>
+            <span class="n">delay</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">max_delay</span><span class="p">,</span> <span class="n">initial_delay</span> <span class="o">*</span> <span class="mi">2</span><span class="o">**</span><span class="n">retries</span><span class="p">))</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">batch_write_item</span><span class="p">(</span><span class="n">RequestItems</span><span class="o">=</span><span class="n">items</span><span class="p">)</span>
+                <span class="n">unprocessed_items</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;UnprocessedItems&quot;</span><span class="p">,</span> <span class="p">{})</span>
+                <span class="c1"># If we failed to process some items, try again</span>
+                <span class="k">if</span> <span class="n">unprocessed_items</span> <span class="ow">and</span> <span class="n">retries</span> <span class="o">&lt;</span> <span class="n">max_retries</span><span class="p">:</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
+                    <span class="n">_batch_write</span><span class="p">(</span><span class="n">unprocessed_items</span><span class="p">,</span> <span class="n">retries</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="c1"># If we still have unprocessed items after the retry limit</span>
+                <span class="k">elif</span> <span class="n">unprocessed_items</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">DDBBatchWriteException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to process items: </span><span class="si">{</span><span class="n">unprocessed_items</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Successfully batch wrote items to table.&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="c1"># If we failed to call the write, try again</span>
+                <span class="k">if</span> <span class="n">retries</span> <span class="o">&lt;</span> <span class="n">max_retries</span><span class="p">:</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
+                    <span class="n">_batch_write</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">retries</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+                    <span class="k">raise</span>
+
+        <span class="c1"># Max batch size DDB (DynamoDB) supports is 25</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="mi">25</span>
+
+        <span class="c1"># Iterate over ddb_items in chunks of batch_size</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ddb_items</span><span class="p">),</span> <span class="n">batch_size</span><span class="p">):</span>
+            <span class="n">batch</span> <span class="o">=</span> <span class="n">ddb_items</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="n">batch_size</span><span class="p">]</span>
+            <span class="n">request_items</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">table_name</span><span class="p">:</span> <span class="p">[]}</span>
+
+            <span class="c1"># Prepare the batch request for DynamoDB</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">:</span>
+                <span class="c1"># Ensure that the item has a method `to_put()` that formats it for DynamoDB</span>
+                <span class="n">put_request</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;PutRequest&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;Item&quot;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">to_put</span><span class="p">()}}</span>
+                <span class="n">request_items</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">table_name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">put_request</span><span class="p">)</span>
+
+            <span class="c1"># Send the batch write request</span>
+            <span class="n">_batch_write</span><span class="p">(</span><span class="n">request_items</span><span class="p">)</span>
+
+        <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="DDBHelper.delete_ddb_item">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.ddb_helper.html#aws.osml.model_runner.database.ddb_helper.DDBHelper.delete_ddb_item">[docs]</a>
+    <span class="k">def</span> <span class="nf">delete_ddb_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ddb_item</span><span class="p">:</span> <span class="n">DDBItem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Delete a DynamoDB item from the table</span>
+
+<span class="sd">        :param ddb_item: DDBItem = item that we want to delete (required)</span>
+
+<span class="sd">        :return: Dict[str, Any] = response from the delete_item request</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">delete_item</span><span class="p">(</span><span class="n">Key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_keys</span><span class="p">(</span><span class="n">ddb_item</span><span class="o">=</span><span class="n">ddb_item</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="DDBHelper.update_ddb_item">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.ddb_helper.html#aws.osml.model_runner.database.ddb_helper.DDBHelper.update_ddb_item">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_ddb_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ddb_item</span><span class="p">:</span> <span class="n">DDBItem</span><span class="p">,</span> <span class="n">update_exp</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">update_attr</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the DynamoDB item based on the contents of an input dictionary. If the user doesn&#39;t</span>
+<span class="sd">        provide an update expression and attributes, one will be generated from the body.</span>
+
+<span class="sd">        :param ddb_item: DDBItem = item that we want to update (required)</span>
+<span class="sd">        :param update_exp: Optional[str] = the update expression to use for the update</span>
+<span class="sd">        :param update_attr: Optional[list] = attribute string to use when updating DDB item</span>
+
+<span class="sd">        :return: Dict[str, Any] = the new ddb item as a dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># if we weren&#39;t provided an explicit update expression/attributes</span>
+        <span class="c1"># then we&#39;ll build them from the body</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">update_exp</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">update_attr</span><span class="p">:</span>
+            <span class="n">update_item</span> <span class="o">=</span> <span class="n">ddb_item</span><span class="o">.</span><span class="n">to_update</span><span class="p">()</span>
+            <span class="n">update_exp</span><span class="p">,</span> <span class="n">update_attr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_update_params</span><span class="p">(</span><span class="n">update_item</span><span class="p">,</span> <span class="n">ddb_item</span><span class="p">)</span>
+
+        <span class="c1"># if we still don&#39;t have an update expression, then we&#39;ll just</span>
+        <span class="k">if</span> <span class="n">update_exp</span> <span class="ow">and</span> <span class="n">update_attr</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">update_item</span><span class="p">(</span>
+                <span class="n">Key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_keys</span><span class="p">(</span><span class="n">ddb_item</span><span class="o">=</span><span class="n">ddb_item</span><span class="p">),</span>
+                <span class="n">UpdateExpression</span><span class="o">=</span><span class="n">update_exp</span><span class="p">,</span>
+                <span class="n">ExpressionAttributeValues</span><span class="o">=</span><span class="n">update_attr</span><span class="p">,</span>
+                <span class="n">ReturnValues</span><span class="o">=</span><span class="s2">&quot;ALL_NEW&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Convert any decimal values in the response</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_decimal</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;Attributes&quot;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DDBUpdateException</span><span class="p">(</span><span class="s2">&quot;Failed to produce update expression or attributes for DDB update!&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DDBHelper.query_items">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.ddb_helper.html#aws.osml.model_runner.database.ddb_helper.DDBHelper.query_items">[docs]</a>
+    <span class="k">def</span> <span class="nf">query_items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ddb_item</span><span class="p">:</span> <span class="n">DDBItem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Query the table for all items of a given hash_key.</span>
+
+<span class="sd">        :param ddb_item: DDBItem = the hash key we want to query the table for</span>
+
+<span class="sd">        :return: List[Dict[str, Any]] = the list of dictionary responses corresponding to the items returned</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">all_items_retrieved</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+            <span class="n">ConsistentRead</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">KeyConditionExpression</span><span class="o">=</span><span class="n">Key</span><span class="p">(</span><span class="n">ddb_item</span><span class="o">.</span><span class="n">ddb_key</span><span class="o">.</span><span class="n">hash_key</span><span class="p">)</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">ddb_item</span><span class="o">.</span><span class="n">ddb_key</span><span class="o">.</span><span class="n">hash_value</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Grab all the items from the table</span>
+        <span class="n">items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">all_items_retrieved</span><span class="p">:</span>
+            <span class="n">items</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">convert_decimal</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;Items&quot;</span><span class="p">]))</span>
+
+            <span class="k">if</span> <span class="s2">&quot;LastEvaluatedKey&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+                    <span class="n">ConsistentRead</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">KeyConditionExpression</span><span class="o">=</span><span class="n">Key</span><span class="p">(</span><span class="n">ddb_item</span><span class="o">.</span><span class="n">ddb_key</span><span class="o">.</span><span class="n">hash_key</span><span class="p">)</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">ddb_item</span><span class="o">.</span><span class="n">ddb_key</span><span class="o">.</span><span class="n">hash_value</span><span class="p">),</span>
+                    <span class="n">ExclusiveStartKey</span><span class="o">=</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;LastEvaluatedKey&quot;</span><span class="p">],</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">all_items_retrieved</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="n">items</span></div>
+
+
+<div class="viewcode-block" id="DDBHelper.get_update_params">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.ddb_helper.html#aws.osml.model_runner.database.ddb_helper.DDBHelper.get_update_params">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_update_params</span><span class="p">(</span><span class="n">body</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">ddb_item</span><span class="p">:</span> <span class="n">DDBItem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate an update expression and a dict of values to update a dynamodb table.</span>
+
+<span class="sd">        :param body: Dict = the body of the request that contains the updated data</span>
+<span class="sd">        :param ddb_item: DDBItem = the hash key we want to query the table for</span>
+
+<span class="sd">        :return: Tuple[str, Dict[str, Any]] = the generated update expression and attributes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">update_expr</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SET &quot;</span><span class="p">]</span>
+        <span class="n">update_attr</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">body</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># need to omit range_key</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="n">ddb_item</span><span class="o">.</span><span class="n">ddb_key</span><span class="o">.</span><span class="n">range_key</span><span class="p">:</span>
+                <span class="n">update_expr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> = :</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">,&quot;</span><span class="p">)</span>
+                <span class="n">update_attr</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;:</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">update_expr</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">update_attr</span></div>
+
+
+<div class="viewcode-block" id="DDBHelper.get_keys">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.ddb_helper.html#aws.osml.model_runner.database.ddb_helper.DDBHelper.get_keys">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_keys</span><span class="p">(</span><span class="n">ddb_item</span><span class="p">:</span> <span class="n">DDBItem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Determine to see if we need to use both keys to search an item in DDB</span>
+
+<span class="sd">        :param ddb_item: DDBItem = the hash key we want to query the table for</span>
+
+<span class="sd">        return Dict[str, Any] = Holding either Hash Key or both Keys (Hash and Range)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ddb_item</span><span class="o">.</span><span class="n">ddb_key</span><span class="o">.</span><span class="n">range_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="n">ddb_item</span><span class="o">.</span><span class="n">ddb_key</span><span class="o">.</span><span class="n">hash_key</span><span class="p">:</span> <span class="n">ddb_item</span><span class="o">.</span><span class="n">ddb_key</span><span class="o">.</span><span class="n">hash_value</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="n">ddb_item</span><span class="o">.</span><span class="n">ddb_key</span><span class="o">.</span><span class="n">hash_key</span><span class="p">:</span> <span class="n">ddb_item</span><span class="o">.</span><span class="n">ddb_key</span><span class="o">.</span><span class="n">hash_value</span><span class="p">,</span>
+                <span class="n">ddb_item</span><span class="o">.</span><span class="n">ddb_key</span><span class="o">.</span><span class="n">range_key</span><span class="p">:</span> <span class="n">ddb_item</span><span class="o">.</span><span class="n">ddb_key</span><span class="o">.</span><span class="n">range_value</span><span class="p">,</span>
+            <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="DDBHelper.convert_decimal">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.ddb_helper.html#aws.osml.model_runner.database.ddb_helper.DDBHelper.convert_decimal">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">convert_decimal</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert any Decimal values in the data to int or float, depending on the value.</span>
+
+<span class="sd">        :param data: Any = the data to convert</span>
+<span class="sd">        :returns: Any = the converted data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">DDBHelper</span><span class="o">.</span><span class="n">convert_decimal</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">DDBHelper</span><span class="o">.</span><span class="n">convert_decimal</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">if</span> <span class="n">data</span> <span class="o">%</span> <span class="mi">1</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">data</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

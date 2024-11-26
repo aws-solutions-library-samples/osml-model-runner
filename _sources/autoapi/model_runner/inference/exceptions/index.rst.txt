@@ -1,0 +1,34 @@
+model_runner.inference.exceptions
+=================================
+
+.. py:module:: model_runner.inference.exceptions
+
+
+Exceptions
+----------
+
+.. autoapisummary::
+
+   model_runner.inference.exceptions.FeatureDistillationException
+   model_runner.inference.exceptions.InvalidFeaturePropertiesException
+
+
+Module Contents
+---------------
+
+.. py:exception:: FeatureDistillationException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: InvalidFeaturePropertiesException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+

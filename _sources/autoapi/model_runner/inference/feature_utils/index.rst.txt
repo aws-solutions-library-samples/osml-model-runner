@@ -1,0 +1,107 @@
+model_runner.inference.feature_utils
+====================================
+
+.. py:module:: model_runner.inference.feature_utils
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.inference.feature_utils.logger
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   model_runner.inference.feature_utils.features_to_image_shapes
+   model_runner.inference.feature_utils.convert_nested_coordinate_lists
+   model_runner.inference.feature_utils.calculate_processing_bounds
+   model_runner.inference.feature_utils.get_source_property
+   model_runner.inference.feature_utils.get_extents
+   model_runner.inference.feature_utils.add_properties_to_features
+   model_runner.inference.feature_utils.get_inference_metadata_property
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:function:: features_to_image_shapes(sensor_model: aws.osml.photogrammetry.SensorModel, features: List[geojson.Feature], skip: Optional[bool] = True) -> List[shapely.geometry.base.BaseGeometry]
+
+   Convert geojson objects/shapes to shapely shapes
+
+   :param sensor_model: SensorModel = the model to use for the transform
+   :param features: List[geojson.Features] = the features to convert
+   :param skip: bool =  Raise an exception when a feature can't be transformed to a shape, defaults True.
+
+   :return: List[BaseGeometry] = a list of shapely shapes
+
+   :raises: ValueError = Indicates one or more features could not be transformed to shapes
+
+
+.. py:function:: convert_nested_coordinate_lists(coordinates_or_lists: List, conversion_function: Callable) -> Union[Tuple, List]
+
+   Convert a nested list of coordinates to 3D world GIS coordinates
+
+   :param coordinates_or_lists: List = a coordinate or list of coordinates to transform
+   :param conversion_function: Callable = the function to use for the GIS transform
+
+   :return: Union[Tuple, List] = the transformed list of coordinates
+
+
+.. py:function:: calculate_processing_bounds(ds: osgeo.gdal.Dataset, roi: Optional[shapely.geometry.base.BaseGeometry], sensor_model: Optional[aws.osml.photogrammetry.SensorModel]) -> Optional[Tuple[aws.osml.model_runner.common.ImageDimensions, aws.osml.model_runner.common.ImageDimensions]]
+
+   An area of interest converter
+
+   :param ds: gdal.Dataset = GDAL dataset
+   :param roi: Optional[BaseGeometry] = ROI shape
+   :param sensor_model: Optional[SensorModel] = Sensor model to use for transformations
+
+   :return: Optional[Tuple[ImageDimensions, ImageDimensions]] = Image dimensions associated with the ROI request
+
+
+.. py:function:: get_source_property(image_location: str, image_extension: str, dataset: osgeo.gdal.Dataset) -> Optional[Dict]
+
+   Get the source property from NITF image
+
+   :param image_location: the location of the source image
+   :param image_extension: the file extension type of the source image
+   :param dataset: the GDAL dataset to probe for source data
+
+   :return: the source dictionary property to attach to features
+
+
+.. py:function:: get_extents(ds: osgeo.gdal.Dataset, sm: aws.osml.photogrammetry.SensorModel) -> Dict[str, Any]
+
+   Returns the geographic extents of the given GDAL dataset.
+
+   :param ds: GDAL dataset.
+   :param sm: OSML Sensor Model imputed for dataset
+   :return: Dictionary with keys 'north', 'south', 'east', 'west' representing the extents.
+
+
+.. py:function:: add_properties_to_features(job_id: str, feature_properties: str, features: List[geojson.Feature]) -> List[geojson.Feature]
+
+   Add arbitrary and controlled property dictionaries to geojson feature properties
+   :param job_id: str = unique identifier for the job
+   :param feature_properties: str = additional feature properties or metadata from the image processing
+   :param features: List[geojson.Feature] = the list of features to update
+
+   :return: List[geojson.Feature] = updated list of features
+
+
+.. py:function:: get_inference_metadata_property(job_id: str, inference_time: str) -> Dict[str, Any]
+
+   Create an inference dictionary property to append to geojson features
+
+   :param job_id: str = unique identifier for the job
+   :param inference_time: str = the time the inference was made in epoch millisec
+
+   :return: Dict[str, Any] = an inference metadata dictionary property to attach to features
+
+

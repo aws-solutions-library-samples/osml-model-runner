@@ -1,0 +1,34 @@
+model_runner.api.exceptions
+===========================
+
+.. py:module:: model_runner.api.exceptions
+
+
+Exceptions
+----------
+
+.. autoapisummary::
+
+   model_runner.api.exceptions.InvalidImageRequestException
+   model_runner.api.exceptions.InvalidS3ObjectException
+
+
+Module Contents
+---------------
+
+.. py:exception:: InvalidImageRequestException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: InvalidS3ObjectException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+

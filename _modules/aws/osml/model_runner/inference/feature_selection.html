@@ -1,0 +1,325 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.inference.feature_selection &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.inference.feature_selection</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.model_runner.inference.feature_selection</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span> <span class="nn">ensemble_boxes</span> <span class="kn">import</span> <span class="n">nms</span><span class="p">,</span> <span class="n">soft_nms</span>
+<span class="kn">from</span> <span class="nn">geojson</span> <span class="kn">import</span> <span class="n">Feature</span>
+
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.common</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FeatureDistillationAlgorithm</span><span class="p">,</span>
+    <span class="n">FeatureDistillationAlgorithmType</span><span class="p">,</span>
+    <span class="n">get_feature_image_bounds</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.inference.exceptions</span> <span class="kn">import</span> <span class="n">FeatureDistillationException</span>
+
+
+<div class="viewcode-block" id="FeatureSelector">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.inference.feature_selection.html#aws.osml.model_runner.inference.feature_selection.FeatureSelector">[docs]</a>
+<span class="k">class</span> <span class="nc">FeatureSelector</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The FeatureSelector class is used to select a subset of geojson features from a larger set</span>
+<span class="sd">    using an algorith such as NMS or Soft NMS.  Parameters such as thresholds and the algorithm</span>
+<span class="sd">    to use can be set by passing a FeatureSelectionOptions object in when the FeatureSelector</span>
+<span class="sd">    is instantiated.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">FeatureDistillationAlgorithm</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructor for FeatureSelector class that selects an algorithm (e.g. NMS, Soft NMS, etc.) and sets parameters</span>
+<span class="sd">        specific to each algorithm (e.g. IoU threshold).</span>
+
+<span class="sd">        :param options: FeatureSelectionOptions = options to use to set the algorithm, thresholds, and parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">options</span>
+
+<div class="viewcode-block" id="FeatureSelector.select_features">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.inference.feature_selection.html#aws.osml.model_runner.inference.feature_selection.FeatureSelector.select_features">[docs]</a>
+    <span class="k">def</span> <span class="nf">select_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Selects a subset of features from a larger set of features using an algorithm such as NMS or Soft NMS.</span>
+
+<span class="sd">        :param feature_list: a list of geojson features with a property of bounds_imcoords</span>
+<span class="sd">        :return: the filtered list of features</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">feature_list</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">feature_list</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">feature_list</span>
+        <span class="n">boxes_list</span><span class="p">,</span> <span class="n">scores_list</span><span class="p">,</span> <span class="n">labels_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_lists_from_features</span><span class="p">(</span><span class="n">feature_list</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">algorithm_type</span> <span class="o">==</span> <span class="n">FeatureDistillationAlgorithmType</span><span class="o">.</span><span class="n">SOFT_NMS</span><span class="p">:</span>
+            <span class="n">boxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">soft_nms</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">boxes_list</span><span class="p">],</span>
+                <span class="p">[</span><span class="n">scores_list</span><span class="p">],</span>
+                <span class="p">[</span><span class="n">labels_list</span><span class="p">],</span>
+                <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">iou_thr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">iou_threshold</span><span class="p">,</span>
+                <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span>
+                <span class="n">thresh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">skip_box_threshold</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">algorithm_type</span> <span class="o">==</span> <span class="n">FeatureDistillationAlgorithmType</span><span class="o">.</span><span class="n">NMS</span><span class="p">:</span>
+            <span class="n">boxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">nms</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">boxes_list</span><span class="p">],</span> <span class="p">[</span><span class="n">scores_list</span><span class="p">],</span> <span class="p">[</span><span class="n">labels_list</span><span class="p">],</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iou_thr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">iou_threshold</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FeatureDistillationException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid feature distillation algorithm: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">algorithm_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_features_from_lists</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_get_lists_from_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">List</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function converts the GeoJSON features into lists of normalized bounding boxes, scores, and label IDs</span>
+<span class="sd">        needed by the selection algorithm implementations. As a side effect of this function various class attributes</span>
+<span class="sd">        are set to support the inverse mapping of algorithm primitives to the full features. See</span>
+<span class="sd">        _get_features_from_lists for the inverse function.</span>
+
+<span class="sd">        :param feature_list: the input set of GeoJSON features to preprocess</span>
+<span class="sd">        :return: tuple of lists - bounding boxes, confidence scores, category labels</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">boxes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">categories</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extents</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>  <span class="c1"># [min_x, min_y, max_x, max_y]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_id_map</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels_map</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">feature_list</span><span class="p">:</span>
+            <span class="c1"># [min_x, min_y, max_x, max_y]</span>
+            <span class="n">bounds_imcoords</span> <span class="o">=</span> <span class="n">get_feature_image_bounds</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+
+            <span class="c1"># This is a workaround for assumptions made by the NMS library and normalization code in this class.</span>
+            <span class="c1"># All of that code assumes that features have bounding boxes with a non-zero area. That assumption</span>
+            <span class="c1"># does not hold for features reported as a single point geometry or others that might simply be</span>
+            <span class="c1"># erroneously reported with a zero width or height bbox. No matter the cause, we would like those</span>
+            <span class="c1"># features to pass through our feature selection processing without triggering errors. Here we</span>
+            <span class="c1"># add 0.1 of a pixel to the width or height of any bbox if it is currently zero. This does not change</span>
+            <span class="c1"># the actual reported geometry of the feature in any way it just ensures the assumption of a non-zero</span>
+            <span class="c1"># area is true.</span>
+            <span class="n">bounds_imcoords</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">bounds_imcoords</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">bounds_imcoords</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">bounds_imcoords</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="k">if</span> <span class="n">bounds_imcoords</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">bounds_imcoords</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">else</span> <span class="n">bounds_imcoords</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                <span class="n">bounds_imcoords</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="k">if</span> <span class="n">bounds_imcoords</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">bounds_imcoords</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="k">else</span> <span class="n">bounds_imcoords</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+            <span class="p">)</span>
+
+            <span class="n">category</span><span class="p">,</span> <span class="n">score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_category_and_score_from_feature</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+            <span class="n">boxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bounds_imcoords</span><span class="p">)</span>
+            <span class="n">categories</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">category</span><span class="p">)</span>
+            <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">score</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">bounds_imcoords</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">bounds_imcoords</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">bounds_imcoords</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">bounds_imcoords</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">bounds_imcoords</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">bounds_imcoords</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">bounds_imcoords</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">bounds_imcoords</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+            <span class="n">bounds_imcoords_rounded</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">coord</span><span class="p">))</span> <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="n">bounds_imcoords</span><span class="p">]</span>
+            <span class="n">feature_hash_id</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">bounds_imcoords_rounded</span><span class="p">)</span> <span class="o">+</span> <span class="n">category</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feature_id_map</span><span class="p">[</span><span class="n">feature_hash_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">feature</span>
+        <span class="n">unique_categories</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">categories</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">unique_category</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">unique_categories</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">labels_map</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)]</span> <span class="o">=</span> <span class="n">unique_category</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">labels_map</span><span class="p">[</span><span class="n">unique_category</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="n">labels_indexes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">category</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span> <span class="k">for</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">categories</span><span class="p">]</span>
+        <span class="n">normalized_boxes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalize_boxes</span><span class="p">(</span><span class="n">boxes</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">normalized_boxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels_indexes</span>
+
+    <span class="k">def</span> <span class="nf">_normalize_boxes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">boxes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function normalizes the bounding boxes by subtracting the minimum x and y coordinates from each</span>
+<span class="sd">        coordinate and dividing by the range of x and y coordinates. That means that all bounding boxes coordinates</span>
+<span class="sd">        will be in the range of [0.0, 1.0] where 0.0 is the minimum of the extent and 1.0 is the maximum. See</span>
+<span class="sd">        _denormalize_boxes() to convert back to bboxes in pixel coordinates.</span>
+
+<span class="sd">        :param boxes: the list of bounding boxes to normalize</span>
+<span class="sd">        :return: the normalized list of bounding boxes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># boxes: [x1, y1, x2, y2]</span>
+        <span class="n">min_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">min_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">x_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">y_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">normalized_boxes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">boxes</span><span class="p">:</span>
+            <span class="n">x1_norm</span> <span class="o">=</span> <span class="p">(</span><span class="n">box</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">min_x</span><span class="p">)</span> <span class="o">/</span> <span class="n">x_range</span>
+            <span class="n">y1_norm</span> <span class="o">=</span> <span class="p">(</span><span class="n">box</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">min_y</span><span class="p">)</span> <span class="o">/</span> <span class="n">y_range</span>
+            <span class="n">x2_norm</span> <span class="o">=</span> <span class="p">(</span><span class="n">box</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">min_x</span><span class="p">)</span> <span class="o">/</span> <span class="n">x_range</span>
+            <span class="n">y2_norm</span> <span class="o">=</span> <span class="p">(</span><span class="n">box</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">min_y</span><span class="p">)</span> <span class="o">/</span> <span class="n">y_range</span>
+            <span class="n">normalized_boxes</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">x1_norm</span><span class="p">,</span> <span class="n">y1_norm</span><span class="p">,</span> <span class="n">x2_norm</span><span class="p">,</span> <span class="n">y2_norm</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">normalized_boxes</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_category_and_score_from_feature</span><span class="p">(</span><span class="n">feature</span><span class="p">:</span> <span class="n">Feature</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the feature class with the highest score from the featureClasses property.</span>
+
+<span class="sd">        :return: tuple of feature class and highest score</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">max_score</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
+        <span class="n">max_class</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">feature_class</span> <span class="ow">in</span> <span class="n">feature</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;properties&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;featureClasses&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="k">if</span> <span class="n">feature_class</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;score&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_score</span><span class="p">:</span>
+                <span class="n">max_score</span> <span class="o">=</span> <span class="n">feature_class</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;score&quot;</span><span class="p">)</span>
+                <span class="n">max_class</span> <span class="o">=</span> <span class="n">feature_class</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;iri&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">max_class</span><span class="p">,</span> <span class="n">max_score</span>
+
+    <span class="k">def</span> <span class="nf">_get_features_from_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">boxes</span><span class="p">:</span> <span class="n">List</span><span class="p">,</span> <span class="n">scores</span><span class="p">:</span> <span class="n">List</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">List</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function consolidates the lists of bounding boxes, scores, and labels into the GeoJSON features.</span>
+<span class="sd">        This happens by finding the feature with a matching bounding box and category in the original feature list</span>
+<span class="sd">        and updating the score if necessary. Any features that were in the original feature list that were not</span>
+<span class="sd">        in the input lists end up filtered out of the result.</span>
+
+<span class="sd">        :param boxes: the normalized bounding boxes for the features</span>
+<span class="sd">        :param scores: the updated scores for each bounding box</span>
+<span class="sd">        :param labels: the labels for each bounding box</span>
+<span class="sd">        :return: the refined list of GeoJSON features</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">im_boxes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_denormalize_boxes</span><span class="p">(</span><span class="n">boxes</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">box</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">im_boxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+            <span class="n">category</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">label</span><span class="p">))</span>
+            <span class="n">feature_hash_id</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">box</span><span class="p">)</span> <span class="o">+</span> <span class="n">category</span><span class="p">)</span>
+            <span class="n">feature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_id_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">feature_hash_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">feature</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">algorithm_type</span> <span class="o">==</span> <span class="n">FeatureDistillationAlgorithmType</span><span class="o">.</span><span class="n">SOFT_NMS</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">feature_class</span> <span class="ow">in</span> <span class="n">feature</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;properties&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;featureClasses&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+                        <span class="k">if</span> <span class="n">feature_class</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;iri&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">category</span><span class="p">:</span>
+                            <span class="n">feature_class</span><span class="p">[</span><span class="s2">&quot;rawScore&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">feature_class</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;score&quot;</span><span class="p">)</span>
+                            <span class="n">feature_class</span><span class="p">[</span><span class="s2">&quot;score&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">score</span>
+                <span class="n">features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">features</span>
+
+    <span class="k">def</span> <span class="nf">_denormalize_boxes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">boxes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function denormalizes the bounding boxes by multiplying each coordinate by the width or height</span>
+<span class="sd">        of the extent and then adding in the extent minimums. That puts all bounding boxes back into the</span>
+<span class="sd">        image coordinate space. This is the inverse of _normalize_boxes().</span>
+
+<span class="sd">        :param boxes: the list of bounding boxes to denormalize</span>
+<span class="sd">        :return: the denormalized list of bounding boxes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># boxes: [x1, y1, x2, y2]</span>
+        <span class="n">min_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">min_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">x_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">y_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">extents</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">denormalized_boxes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">boxes</span><span class="p">:</span>
+            <span class="n">x1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">box</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">x_range</span> <span class="o">+</span> <span class="n">min_x</span><span class="p">))</span>
+            <span class="n">y1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">box</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">y_range</span> <span class="o">+</span> <span class="n">min_y</span><span class="p">))</span>
+            <span class="n">x2</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">box</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">x_range</span> <span class="o">+</span> <span class="n">min_x</span><span class="p">))</span>
+            <span class="n">y2</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">box</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">y_range</span> <span class="o">+</span> <span class="n">min_y</span><span class="p">))</span>
+            <span class="n">denormalized_boxes</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">denormalized_boxes</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

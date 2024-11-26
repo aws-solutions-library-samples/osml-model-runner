@@ -1,0 +1,123 @@
+model_runner.database.endpoint_statistics_table
+===============================================
+
+.. py:module:: model_runner.database.endpoint_statistics_table
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.database.endpoint_statistics_table.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.database.endpoint_statistics_table.EndpointStatisticsItem
+   model_runner.database.endpoint_statistics_table.EndpointStatisticsTable
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:class:: EndpointStatisticsItem
+
+   Bases: :py:obj:`model_runner.database.ddb_helper.DDBItem`
+
+
+   EndpointStatistics is a dataclass meant to represent a single item in the
+   EndpointStatisticsTable
+
+   The data schema is defined as follows:
+   endpoint: str = the Sagemaker endpoint to which the statistics pertain
+   regions_in_progress: int = the number of regions currently being processed
+       for the associated endpoint
+   max_regions: int = the maximum number of regions that an endpoint can concurrently
+       process before region requests should be throttled
+
+
+   .. py:attribute:: endpoint
+      :type:  str
+
+
+   .. py:attribute:: regions_in_progress
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: max_regions
+      :type:  int
+      :value: 0
+
+
+
+   .. py:method:: __post_init__()
+
+
+.. py:class:: EndpointStatisticsTable(table_name: str)
+
+   Bases: :py:obj:`model_runner.database.ddb_helper.DDBHelper`
+
+
+   EndpointStatisticsTable is a class meant to help OSML with accessing and interacting with
+   the per endpoints processing statistics we track as part of the endpoint statistics table.
+   It extends the DDBHelper class and provides its own item data class for use when
+   working with items from the table. It also sets the key for which we index on this table
+   in the constructor.
+
+   :param table_name: str = the name of the table to interact with
+
+   :return: None
+
+
+   .. py:method:: upsert_endpoint(endpoint: str, max_regions: int) -> None
+
+      Upserts an endpoint statistics entry. If the endpoint is already being
+      tracked then we update the max_region count for the existing entry. If an
+      endpoint is scaled up or down or the associated instance type changes the
+      maximum number of concurrent regions may change.
+
+      :param endpoint: str = Sagemaker endpoint name
+      :param max_regions: int = current max concurrent regions the endpoint can process
+
+      :return: None
+
+
+
+   .. py:method:: increment_region_count(endpoint: str) -> None
+
+      Increases the in progress regions for the specified endpoint by 1.
+
+      :param endpoint: str = Sagemaker endpoint name
+
+      :return: None
+
+
+
+   .. py:method:: decrement_region_count(endpoint: str) -> None
+
+      Decreases the in progress regions for the specified endpoint by 1.
+
+      :param endpoint: str = Sagemaker endpoint name
+
+      :return: None
+
+
+
+   .. py:method:: current_in_progress_regions(endpoint: str) -> int
+
+      Retrieve the current number of in progress regions for the specified endpoint
+
+      :param endpoint: str = Sagemaker endpoint name
+
+      :return: int = current number of in progress regions
+
+
+

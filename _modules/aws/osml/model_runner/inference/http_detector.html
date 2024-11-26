@@ -1,0 +1,344 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.inference.http_detector &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.inference.http_detector</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.model_runner.inference.http_detector</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">BufferedReader</span>
+<span class="kn">from</span> <span class="nn">json</span> <span class="kn">import</span> <span class="n">JSONDecodeError</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">geojson</span>
+<span class="kn">import</span> <span class="nn">urllib3</span>
+<span class="kn">from</span> <span class="nn">aws_embedded_metrics.logger.metrics_logger</span> <span class="kn">import</span> <span class="n">MetricsLogger</span>
+<span class="kn">from</span> <span class="nn">aws_embedded_metrics.metric_scope</span> <span class="kn">import</span> <span class="n">metric_scope</span>
+<span class="kn">from</span> <span class="nn">aws_embedded_metrics.unit</span> <span class="kn">import</span> <span class="n">Unit</span>
+<span class="kn">from</span> <span class="nn">geojson</span> <span class="kn">import</span> <span class="n">FeatureCollection</span>
+<span class="kn">from</span> <span class="nn">requests.exceptions</span> <span class="kn">import</span> <span class="n">RetryError</span>
+<span class="kn">from</span> <span class="nn">urllib3.exceptions</span> <span class="kn">import</span> <span class="n">MaxRetryError</span>
+<span class="kn">from</span> <span class="nn">urllib3.util.retry</span> <span class="kn">import</span> <span class="n">Retry</span>
+
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.api</span> <span class="kn">import</span> <span class="n">ModelInvokeMode</span>
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.app_config</span> <span class="kn">import</span> <span class="n">MetricLabels</span>
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.common</span> <span class="kn">import</span> <span class="n">Timer</span>
+
+<span class="kn">from</span> <span class="nn">.detector</span> <span class="kn">import</span> <span class="n">Detector</span>
+<span class="kn">from</span> <span class="nn">.endpoint_builder</span> <span class="kn">import</span> <span class="n">FeatureEndpointBuilder</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CountingRetry">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.inference.http_detector.html#aws.osml.model_runner.inference.http_detector.CountingRetry">[docs]</a>
+<span class="k">class</span> <span class="nc">CountingRetry</span><span class="p">(</span><span class="n">urllib3</span><span class="o">.</span><span class="n">Retry</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A custom Retry class that counts the number of retries during HTTP requests.</span>
+<span class="sd">    Inherits from urllib3&#39;s Retry class to implement retry logic with an additional retry count.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the CountingRetry class with retry settings.</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CountingRetry</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">retry_counts</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="CountingRetry.increment">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.inference.http_detector.html#aws.osml.model_runner.inference.http_detector.CountingRetry.increment">[docs]</a>
+    <span class="k">def</span> <span class="nf">increment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Retry</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Increments the retry count and calls the parent class&#39;s increment method.</span>
+
+<span class="sd">        :return: Retry = A Retry object with updated retry count.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">CountingRetry</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">increment</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">retry_counts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">retry_counts</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="CountingRetry.from_retry">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.inference.http_detector.html#aws.osml.model_runner.inference.http_detector.CountingRetry.from_retry">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_retry</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">retry_instance</span><span class="p">:</span> <span class="n">Retry</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CountingRetry&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a CountingRetry instance from an existing Retry instance.</span>
+
+<span class="sd">        :param retry_instance: Retry = The Retry instance to convert.</span>
+<span class="sd">        :return: CountingRetry = A new CountingRetry object with the same configurations as the provided Retry instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">retry_instance</span><span class="p">,</span> <span class="bp">cls</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">retry_instance</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">total</span><span class="o">=</span><span class="n">retry_instance</span><span class="o">.</span><span class="n">total</span><span class="p">,</span>
+            <span class="n">connect</span><span class="o">=</span><span class="n">retry_instance</span><span class="o">.</span><span class="n">connect</span><span class="p">,</span>
+            <span class="n">read</span><span class="o">=</span><span class="n">retry_instance</span><span class="o">.</span><span class="n">read</span><span class="p">,</span>
+            <span class="n">redirect</span><span class="o">=</span><span class="n">retry_instance</span><span class="o">.</span><span class="n">redirect</span><span class="p">,</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">retry_instance</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+            <span class="n">other</span><span class="o">=</span><span class="n">retry_instance</span><span class="o">.</span><span class="n">other</span><span class="p">,</span>
+            <span class="n">allowed_methods</span><span class="o">=</span><span class="n">retry_instance</span><span class="o">.</span><span class="n">allowed_methods</span><span class="p">,</span>
+            <span class="n">status_forcelist</span><span class="o">=</span><span class="n">retry_instance</span><span class="o">.</span><span class="n">status_forcelist</span><span class="p">,</span>
+            <span class="n">backoff_factor</span><span class="o">=</span><span class="n">retry_instance</span><span class="o">.</span><span class="n">backoff_factor</span><span class="p">,</span>
+            <span class="n">raise_on_redirect</span><span class="o">=</span><span class="n">retry_instance</span><span class="o">.</span><span class="n">raise_on_redirect</span><span class="p">,</span>
+            <span class="n">raise_on_status</span><span class="o">=</span><span class="n">retry_instance</span><span class="o">.</span><span class="n">raise_on_status</span><span class="p">,</span>
+            <span class="n">history</span><span class="o">=</span><span class="n">retry_instance</span><span class="o">.</span><span class="n">history</span><span class="p">,</span>
+            <span class="n">respect_retry_after_header</span><span class="o">=</span><span class="n">retry_instance</span><span class="o">.</span><span class="n">respect_retry_after_header</span><span class="p">,</span>
+            <span class="n">remove_headers_on_redirect</span><span class="o">=</span><span class="n">retry_instance</span><span class="o">.</span><span class="n">remove_headers_on_redirect</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="HTTPDetector">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.inference.http_detector.html#aws.osml.model_runner.inference.http_detector.HTTPDetector">[docs]</a>
+<span class="k">class</span> <span class="nc">HTTPDetector</span><span class="p">(</span><span class="n">Detector</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    HTTPDetector is responsible for invoking HTTP-based model endpoints to run model inference.</span>
+
+<span class="sd">    This class interacts with a model endpoint over HTTP to send a payload for feature detection and retrieves</span>
+<span class="sd">    geojson-formatted feature detection results. It supports retry logic with exponential backoff for network-related</span>
+<span class="sd">    issues.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">retry</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">urllib3</span><span class="o">.</span><span class="n">Retry</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the HTTPDetector with the model endpoint URL, optional name, and retry policy.</span>
+
+<span class="sd">        :param endpoint: str = The full URL of the model endpoint to invoke.</span>
+<span class="sd">        :param name: Optional[str] = A name for the model endpoint.</span>
+<span class="sd">        :param retry: Optional[Retry] = Retry policy for network requests.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">retry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">retry</span> <span class="o">=</span> <span class="n">CountingRetry</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">backoff_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">raise_on_status</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">retry</span> <span class="o">=</span> <span class="n">CountingRetry</span><span class="o">.</span><span class="n">from_retry</span><span class="p">(</span><span class="n">retry</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">http_pool</span> <span class="o">=</span> <span class="n">urllib3</span><span class="o">.</span><span class="n">PoolManager</span><span class="p">(</span><span class="n">cert_reqs</span><span class="o">=</span><span class="s2">&quot;CERT_NONE&quot;</span><span class="p">,</span> <span class="n">retries</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">retry</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">or</span> <span class="s2">&quot;http&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">endpoint</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelInvokeMode</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Defines the invocation mode for the detector as HTTP endpoint.</span>
+
+<span class="sd">        :return: ModelInvokeMode.HTTP_ENDPOINT</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ModelInvokeMode</span><span class="o">.</span><span class="n">HTTP_ENDPOINT</span>
+
+<div class="viewcode-block" id="HTTPDetector.find_features">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.inference.http_detector.html#aws.osml.model_runner.inference.http_detector.HTTPDetector.find_features">[docs]</a>
+    <span class="nd">@metric_scope</span>
+    <span class="k">def</span> <span class="nf">find_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="n">BufferedReader</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">MetricsLogger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FeatureCollection</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Invokes the HTTP model endpoint to detect features from the given payload.</span>
+
+<span class="sd">        This method sends a payload to the HTTP model endpoint and retrieves feature detection results</span>
+<span class="sd">        in the form of a geojson FeatureCollection. If configured, it logs metrics about the invocation process.</span>
+
+<span class="sd">        :param payload: BufferedReader = The data to be sent to the HTTP model for feature detection.</span>
+<span class="sd">        :param metrics: MetricsLogger = The metrics logger to capture system performance and log metrics.</span>
+
+<span class="sd">        :return: FeatureCollection = A geojson FeatureCollection containing the detected features.</span>
+
+<span class="sd">        :raises RetryError: Raised if the request fails after retries.</span>
+<span class="sd">        :raises MaxRetryError: Raised if the maximum retry attempts are reached.</span>
+<span class="sd">        :raises JSONDecodeError: Raised if there is an error decoding the model&#39;s response.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invoking Model: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">set_dimensions</span><span class="p">()</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_dimensions</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">OPERATION_DIMENSION</span><span class="p">:</span> <span class="n">MetricLabels</span><span class="o">.</span><span class="n">MODEL_INVOCATION_OPERATION</span><span class="p">,</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">MODEL_NAME_DIMENSION</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">request_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">INVOCATIONS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+
+            <span class="k">with</span> <span class="n">Timer</span><span class="p">(</span>
+                <span class="n">task_str</span><span class="o">=</span><span class="s2">&quot;Invoke HTTP Endpoint&quot;</span><span class="p">,</span>
+                <span class="n">metric_name</span><span class="o">=</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">DURATION</span><span class="p">,</span>
+                <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span>
+                <span class="n">metrics_logger</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">http_pool</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
+                    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;POST&quot;</span><span class="p">,</span>
+                    <span class="n">url</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endpoint</span><span class="p">,</span>
+                    <span class="n">body</span><span class="o">=</span><span class="n">payload</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">retry_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">retry</span><span class="o">.</span><span class="n">retry_counts</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+                    <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">RETRIES</span><span class="p">,</span> <span class="n">retry_count</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+
+                <span class="k">return</span> <span class="n">geojson</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+
+        <span class="k">except</span> <span class="n">RetryError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">ERRORS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Retry failed - failed due to </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">err</span>
+        <span class="k">except</span> <span class="n">MaxRetryError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">ERRORS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Max retries reached - failed due to </span><span class="si">{</span><span class="n">err</span><span class="o">.</span><span class="n">reason</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">err</span>
+        <span class="k">except</span> <span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">ERRORS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Unable to decode response from model. URL: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">endpoint</span><span class="si">}</span><span class="s2">, Status: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">, &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Headers: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">info</span><span class="p">()</span><span class="si">}</span><span class="s2">, Response: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">data</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">err</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="HTTPDetectorBuilder">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.inference.http_detector.html#aws.osml.model_runner.inference.http_detector.HTTPDetectorBuilder">[docs]</a>
+<span class="k">class</span> <span class="nc">HTTPDetectorBuilder</span><span class="p">(</span><span class="n">FeatureEndpointBuilder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    HTTPDetectorBuilder is responsible for building an HTTPDetector configured with an HTTP model endpoint.</span>
+
+<span class="sd">    This builder constructs an HTTPDetector instance that can send payloads to HTTP-based model endpoints for feature</span>
+<span class="sd">    detection.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the HTTPDetectorBuilder with the model endpoint URL.</span>
+
+<span class="sd">        :param endpoint: str = The full URL of the model endpoint to be used.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">endpoint</span> <span class="o">=</span> <span class="n">endpoint</span>
+
+<div class="viewcode-block" id="HTTPDetectorBuilder.build">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.inference.http_detector.html#aws.osml.model_runner.inference.http_detector.HTTPDetectorBuilder.build">[docs]</a>
+    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Detector</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Builds and returns an HTTPDetector based on the configured parameters.</span>
+
+<span class="sd">        :return: Optional[Detector] = An HTTPDetector instance configured for the specified HTTP model endpoint.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">HTTPDetector</span><span class="p">(</span>
+            <span class="n">endpoint</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endpoint</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

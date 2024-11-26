@@ -1,0 +1,276 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.inference.sm_detector &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.inference.sm_detector</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.model_runner.inference.sm_detector</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">BufferedReader</span>
+<span class="kn">from</span> <span class="nn">json</span> <span class="kn">import</span> <span class="n">JSONDecodeError</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">boto3</span>
+<span class="kn">import</span> <span class="nn">geojson</span>
+<span class="kn">from</span> <span class="nn">aws_embedded_metrics.logger.metrics_logger</span> <span class="kn">import</span> <span class="n">MetricsLogger</span>
+<span class="kn">from</span> <span class="nn">aws_embedded_metrics.metric_scope</span> <span class="kn">import</span> <span class="n">metric_scope</span>
+<span class="kn">from</span> <span class="nn">aws_embedded_metrics.unit</span> <span class="kn">import</span> <span class="n">Unit</span>
+<span class="kn">from</span> <span class="nn">botocore.exceptions</span> <span class="kn">import</span> <span class="n">ClientError</span>
+<span class="kn">from</span> <span class="nn">geojson</span> <span class="kn">import</span> <span class="n">FeatureCollection</span>
+
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.api</span> <span class="kn">import</span> <span class="n">ModelInvokeMode</span>
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.app_config</span> <span class="kn">import</span> <span class="n">BotoConfig</span><span class="p">,</span> <span class="n">MetricLabels</span>
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.common</span> <span class="kn">import</span> <span class="n">Timer</span>
+
+<span class="kn">from</span> <span class="nn">.detector</span> <span class="kn">import</span> <span class="n">Detector</span>
+<span class="kn">from</span> <span class="nn">.endpoint_builder</span> <span class="kn">import</span> <span class="n">FeatureEndpointBuilder</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SMDetector">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.inference.sm_detector.html#aws.osml.model_runner.inference.sm_detector.SMDetector">[docs]</a>
+<span class="k">class</span> <span class="nc">SMDetector</span><span class="p">(</span><span class="n">Detector</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    SMDetector is responsible for invoking SageMaker endpoints to run model inference for feature detection.</span>
+
+<span class="sd">    This class interacts with SageMaker runtime to send a payload for model inference and receive geojson-formatted</span>
+<span class="sd">    feature detection results. It supports both managed AWS endpoints and cross-account invocation using</span>
+<span class="sd">    provided IAM credentials.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">assumed_credentials</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the SMDetector with the SageMaker endpoint and optional credentials.</span>
+
+<span class="sd">        :param endpoint: str = The name of the SageMaker endpoint to invoke.</span>
+<span class="sd">        :param assumed_credentials: Dict[str, str] = Optional credentials for invoking the SageMaker model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">assumed_credentials</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Use the provided credentials to invoke SageMaker endpoints in another AWS account.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sm_client</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">client</span><span class="p">(</span>
+                <span class="s2">&quot;sagemaker-runtime&quot;</span><span class="p">,</span>
+                <span class="n">config</span><span class="o">=</span><span class="n">BotoConfig</span><span class="o">.</span><span class="n">sagemaker</span><span class="p">,</span>
+                <span class="n">aws_access_key_id</span><span class="o">=</span><span class="n">assumed_credentials</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;AccessKeyId&quot;</span><span class="p">),</span>
+                <span class="n">aws_secret_access_key</span><span class="o">=</span><span class="n">assumed_credentials</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SecretAccessKey&quot;</span><span class="p">),</span>
+                <span class="n">aws_session_token</span><span class="o">=</span><span class="n">assumed_credentials</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SessionToken&quot;</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Use the default role for this container if no specific credentials are provided.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sm_client</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">client</span><span class="p">(</span><span class="s2">&quot;sagemaker-runtime&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">BotoConfig</span><span class="o">.</span><span class="n">sagemaker</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">endpoint</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelInvokeMode</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Defines the invocation mode for the detector as SageMaker endpoint.</span>
+
+<span class="sd">        :return: ModelInvokeMode.SM_ENDPOINT</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ModelInvokeMode</span><span class="o">.</span><span class="n">SM_ENDPOINT</span>
+
+<div class="viewcode-block" id="SMDetector.find_features">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.inference.sm_detector.html#aws.osml.model_runner.inference.sm_detector.SMDetector.find_features">[docs]</a>
+    <span class="nd">@metric_scope</span>
+    <span class="k">def</span> <span class="nf">find_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="n">BufferedReader</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">MetricsLogger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FeatureCollection</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Invokes the SageMaker model endpoint to detect features from the given payload.</span>
+
+<span class="sd">        This method sends a payload to the SageMaker model endpoint and retrieves feature detection results</span>
+<span class="sd">        in the form of a geojson FeatureCollection. If configured, it logs metrics about the invocation process.</span>
+
+<span class="sd">        :param payload: BufferedReader = The data to be sent to the SageMaker model for feature detection.</span>
+<span class="sd">        :param metrics: MetricsLogger = The metrics logger to capture system performance and log metrics.</span>
+
+<span class="sd">        :return: FeatureCollection = A geojson FeatureCollection containing the detected features.</span>
+
+<span class="sd">        :raises ClientError: Raised if there is an error while invoking the SageMaker endpoint.</span>
+<span class="sd">        :raises JSONDecodeError: Raised if there is an error decoding the model&#39;s response.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invoking Model: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">endpoint</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">set_dimensions</span><span class="p">()</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_dimensions</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">OPERATION_DIMENSION</span><span class="p">:</span> <span class="n">MetricLabels</span><span class="o">.</span><span class="n">MODEL_INVOCATION_OPERATION</span><span class="p">,</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">MODEL_NAME_DIMENSION</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">endpoint</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">request_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">INVOCATIONS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+
+            <span class="k">with</span> <span class="n">Timer</span><span class="p">(</span>
+                <span class="n">task_str</span><span class="o">=</span><span class="s2">&quot;Invoke SM Endpoint&quot;</span><span class="p">,</span>
+                <span class="n">metric_name</span><span class="o">=</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">DURATION</span><span class="p">,</span>
+                <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span>
+                <span class="n">metrics_logger</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="c1"># Invoke the real SageMaker model endpoint</span>
+                <span class="n">model_response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sm_client</span><span class="o">.</span><span class="n">invoke_endpoint</span><span class="p">(</span><span class="n">EndpointName</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">Body</span><span class="o">=</span><span class="n">payload</span><span class="p">)</span>
+                <span class="n">retry_count</span> <span class="o">=</span> <span class="n">model_response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ResponseMetadata&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;RetryAttempts&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+                    <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">RETRIES</span><span class="p">,</span> <span class="n">retry_count</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+
+                <span class="c1"># Parse the model&#39;s response as a geojson FeatureCollection</span>
+                <span class="k">return</span> <span class="n">geojson</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">model_response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Body&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+
+        <span class="k">except</span> <span class="n">ClientError</span> <span class="k">as</span> <span class="n">ce</span><span class="p">:</span>
+            <span class="n">error_code</span> <span class="o">=</span> <span class="n">ce</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Error&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Code&quot;</span><span class="p">)</span>
+            <span class="n">http_status_code</span> <span class="o">=</span> <span class="n">ce</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ResponseMetadata&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;HTTPStatusCode&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">ERRORS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Unable to get detections from model - HTTP Status Code: </span><span class="si">{</span><span class="n">http_status_code</span><span class="si">}</span><span class="s2">, Error Code: </span><span class="si">{</span><span class="n">error_code</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">ce</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ce</span>
+        <span class="k">except</span> <span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">de</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">ERRORS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Unable to decode response from model.&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">de</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">de</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="SMDetectorBuilder">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.inference.sm_detector.html#aws.osml.model_runner.inference.sm_detector.SMDetectorBuilder">[docs]</a>
+<span class="k">class</span> <span class="nc">SMDetectorBuilder</span><span class="p">(</span><span class="n">FeatureEndpointBuilder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    SMDetectorBuilder is responsible for building an SMDetector configured with a SageMaker endpoint.</span>
+
+<span class="sd">    This builder constructs an SMDetector instance with an optional set of assumed credentials for cross-account</span>
+<span class="sd">    invocation of SageMaker models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">assumed_credentials</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the SMDetectorBuilder with the SageMaker endpoint and optional credentials.</span>
+
+<span class="sd">        :param endpoint: str = The name of the SageMaker endpoint to be used.</span>
+<span class="sd">        :param assumed_credentials: Dict[str, str] = Optional credentials to use with the SageMaker endpoint.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">endpoint</span> <span class="o">=</span> <span class="n">endpoint</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assumed_credentials</span> <span class="o">=</span> <span class="n">assumed_credentials</span>
+
+<div class="viewcode-block" id="SMDetectorBuilder.build">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.inference.sm_detector.html#aws.osml.model_runner.inference.sm_detector.SMDetectorBuilder.build">[docs]</a>
+    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Detector</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Builds and returns an SMDetector based on the configured parameters.</span>
+
+<span class="sd">        :return: Optional[Detector] = An SMDetector instance configured for the specified SageMaker endpoint.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">SMDetector</span><span class="p">(</span>
+            <span class="n">endpoint</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endpoint</span><span class="p">,</span>
+            <span class="n">assumed_credentials</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">assumed_credentials</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

@@ -1,0 +1,44 @@
+model_runner.api.inference
+==========================
+
+.. py:module:: model_runner.api.inference
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.api.inference.VALID_MODEL_HOSTING_OPTIONS
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.api.inference.ModelInvokeMode
+
+
+Module Contents
+---------------
+
+.. py:class:: ModelInvokeMode
+
+   Bases: :py:obj:`str`, :py:obj:`aws.osml.model_runner.common.AutoStringEnum`
+
+
+   Enumeration defining the hosting options for CV models.
+
+
+   .. py:attribute:: NONE
+
+
+   .. py:attribute:: SM_ENDPOINT
+
+
+   .. py:attribute:: HTTP_ENDPOINT
+
+
+.. py:data:: VALID_MODEL_HOSTING_OPTIONS
+

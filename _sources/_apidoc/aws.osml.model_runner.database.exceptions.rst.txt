@@ -1,0 +1,7 @@
+aws.osml.model\_runner.database.exceptions module
+=================================================
+
+.. automodule:: aws.osml.model_runner.database.exceptions
+   :members:
+   :undoc-members:
+   :show-inheritance:

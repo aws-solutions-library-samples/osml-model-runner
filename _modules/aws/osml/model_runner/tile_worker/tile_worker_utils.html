@@ -1,0 +1,459 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.tile_worker.tile_worker_utils &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.tile_worker.tile_worker_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.model_runner.tile_worker.tile_worker_utils</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">ast</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">queue</span> <span class="kn">import</span> <span class="n">Queue</span>
+<span class="kn">from</span> <span class="nn">secrets</span> <span class="kn">import</span> <span class="n">token_hex</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span> <span class="nn">aws_embedded_metrics</span> <span class="kn">import</span> <span class="n">MetricsLogger</span>
+<span class="kn">from</span> <span class="nn">aws_embedded_metrics.metric_scope</span> <span class="kn">import</span> <span class="n">metric_scope</span>
+<span class="kn">from</span> <span class="nn">aws_embedded_metrics.unit</span> <span class="kn">import</span> <span class="n">Unit</span>
+<span class="kn">from</span> <span class="nn">geojson</span> <span class="kn">import</span> <span class="n">Feature</span>
+<span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">gdal</span>
+
+<span class="kn">from</span> <span class="nn">aws.osml.features</span> <span class="kn">import</span> <span class="n">Geolocator</span><span class="p">,</span> <span class="n">ImagedFeaturePropertyAccessor</span>
+<span class="kn">from</span> <span class="nn">aws.osml.gdal</span> <span class="kn">import</span> <span class="n">GDALConfigEnv</span>
+<span class="kn">from</span> <span class="nn">aws.osml.image_processing.gdal_tile_factory</span> <span class="kn">import</span> <span class="n">GDALTileFactory</span>
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.api</span> <span class="kn">import</span> <span class="n">RegionRequest</span>
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.app_config</span> <span class="kn">import</span> <span class="n">MetricLabels</span><span class="p">,</span> <span class="n">ServiceConfig</span>
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.common</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FeatureDistillationDeserializer</span><span class="p">,</span>
+    <span class="n">ImageRegion</span><span class="p">,</span>
+    <span class="n">Timer</span><span class="p">,</span>
+    <span class="n">get_credentials_for_assumed_role</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.database</span> <span class="kn">import</span> <span class="n">FeatureTable</span><span class="p">,</span> <span class="n">RegionRequestItem</span><span class="p">,</span> <span class="n">RegionRequestTable</span>
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.inference</span> <span class="kn">import</span> <span class="n">FeatureSelector</span>
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.inference.endpoint_factory</span> <span class="kn">import</span> <span class="n">FeatureDetectorFactory</span>
+<span class="kn">from</span> <span class="nn">aws.osml.photogrammetry</span> <span class="kn">import</span> <span class="n">ElevationModel</span><span class="p">,</span> <span class="n">SensorModel</span>
+
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">ProcessTilesException</span><span class="p">,</span> <span class="n">SetupTileWorkersException</span>
+<span class="kn">from</span> <span class="nn">.tile_worker</span> <span class="kn">import</span> <span class="n">TileWorker</span>
+<span class="kn">from</span> <span class="nn">.tiling_strategy</span> <span class="kn">import</span> <span class="n">TilingStrategy</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="setup_tile_workers">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.tile_worker.tile_worker_utils.html#aws.osml.model_runner.tile_worker.tile_worker_utils.setup_tile_workers">[docs]</a>
+<span class="k">def</span> <span class="nf">setup_tile_workers</span><span class="p">(</span>
+    <span class="n">region_request</span><span class="p">:</span> <span class="n">RegionRequest</span><span class="p">,</span>
+    <span class="n">sensor_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SensorModel</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">elevation_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ElevationModel</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Queue</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">TileWorker</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sets up a pool of tile-workers to process image tiles from a region request</span>
+
+<span class="sd">    :param region_request: RegionRequest = the region request to update.</span>
+<span class="sd">    :param sensor_model: Optional[SensorModel] = the sensor model for this raster dataset</span>
+<span class="sd">    :param elevation_model: Optional[ElevationModel] = an elevation model used to fix the elevation of the image coordinate</span>
+
+<span class="sd">    :return: Tuple[Queue, List[TileWorker] = a list of tile workers and the queue that manages them</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">model_invocation_credentials</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">region_request</span><span class="o">.</span><span class="n">model_invocation_role</span><span class="p">:</span>
+            <span class="n">model_invocation_credentials</span> <span class="o">=</span> <span class="n">get_credentials_for_assumed_role</span><span class="p">(</span><span class="n">region_request</span><span class="o">.</span><span class="n">model_invocation_role</span><span class="p">)</span>
+
+        <span class="c1"># Set up a Queue to manage our tile workers</span>
+        <span class="n">tile_queue</span><span class="p">:</span> <span class="n">Queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">()</span>
+        <span class="n">tile_workers</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">ServiceConfig</span><span class="o">.</span><span class="n">workers</span><span class="p">)):</span>
+            <span class="c1"># Set up our feature table to work with the region quest</span>
+            <span class="n">feature_table</span> <span class="o">=</span> <span class="n">FeatureTable</span><span class="p">(</span>
+                <span class="n">ServiceConfig</span><span class="o">.</span><span class="n">feature_table</span><span class="p">,</span>
+                <span class="n">region_request</span><span class="o">.</span><span class="n">tile_size</span><span class="p">,</span>
+                <span class="n">region_request</span><span class="o">.</span><span class="n">tile_overlap</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Set up our feature table to work with the region quest</span>
+            <span class="n">region_request_table</span> <span class="o">=</span> <span class="n">RegionRequestTable</span><span class="p">(</span><span class="n">ServiceConfig</span><span class="o">.</span><span class="n">region_request_table</span><span class="p">)</span>
+
+            <span class="c1"># Ignoring mypy error - if model_name was None the call to validate the region</span>
+            <span class="c1"># request at the start of this function would have failed</span>
+            <span class="n">feature_detector</span> <span class="o">=</span> <span class="n">FeatureDetectorFactory</span><span class="p">(</span>
+                <span class="n">endpoint</span><span class="o">=</span><span class="n">region_request</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>
+                <span class="n">endpoint_mode</span><span class="o">=</span><span class="n">region_request</span><span class="o">.</span><span class="n">model_invoke_mode</span><span class="p">,</span>
+                <span class="n">assumed_credentials</span><span class="o">=</span><span class="n">model_invocation_credentials</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+            <span class="n">geolocator</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">sensor_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">geolocator</span> <span class="o">=</span> <span class="n">Geolocator</span><span class="p">(</span><span class="n">ImagedFeaturePropertyAccessor</span><span class="p">(),</span> <span class="n">sensor_model</span><span class="p">,</span> <span class="n">elevation_model</span><span class="o">=</span><span class="n">elevation_model</span><span class="p">)</span>
+
+            <span class="n">worker</span> <span class="o">=</span> <span class="n">TileWorker</span><span class="p">(</span><span class="n">tile_queue</span><span class="p">,</span> <span class="n">feature_detector</span><span class="p">,</span> <span class="n">geolocator</span><span class="p">,</span> <span class="n">feature_table</span><span class="p">,</span> <span class="n">region_request_table</span><span class="p">)</span>
+            <span class="n">worker</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="n">tile_workers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">worker</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setup pool of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">tile_workers</span><span class="p">)</span><span class="si">}</span><span class="s2"> tile workers&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">tile_queue</span><span class="p">,</span> <span class="n">tile_workers</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to setup tile workers!: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">SetupTileWorkersException</span><span class="p">(</span><span class="s2">&quot;Failed to setup tile workers!&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span></div>
+
+
+
+<div class="viewcode-block" id="process_tiles">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.tile_worker.tile_worker_utils.html#aws.osml.model_runner.tile_worker.tile_worker_utils.process_tiles">[docs]</a>
+<span class="k">def</span> <span class="nf">process_tiles</span><span class="p">(</span>
+    <span class="n">tiling_strategy</span><span class="p">:</span> <span class="n">TilingStrategy</span><span class="p">,</span>
+    <span class="n">region_request_item</span><span class="p">:</span> <span class="n">RegionRequestItem</span><span class="p">,</span>
+    <span class="n">tile_queue</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span>
+    <span class="n">tile_workers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">TileWorker</span><span class="p">],</span>
+    <span class="n">raster_dataset</span><span class="p">:</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span>
+    <span class="n">sensor_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SensorModel</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Loads a GDAL dataset into memory and processes it with a pool of tile workers.</span>
+
+<span class="sd">    :param tiling_strategy: the approach used to decompose the region into tiles for the ML model</span>
+<span class="sd">    :param region_request_item: RegionRequestItem = the region request to update.</span>
+<span class="sd">    :param tile_queue: Queue = keeps the image in the queue for processing</span>
+<span class="sd">    :param tile_workers: List[TileWorker] = the list of tile workers</span>
+<span class="sd">    :param raster_dataset: gdal.Dataset = the raster dataset containing the region</span>
+<span class="sd">    :param sensor_model: Optional[SensorModel] = the sensor model for this raster dataset</span>
+
+<span class="sd">    :return: Tuple[int, int, List[ImageRegion]] = number of tiles processed, number of tiles with an error</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Grab completed tiles from region item</span>
+    <span class="c1"># Explicitly cast to Tuple[Tuple[int, int], Tuple[int, int]]</span>
+    <span class="c1"># Ensure the bounds have exactly two integers before converting</span>
+    <span class="n">region_bounds</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="n">region_request_item</span><span class="o">.</span><span class="n">region_bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">region_request_item</span><span class="o">.</span><span class="n">region_bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="p">(</span><span class="n">region_request_item</span><span class="o">.</span><span class="n">region_bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">region_request_item</span><span class="o">.</span><span class="n">region_bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]),</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Explicitly cast tile_size to Tuple[int, int]</span>
+    <span class="n">tile_size</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">region_request_item</span><span class="o">.</span><span class="n">tile_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">region_request_item</span><span class="o">.</span><span class="n">tile_size</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="c1"># Explicitly cast tile_overlap to Tuple[int, int]</span>
+    <span class="n">tile_overlap</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">region_request_item</span><span class="o">.</span><span class="n">tile_overlap</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">region_request_item</span><span class="o">.</span><span class="n">tile_overlap</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">tile_array</span> <span class="o">=</span> <span class="n">tiling_strategy</span><span class="o">.</span><span class="n">compute_tiles</span><span class="p">(</span><span class="n">region_bounds</span><span class="p">,</span> <span class="n">tile_size</span><span class="p">,</span> <span class="n">tile_overlap</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">region_request_item</span><span class="o">.</span><span class="n">succeeded_tiles</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Filter ImageRegions based on matching in succeeded_tiles</span>
+        <span class="n">filtered_regions</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">region</span>
+            <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="n">tile_array</span>
+            <span class="k">if</span> <span class="p">[[</span><span class="n">region</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">region</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]],</span> <span class="p">[</span><span class="n">region</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">region</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]]]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">region_request_item</span><span class="o">.</span><span class="n">succeeded_tiles</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tile_array</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tile_array</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">tile_array</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">tile_array</span><span class="p">)</span><span class="si">}</span><span class="s2"> tiles have already been processed!&quot;</span><span class="p">)</span>
+
+        <span class="n">tile_array</span> <span class="o">=</span> <span class="n">filtered_regions</span>
+
+    <span class="n">total_tile_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tile_array</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># This will update the GDAL configuration options to use the security credentials for</span>
+        <span class="c1"># this request. Any GDAL managed AWS calls (i.e. incrementally fetching pixels from a</span>
+        <span class="c1"># dataset stored in S3) within this &quot;with&quot; statement will be made using customer</span>
+        <span class="c1"># credentials. At the end of the &quot;with&quot; scope the credentials will be removed.</span>
+        <span class="n">image_read_credentials</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">region_request_item</span><span class="o">.</span><span class="n">image_read_role</span><span class="p">:</span>
+            <span class="n">image_read_credentials</span> <span class="o">=</span> <span class="n">get_credentials_for_assumed_role</span><span class="p">(</span><span class="n">region_request_item</span><span class="o">.</span><span class="n">image_read_role</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">GDALConfigEnv</span><span class="p">()</span><span class="o">.</span><span class="n">with_aws_credentials</span><span class="p">(</span><span class="n">image_read_credentials</span><span class="p">):</span>
+            <span class="c1"># Use the request and metadata from the raster dataset to create a set of keyword</span>
+            <span class="c1"># arguments for the gdal.Translate() function. This will configure that function to</span>
+            <span class="c1"># create image tiles using the format, compression, etc. needed by the CV container.</span>
+            <span class="n">gdal_tile_factory</span> <span class="o">=</span> <span class="n">GDALTileFactory</span><span class="p">(</span>
+                <span class="n">raster_dataset</span><span class="o">=</span><span class="n">raster_dataset</span><span class="p">,</span>
+                <span class="n">tile_format</span><span class="o">=</span><span class="n">region_request_item</span><span class="o">.</span><span class="n">tile_format</span><span class="p">,</span>
+                <span class="n">tile_compression</span><span class="o">=</span><span class="n">region_request_item</span><span class="o">.</span><span class="n">tile_compression</span><span class="p">,</span>
+                <span class="n">sensor_model</span><span class="o">=</span><span class="n">sensor_model</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Calculate a set of ML engine sized regions that we need to process for this image</span>
+            <span class="c1"># and set up a temporary directory to store the temporary files. The entire directory</span>
+            <span class="c1"># will be deleted at the end of this image&#39;s processing</span>
+            <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
+                <span class="c1"># Ignoring mypy error - if region_bounds was None the call to validate the</span>
+                <span class="c1"># image region request at the start of this function would have failed</span>
+                <span class="k">for</span> <span class="n">tile_bounds</span> <span class="ow">in</span> <span class="n">tile_array</span><span class="p">:</span>
+                    <span class="c1"># Create a temp file name for the encoded region</span>
+                    <span class="n">region_image_filename</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">token_hex</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span><span class="si">}</span><span class="s2">-region-</span><span class="si">{</span><span class="n">tile_bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">tile_bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">-&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tile_bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">tile_bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">region_request_item</span><span class="o">.</span><span class="n">tile_format</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+                    <span class="c1"># Set a path for the tmp image</span>
+                    <span class="n">tmp_image_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">region_image_filename</span><span class="p">)</span>
+
+                    <span class="c1"># Generate an encoded tile of the requested image region</span>
+                    <span class="n">absolute_tile_path</span> <span class="o">=</span> <span class="n">_create_tile</span><span class="p">(</span><span class="n">gdal_tile_factory</span><span class="p">,</span> <span class="n">tile_bounds</span><span class="p">,</span> <span class="n">tmp_image_path</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">absolute_tile_path</span><span class="p">:</span>
+                        <span class="k">continue</span>
+
+                    <span class="c1"># Put the image info on the tile worker queue allowing each tile to be</span>
+                    <span class="c1"># processed in parallel.</span>
+                    <span class="n">image_info</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s2">&quot;image_path&quot;</span><span class="p">:</span> <span class="n">tmp_image_path</span><span class="p">,</span>
+                        <span class="s2">&quot;region&quot;</span><span class="p">:</span> <span class="n">tile_bounds</span><span class="p">,</span>
+                        <span class="s2">&quot;image_id&quot;</span><span class="p">:</span> <span class="n">region_request_item</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span>
+                        <span class="s2">&quot;job_id&quot;</span><span class="p">:</span> <span class="n">region_request_item</span><span class="o">.</span><span class="n">job_id</span><span class="p">,</span>
+                        <span class="s2">&quot;region_id&quot;</span><span class="p">:</span> <span class="n">region_request_item</span><span class="o">.</span><span class="n">region_id</span><span class="p">,</span>
+                    <span class="p">}</span>
+
+                    <span class="c1"># Place the image info onto our processing queue</span>
+                    <span class="n">tile_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">image_info</span><span class="p">)</span>
+
+                <span class="c1"># Put enough empty messages on the queue to shut down the workers</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tile_workers</span><span class="p">)):</span>
+                    <span class="n">tile_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+
+                <span class="c1"># Ensure the wait for tile workers happens within the context where we create</span>
+                <span class="c1"># the temp directory. If the context is exited before all workers return then</span>
+                <span class="c1"># the directory will be deleted, and we will potentially lose tiles.</span>
+                <span class="c1"># Wait for all the workers to finish gracefully before we clean up the temp directory</span>
+                <span class="n">tile_error_count</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">worker</span> <span class="ow">in</span> <span class="n">tile_workers</span><span class="p">:</span>
+                    <span class="n">worker</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+                    <span class="n">tile_error_count</span> <span class="o">+=</span> <span class="n">worker</span><span class="o">.</span><span class="n">failed_tile_count</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Model Runner Stats Processed </span><span class="si">{</span><span class="n">total_tile_count</span><span class="si">}</span><span class="s2"> image tiles for &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;region </span><span class="si">{</span><span class="n">region_request_item</span><span class="o">.</span><span class="n">region_bounds</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="n">tile_error_count</span><span class="si">}</span><span class="s2"> tiles failed to process.&quot;</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File processing tiles: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">ProcessTilesException</span><span class="p">(</span><span class="s2">&quot;Failed to process tiles!&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span>
+
+    <span class="k">return</span> <span class="n">total_tile_count</span><span class="p">,</span> <span class="n">tile_error_count</span></div>
+
+
+
+<span class="nd">@metric_scope</span>
+<span class="k">def</span> <span class="nf">_create_tile</span><span class="p">(</span><span class="n">gdal_tile_factory</span><span class="p">,</span> <span class="n">tile_bounds</span><span class="p">,</span> <span class="n">tmp_image_path</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">MetricsLogger</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create an encoded tile of the requested image region.</span>
+
+<span class="sd">    :param gdal_tile_factory: the factory used to create the tile</span>
+<span class="sd">    :param tile_bounds: the requested tile boundary</span>
+<span class="sd">    :param tmp_image_path: the output location of the tile</span>
+<span class="sd">    :param metrics: the current metrics scope</span>
+<span class="sd">    :return: the resulting tile path or None if the tile could not be created</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+        <span class="n">metrics</span><span class="o">.</span><span class="n">set_dimensions</span><span class="p">()</span>
+        <span class="n">metrics</span><span class="o">.</span><span class="n">put_dimensions</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="n">MetricLabels</span><span class="o">.</span><span class="n">OPERATION_DIMENSION</span><span class="p">:</span> <span class="n">MetricLabels</span><span class="o">.</span><span class="n">TILE_GENERATION_OPERATION</span><span class="p">,</span>
+                <span class="n">MetricLabels</span><span class="o">.</span><span class="n">INPUT_FORMAT_DIMENSION</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">gdal_tile_factory</span><span class="o">.</span><span class="n">raster_dataset</span><span class="o">.</span><span class="n">GetDriver</span><span class="p">()</span><span class="o">.</span><span class="n">ShortName</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Use GDAL to create an encoded tile of the image region</span>
+    <span class="n">absolute_tile_path</span> <span class="o">=</span> <span class="n">tmp_image_path</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span>
+    <span class="k">with</span> <span class="n">Timer</span><span class="p">(</span>
+        <span class="n">task_str</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Creating image tile: </span><span class="si">{</span><span class="n">absolute_tile_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">metric_name</span><span class="o">=</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">DURATION</span><span class="p">,</span>
+        <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span>
+        <span class="n">metrics_logger</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">INVOCATIONS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+
+        <span class="n">encoded_tile_data</span> <span class="o">=</span> <span class="n">gdal_tile_factory</span><span class="o">.</span><span class="n">create_encoded_tile</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">tile_bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">tile_bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">tile_bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">tile_bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">absolute_tile_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">binary_file</span><span class="p">:</span>
+            <span class="n">binary_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">encoded_tile_data</span><span class="p">)</span>
+
+    <span class="c1"># GDAL doesn&#39;t always generate errors, so we need to make sure the NITF</span>
+    <span class="c1"># encoded region was actually created.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">tmp_image_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s2">&quot;GDAL unable to create tile </span><span class="si">%s</span><span class="s2">. Does not exist!&quot;</span><span class="p">,</span>
+            <span class="n">absolute_tile_path</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">ERRORS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;Created </span><span class="si">%s</span><span class="s2"> size </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">absolute_tile_path</span><span class="p">,</span>
+            <span class="n">sizeof_fmt</span><span class="p">(</span><span class="n">tmp_image_path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">absolute_tile_path</span>
+
+
+<div class="viewcode-block" id="sizeof_fmt">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.tile_worker.tile_worker_utils.html#aws.osml.model_runner.tile_worker.tile_worker_utils.sizeof_fmt">[docs]</a>
+<span class="k">def</span> <span class="nf">sizeof_fmt</span><span class="p">(</span><span class="n">num</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">suffix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;B&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">unit</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;Ki&quot;</span><span class="p">,</span> <span class="s2">&quot;Mi&quot;</span><span class="p">,</span> <span class="s2">&quot;Gi&quot;</span><span class="p">,</span> <span class="s2">&quot;Ti&quot;</span><span class="p">,</span> <span class="s2">&quot;Pi&quot;</span><span class="p">,</span> <span class="s2">&quot;Ei&quot;</span><span class="p">,</span> <span class="s2">&quot;Zi&quot;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">num</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1024.0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%3.1f%s%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">suffix</span><span class="p">)</span>
+        <span class="n">num</span> <span class="o">/=</span> <span class="mf">1024.0</span>
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%.1f%s%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="s2">&quot;Yi&quot;</span><span class="p">,</span> <span class="n">suffix</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="select_features">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.tile_worker.tile_worker_utils.html#aws.osml.model_runner.tile_worker.tile_worker_utils.select_features">[docs]</a>
+<span class="k">def</span> <span class="nf">select_features</span><span class="p">(</span>
+    <span class="n">feature_distillation_option</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">features</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">],</span>
+    <span class="n">processing_bounds</span><span class="p">:</span> <span class="n">ImageRegion</span><span class="p">,</span>
+    <span class="n">region_size</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">tile_size</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">tile_overlap</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">tiling_strategy</span><span class="p">:</span> <span class="n">TilingStrategy</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Selects the desired features using the options in the JobItem (NMS, SOFT_NMS, etc.).</span>
+<span class="sd">    This code applies a feature selector only to the features that came from regions of the image</span>
+<span class="sd">    that were processed multiple times. First features are grouped based on the region they were</span>
+<span class="sd">    processed in. Any features found in the overlap area between regions are run through the</span>
+<span class="sd">    FeatureSelector. If they were not part of an overlap area between regions, they will be grouped</span>
+<span class="sd">    based on tile boundaries. Any features that fall into the overlap of adjacent tiles are filtered</span>
+<span class="sd">    by the FeatureSelector. All other features should not be duplicates; they are added to the result</span>
+<span class="sd">    without additional filtering.</span>
+
+<span class="sd">    Computationally, this implements two critical factors that lower the overall processing time for the</span>
+<span class="sd">    O(N^2) selection algorithms. First, it will filter out the majority of features that couldn&#39;t possibly</span>
+<span class="sd">    have duplicates generated by our tiled image processing; Second, it runs the selection algorithms</span>
+<span class="sd">    incrementally on much smaller groups of features.</span>
+
+<span class="sd">    :param region_size:</span>
+<span class="sd">    :param feature_distillation_option: str = the options used in selecting features (e.g., NMS/SOFT_NMS, thresholds)</span>
+<span class="sd">    :param features: List[Feature] = the list of geojson features to process</span>
+<span class="sd">    :param processing_bounds: the requested area of the image</span>
+<span class="sd">    :param region_size: str = region size to use for feature dedup</span>
+<span class="sd">    :param tile_size: str = size of the tiles used during processing</span>
+<span class="sd">    :param tile_overlap: str = overlap between tiles during processing</span>
+<span class="sd">    :param tiling_strategy: the tiling strategy to use for feature dedup</span>
+<span class="sd">    :return: List[Feature] = the list of geojson features after processing</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">feature_distillation_option_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">feature_distillation_option</span><span class="p">)</span>
+    <span class="n">feature_distillation_option</span> <span class="o">=</span> <span class="n">FeatureDistillationDeserializer</span><span class="p">()</span><span class="o">.</span><span class="n">deserialize</span><span class="p">(</span><span class="n">feature_distillation_option_dict</span><span class="p">)</span>
+    <span class="n">feature_selector</span> <span class="o">=</span> <span class="n">FeatureSelector</span><span class="p">(</span><span class="n">feature_distillation_option</span><span class="p">)</span>
+
+    <span class="n">region_size</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">region_size</span><span class="p">)</span>
+    <span class="n">tile_size</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">tile_size</span><span class="p">)</span>
+    <span class="n">overlap</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">tile_overlap</span><span class="p">)</span>
+    <span class="n">deduped_features</span> <span class="o">=</span> <span class="n">tiling_strategy</span><span class="o">.</span><span class="n">cleanup_duplicate_features</span><span class="p">(</span>
+        <span class="n">processing_bounds</span><span class="p">,</span> <span class="n">region_size</span><span class="p">,</span> <span class="n">tile_size</span><span class="p">,</span> <span class="n">overlap</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">feature_selector</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">deduped_features</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

@@ -1,0 +1,388 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>model_runner.status &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="model_runner.status.base_status_monitor" href="base_status_monitor/index.html" />
+    <link rel="prev" title="model_runner.sink.sink_factory" href="../sink/sink_factory/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">model_runner</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../index.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../api/index.html">model_runner.api</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../app_config/index.html">model_runner.app_config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../common/index.html">model_runner.common</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../database/index.html">model_runner.database</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../exceptions/index.html">model_runner.exceptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../image_request_handler/index.html">model_runner.image_request_handler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../inference/index.html">model_runner.inference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../model_runner/index.html">model_runner.model_runner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../queue/index.html">model_runner.queue</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../region_request_handler/index.html">model_runner.region_request_handler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sink/index.html">model_runner.sink</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">model_runner.status</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tile_worker/index.html">model_runner.tile_worker</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../index.html#classes">Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../index.html#package-contents">Package Contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">model_runner</a></li>
+      <li class="breadcrumb-item active">model_runner.status</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/autoapi/model_runner/status/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-model_runner.status">
+<span id="model-runner-status"></span><h1>model_runner.status<a class="headerlink" href="#module-model_runner.status" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="base_status_monitor/index.html">model_runner.status.base_status_monitor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions/index.html">model_runner.status.exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image_status_monitor/index.html">model_runner.status.image_status_monitor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="region_status_monitor/index.html">model_runner.status.region_status_monitor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sns_helper/index.html">model_runner.status.sns_helper</a></li>
+<li class="toctree-l1"><a class="reference internal" href="status_message/index.html">model_runner.status.status_message</a></li>
+</ul>
+</div>
+</section>
+<section id="exceptions">
+<h2>Exceptions<a class="headerlink" href="#exceptions" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.status.SNSPublishException" title="model_runner.status.SNSPublishException"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SNSPublishException</span></code></a></p></td>
+<td><p>Common base class for all non-exit exceptions.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#model_runner.status.StatusMonitorException" title="model_runner.status.StatusMonitorException"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StatusMonitorException</span></code></a></p></td>
+<td><p>Common base class for all non-exit exceptions.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.status.ImageStatusMonitor" title="model_runner.status.ImageStatusMonitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ImageStatusMonitor</span></code></a></p></td>
+<td><p>ImageStatusMonitor is responsible for monitoring and publishing the status of image processing requests.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#model_runner.status.RegionStatusMonitor" title="model_runner.status.RegionStatusMonitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RegionStatusMonitor</span></code></a></p></td>
+<td><p>RegionStatusMonitor is responsible for monitoring and publishing the status of region processing requests.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.status.SNSHelper" title="model_runner.status.SNSHelper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SNSHelper</span></code></a></p></td>
+<td><p>Encapsulates Amazon SNS topic functions.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#model_runner.status.StatusMessage" title="model_runner.status.StatusMessage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StatusMessage</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="package-contents">
+<h2>Package Contents<a class="headerlink" href="#package-contents" title="Link to this heading"></a></h2>
+<dl class="py exception">
+<dt class="sig sig-object py" id="model_runner.status.SNSPublishException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.status.</span></span><span class="sig-name descname"><span class="pre">SNSPublishException</span></span><a class="headerlink" href="#model_runner.status.SNSPublishException" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
+<p>Common base class for all non-exit exceptions.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="model_runner.status.StatusMonitorException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.status.</span></span><span class="sig-name descname"><span class="pre">StatusMonitorException</span></span><a class="headerlink" href="#model_runner.status.StatusMonitorException" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
+<p>Common base class for all non-exit exceptions.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.status.ImageStatusMonitor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.status.</span></span><span class="sig-name descname"><span class="pre">ImageStatusMonitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_status_topic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_runner.status.ImageStatusMonitor" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="base_status_monitor/index.html#model_runner.status.base_status_monitor.BaseStatusMonitor" title="model_runner.status.base_status_monitor.BaseStatusMonitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_runner.status.base_status_monitor.BaseStatusMonitor</span></code></a></p>
+<p>ImageStatusMonitor is responsible for monitoring and publishing the status of image processing requests.</p>
+<p>This class uses Amazon SNS to publish updates on image request status, including success, partial success,
+failure, and progress. It interacts with JobItem data to determine the current status of the request and logs
+important status changes.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.status.ImageStatusMonitor.process_event">
+<span class="sig-name descname"><span class="pre">process_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_request_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../_apidoc/aws.osml.model_runner.database.job_table.html#aws.osml.model_runner.database.job_table.JobItem" title="aws.osml.model_runner.database.job_table.JobItem"><span class="pre">aws.osml.model_runner.database.job_table.JobItem</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.model_runner.common.RequestStatus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#model_runner.status.ImageStatusMonitor.process_event" title="Link to this definition"></a></dt>
+<dd><p>Publishes the status message via SNS for image requests.</p>
+<p>This method publishes status updates for a specific image request by creating an SNS message and logging
+the event. If the required fields (job_id, image_id, processing_duration) are present in the request item,
+it sends a message using the StatusMessage class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_request_item</strong> – JobItem = The image request for which the status is being updated.</p></li>
+<li><p><strong>status</strong> – RequestStatus = The current status of the image request.</p></li>
+<li><p><strong>message</strong> – str = A message describing the reason for the status update.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#model_runner.status.StatusMonitorException" title="model_runner.status.StatusMonitorException"><strong>StatusMonitorException</strong></a> – Raised if the request item is missing required fields or if SNS publication fails.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.status.ImageStatusMonitor.get_status">
+<span class="sig-name descname"><span class="pre">get_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../_apidoc/aws.osml.model_runner.database.job_table.html#aws.osml.model_runner.database.job_table.JobItem" title="aws.osml.model_runner.database.job_table.JobItem"><span class="pre">aws.osml.model_runner.database.job_table.JobItem</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">aws.osml.model_runner.common.RequestStatus</span></span></span><a class="headerlink" href="#model_runner.status.ImageStatusMonitor.get_status" title="Link to this definition"></a></dt>
+<dd><p>Determines the current status of an image request.</p>
+<p>This method evaluates the success and error counts for regions in the image request and returns the
+appropriate status: SUCCESS, PARTIAL, FAILED, or IN_PROGRESS.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request_item</strong> – JobItem = The image request item containing region processing information.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>RequestStatus = The status of the image request based on the region counts.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.status.RegionStatusMonitor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.status.</span></span><span class="sig-name descname"><span class="pre">RegionStatusMonitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">region_status_topic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_runner.status.RegionStatusMonitor" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="base_status_monitor/index.html#model_runner.status.base_status_monitor.BaseStatusMonitor" title="model_runner.status.base_status_monitor.BaseStatusMonitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_runner.status.base_status_monitor.BaseStatusMonitor</span></code></a></p>
+<p>RegionStatusMonitor is responsible for monitoring and publishing the status of region processing requests.</p>
+<p>This class uses Amazon SNS to publish updates on the status of region requests, including success, partial success,
+and failure. It interacts with RegionRequestItem data to determine the current status of the request and logs
+important status changes.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.status.RegionStatusMonitor.process_event">
+<span class="sig-name descname"><span class="pre">process_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">region_request_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../_apidoc/aws.osml.model_runner.database.region_request_table.html#aws.osml.model_runner.database.region_request_table.RegionRequestItem" title="aws.osml.model_runner.database.region_request_table.RegionRequestItem"><span class="pre">aws.osml.model_runner.database.region_request_table.RegionRequestItem</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.model_runner.common.RequestStatus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#model_runner.status.RegionStatusMonitor.process_event" title="Link to this definition"></a></dt>
+<dd><p>Publishes the status message via SNS for region requests.</p>
+<p>This method publishes status updates for a specific region request by creating an SNS message and logging
+the event. If the required fields (job_id, image_id, region_id, processing_duration) are present in the request item,
+it sends a message using the StatusMessage class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>region_request_item</strong> – RegionRequestItem = The region request for which the status is being updated.</p></li>
+<li><p><strong>status</strong> – RequestStatus = The current status of the region request.</p></li>
+<li><p><strong>message</strong> – str = A message describing the reason for the status update.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#model_runner.status.StatusMonitorException" title="model_runner.status.StatusMonitorException"><strong>StatusMonitorException</strong></a> – Raised if the request item is missing required fields or if SNS publication fails.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.status.RegionStatusMonitor.get_status">
+<span class="sig-name descname"><span class="pre">get_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../../_apidoc/aws.osml.model_runner.database.region_request_table.html#aws.osml.model_runner.database.region_request_table.RegionRequestItem" title="aws.osml.model_runner.database.region_request_table.RegionRequestItem"><span class="pre">aws.osml.model_runner.database.region_request_table.RegionRequestItem</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">aws.osml.model_runner.common.RequestStatus</span></span></span><a class="headerlink" href="#model_runner.status.RegionStatusMonitor.get_status" title="Link to this definition"></a></dt>
+<dd><p>Determines the current status of a region request.</p>
+<p>This method evaluates the total tiles and failed tile counts for regions in the request and returns the
+appropriate status: SUCCESS, PARTIAL, or FAILED.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request_item</strong> – RegionRequestItem = The region request item containing tile processing information.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>RequestStatus = The status of the region request based on the tile counts.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.status.SNSHelper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.status.</span></span><span class="sig-name descname"><span class="pre">SNSHelper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topic_arn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_runner.status.SNSHelper" title="Link to this definition"></a></dt>
+<dd><p>Encapsulates Amazon SNS topic functions.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.status.SNSHelper.sns_client">
+<span class="sig-name descname"><span class="pre">sns_client</span></span><a class="headerlink" href="#model_runner.status.SNSHelper.sns_client" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.status.SNSHelper.topic_arn">
+<span class="sig-name descname"><span class="pre">topic_arn</span></span><a class="headerlink" href="#model_runner.status.SNSHelper.topic_arn" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.status.SNSHelper.publish_message">
+<span class="sig-name descname"><span class="pre">publish_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#model_runner.status.SNSHelper.publish_message" title="Link to this definition"></a></dt>
+<dd><p>Publishes a message, with attributes, to a topic. Subscriptions can be filtered
+based on message attributes so that a subscription receives messages only
+when specified attributes are present.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>message</strong> – str = the message to publish.</p></li>
+<li><p><strong>attributes</strong> – Dict[str, Any] = the key-value attributes to attach to the message. Values
+must be either <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bytes</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[str] The ID of the message.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.status.StatusMessage">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.status.</span></span><span class="sig-name descname"><span class="pre">StatusMessage</span></span><a class="headerlink" href="#model_runner.status.StatusMessage" title="Link to this definition"></a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.status.StatusMessage.status">
+<span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">aws.osml.model_runner.common.RequestStatus</span></em><a class="headerlink" href="#model_runner.status.StatusMessage.status" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.status.StatusMessage.job_id">
+<span class="sig-name descname"><span class="pre">job_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#model_runner.status.StatusMessage.job_id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.status.StatusMessage.image_status">
+<span class="sig-name descname"><span class="pre">image_status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">aws.osml.model_runner.common.RequestStatus</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.status.StatusMessage.image_status" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.status.StatusMessage.image_id">
+<span class="sig-name descname"><span class="pre">image_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.status.StatusMessage.image_id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.status.StatusMessage.region_id">
+<span class="sig-name descname"><span class="pre">region_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.status.StatusMessage.region_id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.status.StatusMessage.processing_duration">
+<span class="sig-name descname"><span class="pre">processing_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.status.StatusMessage.processing_duration" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.status.StatusMessage.failed_tiles">
+<span class="sig-name descname"><span class="pre">failed_tiles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.status.StatusMessage.failed_tiles" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.status.StatusMessage.asdict_str_values">
+<span class="sig-name descname"><span class="pre">asdict_str_values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#model_runner.status.StatusMessage.asdict_str_values" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.status.StatusMessage.asdict">
+<span class="sig-name descname"><span class="pre">asdict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a></span></span><a class="headerlink" href="#model_runner.status.StatusMessage.asdict" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../sink/sink_factory/index.html" class="btn btn-neutral float-left" title="model_runner.sink.sink_factory" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="base_status_monitor/index.html" class="btn btn-neutral float-right" title="model_runner.status.base_status_monitor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

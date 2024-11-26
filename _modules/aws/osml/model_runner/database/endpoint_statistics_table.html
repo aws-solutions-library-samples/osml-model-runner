@@ -1,0 +1,248 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.database.endpoint_statistics_table &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.database.endpoint_statistics_table</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.model_runner.database.endpoint_statistics_table</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+
+<span class="kn">from</span> <span class="nn">boto3.dynamodb.conditions</span> <span class="kn">import</span> <span class="n">Attr</span>
+<span class="kn">from</span> <span class="nn">botocore.exceptions</span> <span class="kn">import</span> <span class="n">ClientError</span>
+<span class="kn">from</span> <span class="nn">dacite</span> <span class="kn">import</span> <span class="n">from_dict</span>
+
+<span class="kn">from</span> <span class="nn">.ddb_helper</span> <span class="kn">import</span> <span class="n">DDBHelper</span><span class="p">,</span> <span class="n">DDBItem</span><span class="p">,</span> <span class="n">DDBKey</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="EndpointStatisticsItem">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.endpoint_statistics_table.html#aws.osml.model_runner.database.endpoint_statistics_table.EndpointStatisticsItem">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">EndpointStatisticsItem</span><span class="p">(</span><span class="n">DDBItem</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    EndpointStatistics is a dataclass meant to represent a single item in the</span>
+<span class="sd">    EndpointStatisticsTable</span>
+
+<span class="sd">    The data schema is defined as follows:</span>
+<span class="sd">    endpoint: str = the Sagemaker endpoint to which the statistics pertain</span>
+<span class="sd">    regions_in_progress: int = the number of regions currently being processed</span>
+<span class="sd">        for the associated endpoint</span>
+<span class="sd">    max_regions: int = the maximum number of regions that an endpoint can concurrently</span>
+<span class="sd">        process before region requests should be throttled</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">regions_in_progress</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">max_regions</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ddb_key</span> <span class="o">=</span> <span class="n">DDBKey</span><span class="p">(</span><span class="n">hash_key</span><span class="o">=</span><span class="s2">&quot;endpoint&quot;</span><span class="p">,</span> <span class="n">hash_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endpoint</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="EndpointStatisticsTable">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.endpoint_statistics_table.html#aws.osml.model_runner.database.endpoint_statistics_table.EndpointStatisticsTable">[docs]</a>
+<span class="k">class</span> <span class="nc">EndpointStatisticsTable</span><span class="p">(</span><span class="n">DDBHelper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    EndpointStatisticsTable is a class meant to help OSML with accessing and interacting with</span>
+<span class="sd">    the per endpoints processing statistics we track as part of the endpoint statistics table.</span>
+<span class="sd">    It extends the DDBHelper class and provides its own item data class for use when</span>
+<span class="sd">    working with items from the table. It also sets the key for which we index on this table</span>
+<span class="sd">    in the constructor.</span>
+
+<span class="sd">    :param table_name: str = the name of the table to interact with</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EndpointStatisticsTable.upsert_endpoint">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.endpoint_statistics_table.html#aws.osml.model_runner.database.endpoint_statistics_table.EndpointStatisticsTable.upsert_endpoint">[docs]</a>
+    <span class="k">def</span> <span class="nf">upsert_endpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_regions</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Upserts an endpoint statistics entry. If the endpoint is already being</span>
+<span class="sd">        tracked then we update the max_region count for the existing entry. If an</span>
+<span class="sd">        endpoint is scaled up or down or the associated instance type changes the</span>
+<span class="sd">        maximum number of concurrent regions may change.</span>
+
+<span class="sd">        :param endpoint: str = Sagemaker endpoint name</span>
+<span class="sd">        :param max_regions: int = current max concurrent regions the endpoint can process</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting max region count for endpoint </span><span class="si">{</span><span class="n">endpoint</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">max_regions</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">put_ddb_item</span><span class="p">(</span>
+                <span class="n">EndpointStatisticsItem</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">max_regions</span><span class="o">=</span><span class="n">max_regions</span><span class="p">),</span>
+                <span class="n">Attr</span><span class="p">(</span><span class="s2">&quot;endpoint&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">not_exists</span><span class="p">(),</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="n">ClientError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;Error&quot;</span><span class="p">][</span><span class="s2">&quot;Code&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;ConditionalCheckFailedException&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">update_ddb_item</span><span class="p">(</span>
+                    <span class="n">EndpointStatisticsItem</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">endpoint</span><span class="p">),</span>
+                    <span class="s2">&quot;SET max_regions = :max&quot;</span><span class="p">,</span>
+                    <span class="p">{</span><span class="s2">&quot;:max&quot;</span><span class="p">:</span> <span class="n">max_regions</span><span class="p">},</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span></div>
+
+
+<div class="viewcode-block" id="EndpointStatisticsTable.increment_region_count">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.endpoint_statistics_table.html#aws.osml.model_runner.database.endpoint_statistics_table.EndpointStatisticsTable.increment_region_count">[docs]</a>
+    <span class="k">def</span> <span class="nf">increment_region_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Increases the in progress regions for the specified endpoint by 1.</span>
+
+<span class="sd">        :param endpoint: str = Sagemaker endpoint name</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Incremented in-progress region count for endpoint: &#39;</span><span class="si">{</span><span class="n">endpoint</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_ddb_item</span><span class="p">(</span>
+            <span class="n">EndpointStatisticsItem</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">endpoint</span><span class="p">),</span>
+            <span class="s2">&quot;SET regions_in_progress = regions_in_progress + :change&quot;</span><span class="p">,</span>
+            <span class="p">{</span><span class="s2">&quot;:change&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EndpointStatisticsTable.decrement_region_count">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.endpoint_statistics_table.html#aws.osml.model_runner.database.endpoint_statistics_table.EndpointStatisticsTable.decrement_region_count">[docs]</a>
+    <span class="k">def</span> <span class="nf">decrement_region_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Decreases the in progress regions for the specified endpoint by 1.</span>
+
+<span class="sd">        :param endpoint: str = Sagemaker endpoint name</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Decremented in-progress region count for endpoint: &#39;</span><span class="si">{</span><span class="n">endpoint</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_ddb_item</span><span class="p">(</span>
+            <span class="n">EndpointStatisticsItem</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">endpoint</span><span class="p">),</span>
+            <span class="s2">&quot;SET regions_in_progress = regions_in_progress - :change&quot;</span><span class="p">,</span>
+            <span class="p">{</span><span class="s2">&quot;:change&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EndpointStatisticsTable.current_in_progress_regions">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.endpoint_statistics_table.html#aws.osml.model_runner.database.endpoint_statistics_table.EndpointStatisticsTable.current_in_progress_regions">[docs]</a>
+    <span class="k">def</span> <span class="nf">current_in_progress_regions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve the current number of in progress regions for the specified endpoint</span>
+
+<span class="sd">        :param endpoint: str = Sagemaker endpoint name</span>
+
+<span class="sd">        :return: int = current number of in progress regions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span>
+            <span class="n">from_dict</span><span class="p">(</span>
+                <span class="n">EndpointStatisticsItem</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ddb_item</span><span class="p">(</span><span class="n">EndpointStatisticsItem</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="n">endpoint</span><span class="p">))</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">regions_in_progress</span>
+        <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

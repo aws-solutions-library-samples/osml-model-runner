@@ -1,0 +1,256 @@
+model_runner.common.mr_post_processing
+======================================
+
+.. py:module:: model_runner.common.mr_post_processing
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.common.mr_post_processing.ABCEnumMeta
+   model_runner.common.mr_post_processing.MRPostProcessingAlgorithmType
+   model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType
+   model_runner.common.mr_post_processing.MRPostprocessingStep
+   model_runner.common.mr_post_processing.MRPostProcessingAlgorithm
+   model_runner.common.mr_post_processing.FeatureDistillationAlgorithm
+   model_runner.common.mr_post_processing.FeatureDistillationNMS
+   model_runner.common.mr_post_processing.FeatureDistillationSoftNMS
+   model_runner.common.mr_post_processing.MRPostProcessing
+   model_runner.common.mr_post_processing.PostProcessingDeserializer
+   model_runner.common.mr_post_processing.FeatureDistillationDeserializer
+   model_runner.common.mr_post_processing.MRPostProcessingDeserializer
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   model_runner.common.mr_post_processing.deserialize_post_processing_list
+   model_runner.common.mr_post_processing.mr_post_processing_options_factory
+
+
+Module Contents
+---------------
+
+.. py:class:: ABCEnumMeta
+
+   Bases: :py:obj:`abc.ABCMeta`, :py:obj:`enum.EnumMeta`
+
+
+   A metaclass combining ABCMeta and EnumMeta, used as a base for creating
+   enums for MRPostProcessing algorithm types. It ensures that the derived enums
+   are both Enums and ABCs, enabling type checks and abstract method enforcement.
+
+
+   .. py:method:: __call__(*args, **kw)
+
+      Either returns an existing member, or creates a new enum class.
+
+      This method is used both when an enum class is given a value to match
+      to an enumeration member (i.e. Color(3)) and for the functional API
+      (i.e. Color = Enum('Color', names='RED GREEN BLUE')).
+
+      When used for the functional API:
+
+      `value` will be the name of the new class.
+
+      `names` should be either a string of white-space/comma delimited names
+      (values will start at `start`), or an iterator/mapping of name, value pairs.
+
+      `module` should be set to the module this class is being created in;
+      if it is not set, an attempt to find that module will be made, but if
+      it fails the class will not be picklable.
+
+      `qualname` should be set to the actual location this class can be found
+      at in its module; by default it is set to the global scope.  If this is
+      not correct, unpickling will fail in some circumstances.
+
+      `type`, if set, will be mixed in as the first base class.
+
+
+
+.. py:class:: MRPostProcessingAlgorithmType
+
+   Bases: :py:obj:`model_runner.common.auto_string_enum.AutoStringEnum`
+
+
+.. py:class:: FeatureDistillationAlgorithmType
+
+   Bases: :py:obj:`str`, :py:obj:`MRPostProcessingAlgorithmType`
+
+
+   Enum for defining different feature distillation algorithms used in post-processing.
+   Each member represents a specific algorithm for entity selection or fusion.
+   NMS: Non-maximum Suppression
+   SOFT_NMS: Variant of NMS (https://arxiv.org/abs/1704.04503). This implementation is gaussian Soft-NMS,
+               as opposed to linear.
+   NMW: Non-maximum weighted
+   WBF: Weighted boxes fusion
+
+
+   .. py:attribute:: NMS
+
+
+   .. py:attribute:: SOFT_NMS
+
+
+.. py:class:: MRPostprocessingStep
+
+   Bases: :py:obj:`str`, :py:obj:`model_runner.common.auto_string_enum.AutoStringEnum`
+
+
+   Enum defining available steps for MR post-processing.
+
+
+   .. py:attribute:: FEATURE_DISTILLATION
+
+
+.. py:class:: MRPostProcessingAlgorithm
+
+   Bases: :py:obj:`abc.ABC`
+
+
+   Abstract base class representing a generic MR post-processing algorithm.
+   :param algorithm_type: The type of the algorithm, represented by a specific enum.
+
+
+   .. py:attribute:: algorithm_type
+      :type:  MRPostProcessingAlgorithmType
+
+
+.. py:class:: FeatureDistillationAlgorithm
+
+   Bases: :py:obj:`MRPostProcessingAlgorithm`
+
+
+   Generic FeatureDistillationAlgorithm class that is designed to be extended for each specific algorithm.
+   :property algorithm_type: FeatureSelectionAlgorithmType = algorithm to use to combine object detections
+   :property iou_threshold: float = intersection over union threshold
+                                   - if greater than this value boxes are considered the same
+
+
+   .. py:attribute:: algorithm_type
+      :type:  FeatureDistillationAlgorithmType
+
+
+   .. py:attribute:: iou_threshold
+      :type:  float
+
+
+.. py:class:: FeatureDistillationNMS
+
+   Bases: :py:obj:`FeatureDistillationAlgorithm`
+
+
+   :property algorithm_type: FeatureSelectionAlgorithmType = algorithm to use to combine object detections
+   :property iou_threshold: float = intersection over union threshold
+                                   - if greater than this value boxes are considered the same
+
+
+   .. py:attribute:: algorithm_type
+      :type:  FeatureDistillationAlgorithmType
+
+
+   .. py:attribute:: iou_threshold
+      :type:  float
+
+
+.. py:class:: FeatureDistillationSoftNMS
+
+   Bases: :py:obj:`FeatureDistillationAlgorithm`
+
+
+   :property algorithm_type: FeatureSelectionAlgorithmType = algorithm to use to combine object detections
+   :property iou_threshold: float = intersection over union threshold
+                                   - if greater than this value boxes are considered the same
+   :property skip_box_threshold: float = boxes with a confidence below this threshold value are skipped
+   :property sigma: float = value - only applies to Soft NMS
+
+
+   .. py:attribute:: algorithm_type
+      :type:  FeatureDistillationAlgorithmType
+
+
+   .. py:attribute:: iou_threshold
+      :type:  float
+
+
+   .. py:attribute:: skip_box_threshold
+      :type:  float
+
+
+   .. py:attribute:: sigma
+      :type:  float
+
+
+.. py:class:: MRPostProcessing
+
+   Represents an operation for MR post-processing.
+   :param step: The post-processing step (MRPostprocessingStep).
+   :param algorithm: The algorithm used in this step (MRPostProcessingAlgorithm).
+
+
+   .. py:attribute:: step
+      :type:  MRPostprocessingStep
+
+
+   .. py:attribute:: algorithm
+      :type:  MRPostProcessingAlgorithm
+
+
+.. py:class:: PostProcessingDeserializer
+
+   Bases: :py:obj:`abc.ABC`
+
+
+   Abstract post-processing deserializer that defines a deserialize method.
+
+
+   .. py:method:: deserialize(post_processing_algorithm: dict) -> MRPostProcessingAlgorithm
+      :staticmethod:
+
+      :abstractmethod:
+
+
+
+.. py:class:: FeatureDistillationDeserializer
+
+   Bases: :py:obj:`PostProcessingDeserializer`
+
+
+   Provides static methods for deserializing feature distillation algorithms from a dictionary.
+
+
+   .. py:method:: deserialize(post_processing_algorithm: dict) -> FeatureDistillationAlgorithm
+      :staticmethod:
+
+
+
+.. py:class:: MRPostProcessingDeserializer
+
+   Provides static method for obtaining the appropriate deserializer based on the post-processing step.
+
+
+   .. py:method:: get_deserializer(step: MRPostprocessingStep) -> PostProcessingDeserializer
+      :staticmethod:
+
+
+
+.. py:function:: deserialize_post_processing_list(mr_processing_list: List) -> List[MRPostProcessing]
+
+   Deserializes a list of MR post-processing steps and algorithms from a list of dictionaries.
+   :param mr_processing_list: A list of dictionaries representing MR post-processing objects.
+   :return: A list of MRPostProcessing objects.
+
+
+.. py:function:: mr_post_processing_options_factory(properties_list: List) -> Dict
+
+   Factory function for converting dataclass instances to dictionaries.
+   Specifically used with MR post-processing related dataclasses.
+   :param properties_list: A list of properties (key-value pairs) of a dataclass.
+   :return: A dictionary representation of the dataclass.
+
+

@@ -1,0 +1,170 @@
+model_runner
+============
+
+.. py:module:: model_runner
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/model_runner/api/index
+   /autoapi/model_runner/app_config/index
+   /autoapi/model_runner/common/index
+   /autoapi/model_runner/database/index
+   /autoapi/model_runner/exceptions/index
+   /autoapi/model_runner/image_request_handler/index
+   /autoapi/model_runner/inference/index
+   /autoapi/model_runner/model_runner/index
+   /autoapi/model_runner/queue/index
+   /autoapi/model_runner/region_request_handler/index
+   /autoapi/model_runner/sink/index
+   /autoapi/model_runner/status/index
+   /autoapi/model_runner/tile_worker/index
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.ModelRunner
+
+
+Package Contents
+----------------
+
+.. py:class:: ModelRunner(tiling_strategy: model_runner.tile_worker.TilingStrategy = VariableOverlapTilingStrategy())
+
+   Main class for operating the ModelRunner application. It monitors input queues for processing requests,
+   decomposes the image into smaller regions and tiles, invokes an ML model on each tile, and aggregates
+   the results into a single output, which can be sent to the configured output sinks.
+
+
+   .. py:attribute:: config
+
+
+   .. py:attribute:: tiling_strategy
+
+
+   .. py:attribute:: image_request_queue
+
+
+   .. py:attribute:: image_requests_iter
+
+
+   .. py:attribute:: region_request_queue
+
+
+   .. py:attribute:: region_requests_iter
+
+
+   .. py:attribute:: job_table
+
+
+   .. py:attribute:: region_request_table
+
+
+   .. py:attribute:: endpoint_statistics_table
+
+
+   .. py:attribute:: image_status_monitor
+
+
+   .. py:attribute:: region_status_monitor
+
+
+   .. py:attribute:: endpoint_utils
+
+
+   .. py:attribute:: region_request_handler
+
+
+   .. py:attribute:: image_request_handler
+
+
+   .. py:attribute:: running
+      :value: False
+
+
+
+   .. py:method:: run() -> None
+
+      Start the ModelRunner to continuously monitor and process work queues.
+
+      :return: None
+
+
+
+   .. py:method:: stop() -> None
+
+      Stop the ModelRunner.
+
+      :return: None
+
+
+
+   .. py:method:: monitor_work_queues() -> None
+
+      Continuously monitors the SQS queues for RegionRequest and ImageRequest.
+      :return: None
+
+
+
+   .. py:method:: _process_region_requests() -> bool
+
+      Process messages from the region request queue.
+
+      :return: True if a region request was processed, False if not.
+
+
+
+   .. py:method:: _process_image_requests() -> bool
+
+      Processes messages from the image request queue.
+
+      This method retrieves and processes image requests from the SQS queue. It validates
+      the image request, and if valid, passes it to the `ImageRequestHandler` for further
+      processing. In case of a retryable exception, the request is reset in the queue with
+      a visibility timeout. If the image request fails due to an error, it is marked as
+      failed and the appropriate actions are taken.
+
+      :raises InvalidImageRequestException: If the image request is found to be invalid.
+      :raises Exception: If an unexpected error occurs during processing.
+
+      :return: True if a image request was processed, False if not.
+
+
+
+   .. py:method:: _fail_image_request(image_request: model_runner.api.ImageRequest, error: Exception) -> None
+
+      Handles failing an image request by updating its status and logging the failure.
+
+      This method is called when an image request cannot be processed due to an error.
+      It marks the image request as failed and updates the job status using the
+      `ImageRequestHandler`.
+
+      :param image_request: The image request that failed to process.
+      :param error: The exception that caused the failure.
+
+      :return: None
+
+
+
+   .. py:method:: _get_or_create_region_request_item(region_request: model_runner.api.RegionRequest) -> model_runner.database.RegionRequestItem
+
+      Retrieves or creates a `RegionRequestItem` in the region request table.
+
+      This method checks if a region request already exists in the `RegionRequestTable`.
+      If it does, it retrieves the existing request; otherwise, it creates a new
+      `RegionRequestItem` from the provided `RegionRequest` and starts the region
+      processing.
+
+      :param region_request: The region request to process.
+
+      :return: The retrieved or newly created `RegionRequestItem`.
+
+
+

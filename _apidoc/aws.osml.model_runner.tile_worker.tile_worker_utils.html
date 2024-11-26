@@ -1,0 +1,188 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.tile_worker.tile_worker_utils module &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.tile_worker.tile_worker_utils module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_apidoc/aws.osml.model_runner.tile_worker.tile_worker_utils.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-aws.osml.model_runner.tile_worker.tile_worker_utils">
+<span id="aws-osml-model-runner-tile-worker-tile-worker-utils-module"></span><h1>aws.osml.model_runner.tile_worker.tile_worker_utils module<a class="headerlink" href="#module-aws.osml.model_runner.tile_worker.tile_worker_utils" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="aws.osml.model_runner.tile_worker.tile_worker_utils.setup_tile_workers">
+<span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.tile_worker.tile_worker_utils.</span></span><span class="sig-name descname"><span class="pre">setup_tile_workers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">region_request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="aws.osml.model_runner.api.region_request.html#aws.osml.model_runner.api.region_request.RegionRequest" title="aws.osml.model_runner.api.region_request.RegionRequest"><span class="pre">RegionRequest</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SensorModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elevation_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ElevationModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.13)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/queue.html#queue.Queue" title="(in Python v3.13)"><span class="pre">Queue</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="aws.osml.model_runner.tile_worker.tile_worker.html#aws.osml.model_runner.tile_worker.tile_worker.TileWorker" title="aws.osml.model_runner.tile_worker.tile_worker.TileWorker"><span class="pre">TileWorker</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/tile_worker/tile_worker_utils.html#setup_tile_workers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.tile_worker.tile_worker_utils.setup_tile_workers" title="Link to this definition"></a></dt>
+<dd><p>Sets up a pool of tile-workers to process image tiles from a region request</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>region_request</strong> – RegionRequest = the region request to update.</p></li>
+<li><p><strong>sensor_model</strong> – Optional[SensorModel] = the sensor model for this raster dataset</p></li>
+<li><p><strong>elevation_model</strong> – Optional[ElevationModel] = an elevation model used to fix the elevation of the image coordinate</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple[Queue, List[TileWorker] = a list of tile workers and the queue that manages them</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="aws.osml.model_runner.tile_worker.tile_worker_utils.process_tiles">
+<span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.tile_worker.tile_worker_utils.</span></span><span class="sig-name descname"><span class="pre">process_tiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tiling_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="aws.osml.model_runner.tile_worker.tiling_strategy.html#aws.osml.model_runner.tile_worker.tiling_strategy.TilingStrategy" title="aws.osml.model_runner.tile_worker.tiling_strategy.TilingStrategy"><span class="pre">TilingStrategy</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">region_request_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="aws.osml.model_runner.database.region_request_table.html#aws.osml.model_runner.database.region_request_table.RegionRequestItem" title="aws.osml.model_runner.database.region_request_table.RegionRequestItem"><span class="pre">RegionRequestItem</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">tile_queue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/queue.html#queue.Queue" title="(in Python v3.13)"><span class="pre">Queue</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">tile_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="aws.osml.model_runner.tile_worker.tile_worker.html#aws.osml.model_runner.tile_worker.tile_worker.TileWorker" title="aws.osml.model_runner.tile_worker.tile_worker.TileWorker"><span class="pre">TileWorker</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raster_dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SensorModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.13)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/tile_worker/tile_worker_utils.html#process_tiles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.tile_worker.tile_worker_utils.process_tiles" title="Link to this definition"></a></dt>
+<dd><p>Loads a GDAL dataset into memory and processes it with a pool of tile workers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tiling_strategy</strong> – the approach used to decompose the region into tiles for the ML model</p></li>
+<li><p><strong>region_request_item</strong> – RegionRequestItem = the region request to update.</p></li>
+<li><p><strong>tile_queue</strong> – Queue = keeps the image in the queue for processing</p></li>
+<li><p><strong>tile_workers</strong> – List[TileWorker] = the list of tile workers</p></li>
+<li><p><strong>raster_dataset</strong> – gdal.Dataset = the raster dataset containing the region</p></li>
+<li><p><strong>sensor_model</strong> – Optional[SensorModel] = the sensor model for this raster dataset</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple[int, int, List[ImageRegion]] = number of tiles processed, number of tiles with an error</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="aws.osml.model_runner.tile_worker.tile_worker_utils.sizeof_fmt">
+<span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.tile_worker.tile_worker_utils.</span></span><span class="sig-name descname"><span class="pre">sizeof_fmt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'B'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/tile_worker/tile_worker_utils.html#sizeof_fmt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.tile_worker.tile_worker_utils.sizeof_fmt" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="aws.osml.model_runner.tile_worker.tile_worker_utils.select_features">
+<span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.tile_worker.tile_worker_utils.</span></span><span class="sig-name descname"><span class="pre">select_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_distillation_option</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Feature</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processing_bounds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.13)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.13)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.13)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">tile_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">tile_overlap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">tiling_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="aws.osml.model_runner.tile_worker.tiling_strategy.html#aws.osml.model_runner.tile_worker.tiling_strategy.TilingStrategy" title="aws.osml.model_runner.tile_worker.tiling_strategy.TilingStrategy"><span class="pre">TilingStrategy</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Feature</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/tile_worker/tile_worker_utils.html#select_features"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.tile_worker.tile_worker_utils.select_features" title="Link to this definition"></a></dt>
+<dd><p>Selects the desired features using the options in the JobItem (NMS, SOFT_NMS, etc.).
+This code applies a feature selector only to the features that came from regions of the image
+that were processed multiple times. First features are grouped based on the region they were
+processed in. Any features found in the overlap area between regions are run through the
+FeatureSelector. If they were not part of an overlap area between regions, they will be grouped
+based on tile boundaries. Any features that fall into the overlap of adjacent tiles are filtered
+by the FeatureSelector. All other features should not be duplicates; they are added to the result
+without additional filtering.</p>
+<p>Computationally, this implements two critical factors that lower the overall processing time for the
+O(N^2) selection algorithms. First, it will filter out the majority of features that couldn’t possibly
+have duplicates generated by our tiled image processing; Second, it runs the selection algorithms
+incrementally on much smaller groups of features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>region_size</strong></p></li>
+<li><p><strong>feature_distillation_option</strong> – str = the options used in selecting features (e.g., NMS/SOFT_NMS, thresholds)</p></li>
+<li><p><strong>features</strong> – List[Feature] = the list of geojson features to process</p></li>
+<li><p><strong>processing_bounds</strong> – the requested area of the image</p></li>
+<li><p><strong>region_size</strong> – str = region size to use for feature dedup</p></li>
+<li><p><strong>tile_size</strong> – str = size of the tiles used during processing</p></li>
+<li><p><strong>tile_overlap</strong> – str = overlap between tiles during processing</p></li>
+<li><p><strong>tiling_strategy</strong> – the tiling strategy to use for feature dedup</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[Feature] = the list of geojson features after processing</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

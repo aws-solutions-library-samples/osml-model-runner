@@ -1,0 +1,210 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.inference.http_detector module &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.inference.http_detector module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_apidoc/aws.osml.model_runner.inference.http_detector.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-aws.osml.model_runner.inference.http_detector">
+<span id="aws-osml-model-runner-inference-http-detector-module"></span><h1>aws.osml.model_runner.inference.http_detector module<a class="headerlink" href="#module-aws.osml.model_runner.inference.http_detector" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.inference.http_detector.CountingRetry">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.inference.http_detector.</span></span><span class="sig-name descname"><span class="pre">CountingRetry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/aws/osml/model_runner/inference/http_detector.html#CountingRetry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.inference.http_detector.CountingRetry" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Retry</span></code></p>
+<p>A custom Retry class that counts the number of retries during HTTP requests.
+Inherits from urllib3’s Retry class to implement retry logic with an additional retry count.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.inference.http_detector.CountingRetry.increment">
+<span class="sig-name descname"><span class="pre">increment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Retry</span></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/inference/http_detector.html#CountingRetry.increment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.inference.http_detector.CountingRetry.increment" title="Link to this definition"></a></dt>
+<dd><p>Increments the retry count and calls the parent class’s increment method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Retry = A Retry object with updated retry count.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.inference.http_detector.CountingRetry.from_retry">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_retry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">retry_instance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Retry</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#aws.osml.model_runner.inference.http_detector.CountingRetry" title="aws.osml.model_runner.inference.http_detector.CountingRetry"><span class="pre">CountingRetry</span></a></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/inference/http_detector.html#CountingRetry.from_retry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.inference.http_detector.CountingRetry.from_retry" title="Link to this definition"></a></dt>
+<dd><p>Creates a CountingRetry instance from an existing Retry instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>retry_instance</strong> – Retry = The Retry instance to convert.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>CountingRetry = A new CountingRetry object with the same configurations as the provided Retry instance.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.inference.http_detector.HTTPDetector">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.inference.http_detector.</span></span><span class="sig-name descname"><span class="pre">HTTPDetector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Retry</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/aws/osml/model_runner/inference/http_detector.html#HTTPDetector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.inference.http_detector.HTTPDetector" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="aws.osml.model_runner.inference.detector.html#aws.osml.model_runner.inference.detector.Detector" title="aws.osml.model_runner.inference.detector.Detector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Detector</span></code></a></p>
+<p>HTTPDetector is responsible for invoking HTTP-based model endpoints to run model inference.</p>
+<p>This class interacts with a model endpoint over HTTP to send a payload for feature detection and retrieves
+geojson-formatted feature detection results. It supports retry logic with exponential backoff for network-related
+issues.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="aws.osml.model_runner.inference.http_detector.HTTPDetector.mode">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="aws.osml.model_runner.api.inference.html#aws.osml.model_runner.api.inference.ModelInvokeMode" title="aws.osml.model_runner.api.inference.ModelInvokeMode"><span class="pre">ModelInvokeMode</span></a></em><a class="headerlink" href="#aws.osml.model_runner.inference.http_detector.HTTPDetector.mode" title="Link to this definition"></a></dt>
+<dd><p>Defines the invocation mode for the detector as HTTP endpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ModelInvokeMode.HTTP_ENDPOINT</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.inference.http_detector.HTTPDetector.find_features">
+<span class="sig-name descname"><span class="pre">find_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BufferedReader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MetricsLogger</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">FeatureCollection</span></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/inference/http_detector.html#HTTPDetector.find_features"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.inference.http_detector.HTTPDetector.find_features" title="Link to this definition"></a></dt>
+<dd><p>Invokes the HTTP model endpoint to detect features from the given payload.</p>
+<p>This method sends a payload to the HTTP model endpoint and retrieves feature detection results
+in the form of a geojson FeatureCollection. If configured, it logs metrics about the invocation process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>payload</strong> – BufferedReader = The data to be sent to the HTTP model for feature detection.</p></li>
+<li><p><strong>metrics</strong> – MetricsLogger = The metrics logger to capture system performance and log metrics.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>FeatureCollection = A geojson FeatureCollection containing the detected features.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>RetryError</strong> – Raised if the request fails after retries.</p></li>
+<li><p><strong>MaxRetryError</strong> – Raised if the maximum retry attempts are reached.</p></li>
+<li><p><strong>JSONDecodeError</strong> – Raised if there is an error decoding the model’s response.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.inference.http_detector.HTTPDetectorBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.inference.http_detector.</span></span><span class="sig-name descname"><span class="pre">HTTPDetectorBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/aws/osml/model_runner/inference/http_detector.html#HTTPDetectorBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.inference.http_detector.HTTPDetectorBuilder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="aws.osml.model_runner.inference.endpoint_builder.html#aws.osml.model_runner.inference.endpoint_builder.FeatureEndpointBuilder" title="aws.osml.model_runner.inference.endpoint_builder.FeatureEndpointBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">FeatureEndpointBuilder</span></code></a></p>
+<p>HTTPDetectorBuilder is responsible for building an HTTPDetector configured with an HTTP model endpoint.</p>
+<p>This builder constructs an HTTPDetector instance that can send payloads to HTTP-based model endpoints for feature
+detection.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.inference.http_detector.HTTPDetectorBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="aws.osml.model_runner.inference.detector.html#aws.osml.model_runner.inference.detector.Detector" title="aws.osml.model_runner.inference.detector.Detector"><span class="pre">Detector</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/inference/http_detector.html#HTTPDetectorBuilder.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.inference.http_detector.HTTPDetectorBuilder.build" title="Link to this definition"></a></dt>
+<dd><p>Builds and returns an HTTPDetector based on the configured parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Detector] = An HTTPDetector instance configured for the specified HTTP model endpoint.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

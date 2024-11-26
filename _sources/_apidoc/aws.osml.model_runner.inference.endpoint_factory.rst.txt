@@ -1,0 +1,7 @@
+aws.osml.model\_runner.inference.endpoint\_factory module
+=========================================================
+
+.. automodule:: aws.osml.model_runner.inference.endpoint_factory
+   :members:
+   :undoc-members:
+   :show-inheritance:

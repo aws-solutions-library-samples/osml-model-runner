@@ -1,0 +1,949 @@
+model_runner.database
+=====================
+
+.. py:module:: model_runner.database
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/model_runner/database/ddb_helper/index
+   /autoapi/model_runner/database/endpoint_statistics_table/index
+   /autoapi/model_runner/database/exceptions/index
+   /autoapi/model_runner/database/feature_table/index
+   /autoapi/model_runner/database/job_table/index
+   /autoapi/model_runner/database/region_request_table/index
+
+
+Exceptions
+----------
+
+.. autoapisummary::
+
+   model_runner.database.AddFeaturesException
+   model_runner.database.CompleteRegionException
+   model_runner.database.DDBUpdateException
+   model_runner.database.EndImageException
+   model_runner.database.GetImageRequestItemException
+   model_runner.database.GetRegionRequestItemException
+   model_runner.database.IsImageCompleteException
+   model_runner.database.StartImageException
+   model_runner.database.StartRegionException
+   model_runner.database.UpdateRegionException
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.database.DDBHelper
+   model_runner.database.DDBItem
+   model_runner.database.DDBKey
+   model_runner.database.EndpointStatisticsTable
+   model_runner.database.FeatureTable
+   model_runner.database.JobItem
+   model_runner.database.JobTable
+   model_runner.database.RegionRequestItem
+   model_runner.database.RegionRequestTable
+
+
+Package Contents
+----------------
+
+.. py:class:: DDBHelper(table_name: str)
+
+   DDBHelper is a class meant to help OSML with accessing and interacting with DynamoDB tables.
+
+   Attributes:
+       table_name (str): The name of the DynamoDB table to interact with.
+       client (boto3.resources.factory.dynamodb.ServiceResource): A DynamoDB service resource instance used.
+       table (boto3.resources.factory.dynamodb.Table): A reference to the DynamoDB table for performing operations.
+
+
+   .. py:attribute:: table_name
+
+
+   .. py:attribute:: client
+
+
+   .. py:attribute:: table
+
+
+   .. py:method:: get_ddb_item(ddb_item: DDBItem) -> Dict[str, Any]
+
+      Get a DynamoDB item from table and convert Decimal values to native types
+
+      :param ddb_item: DDBItem = item that we want to get (required)
+
+      :return: Dict[str, Any] = response from the get_item request
+
+
+
+   .. py:method:: put_ddb_item(ddb_item: DDBItem, condition_expression: str = None) -> Dict[str, Any]
+
+      Put a DynamoDB item into the table with a jitter-delayed retry logic for unprocessed items.
+
+      :param ddb_item: DDBItem = item that we want to put (required)
+      :param condition_expression: str = Condition that must be satisfied in order for a PutItem operation to succeed.
+
+      :return: Dict[str, Any] = item from the put_item response
+
+
+
+   .. py:method:: batch_write_items(ddb_items: List[DDBItem], max_retries: int = 500, max_delay: float = 8) -> None
+
+      Write multiple DynamoDB items in a batch with jitter-delayed retry logic for unprocessed items.
+
+      This method splits the provided list of `ddb_items` into batches of up to 25 items (the maximum batch size
+      supported by DynamoDB). Each batch is written to the table, and if unprocessed items are returned,
+      the method retries the operation with an exponential backoff with jitter. The number of retries and the
+      maximum delay between retries are configurable.
+
+      :param ddb_items: List[DDBItem] = List of items that we want to write in batch mode to the DynamoDB table.
+      :param max_retries: int = Maximum number of retries for unprocessed items. Defaults to 500.
+      :param max_delay: float = Maximum delay in seconds between retries, applied with jitter. Defaults to 8 seconds.
+
+      :return: None
+
+
+
+   .. py:method:: delete_ddb_item(ddb_item: DDBItem) -> Dict[str, Any]
+
+      Delete a DynamoDB item from the table
+
+      :param ddb_item: DDBItem = item that we want to delete (required)
+
+      :return: Dict[str, Any] = response from the delete_item request
+
+
+
+   .. py:method:: update_ddb_item(ddb_item: DDBItem, update_exp: str = None, update_attr: Dict = None) -> Dict[str, Any]
+
+      Update the DynamoDB item based on the contents of an input dictionary. If the user doesn't
+      provide an update expression and attributes, one will be generated from the body.
+
+      :param ddb_item: DDBItem = item that we want to update (required)
+      :param update_exp: Optional[str] = the update expression to use for the update
+      :param update_attr: Optional[list] = attribute string to use when updating DDB item
+
+      :return: Dict[str, Any] = the new ddb item as a dict
+
+
+
+   .. py:method:: query_items(ddb_item: DDBItem) -> List[Dict[str, Any]]
+
+      Query the table for all items of a given hash_key.
+
+      :param ddb_item: DDBItem = the hash key we want to query the table for
+
+      :return: List[Dict[str, Any]] = the list of dictionary responses corresponding to the items returned
+
+
+
+   .. py:method:: get_update_params(body: Dict, ddb_item: DDBItem) -> Tuple[str, Dict[str, Any]]
+      :staticmethod:
+
+
+      Generate an update expression and a dict of values to update a dynamodb table.
+
+      :param body: Dict = the body of the request that contains the updated data
+      :param ddb_item: DDBItem = the hash key we want to query the table for
+
+      :return: Tuple[str, Dict[str, Any]] = the generated update expression and attributes
+
+
+
+   .. py:method:: get_keys(ddb_item: DDBItem) -> Dict[str, Any]
+      :staticmethod:
+
+
+      Determine to see if we need to use both keys to search an item in DDB
+
+      :param ddb_item: DDBItem = the hash key we want to query the table for
+
+      return Dict[str, Any] = Holding either Hash Key or both Keys (Hash and Range)
+
+
+
+   .. py:method:: convert_decimal(data: Any) -> Any
+      :staticmethod:
+
+
+      Convert any Decimal values in the data to int or float, depending on the value.
+
+      :param data: Any = the data to convert
+      :returns: Any = the converted data
+
+
+
+.. py:class:: DDBItem
+
+   DDBItem is a dataclass meant to represent a single item in a DynamoDB table via a key-value pair.
+
+   Attributes:
+       ddb_key (DDBKey): The key object representing the hash and range key pair for this DynamoDB item.
+
+
+   .. py:attribute:: ddb_key
+      :type:  DDBKey
+
+
+   .. py:method:: to_put() -> Dict[str, str]
+
+
+   .. py:method:: to_update() -> Dict[str, str]
+
+
+   .. py:method:: __get_fields()
+      :staticmethod:
+
+
+
+.. py:class:: DDBKey
+
+   DDBKey is a dataclass meant to represent a single item in a DynamoDB table via a key-value pair.
+
+   Attributes:
+       hash_key (str): The name of the hash key (partition key) used to identify the item in the DynamoDB table.
+       hash_value (str): The value of the hash key (partition key) that uniquely identifies the item in the table.
+       range_key (Optional[str]): The name of the range key (sort key) used to further refine the item's location.
+       range_value (Optional[str]): The value of the range key (sort key) that, together with the hash key, identifies.
+
+
+   .. py:attribute:: hash_key
+      :type:  str
+
+
+   .. py:attribute:: hash_value
+      :type:  str
+
+
+   .. py:attribute:: range_key
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: range_value
+      :type:  Optional[str]
+      :value: None
+
+
+
+.. py:class:: EndpointStatisticsTable(table_name: str)
+
+   Bases: :py:obj:`model_runner.database.ddb_helper.DDBHelper`
+
+
+   EndpointStatisticsTable is a class meant to help OSML with accessing and interacting with
+   the per endpoints processing statistics we track as part of the endpoint statistics table.
+   It extends the DDBHelper class and provides its own item data class for use when
+   working with items from the table. It also sets the key for which we index on this table
+   in the constructor.
+
+   :param table_name: str = the name of the table to interact with
+
+   :return: None
+
+
+   .. py:method:: upsert_endpoint(endpoint: str, max_regions: int) -> None
+
+      Upserts an endpoint statistics entry. If the endpoint is already being
+      tracked then we update the max_region count for the existing entry. If an
+      endpoint is scaled up or down or the associated instance type changes the
+      maximum number of concurrent regions may change.
+
+      :param endpoint: str = Sagemaker endpoint name
+      :param max_regions: int = current max concurrent regions the endpoint can process
+
+      :return: None
+
+
+
+   .. py:method:: increment_region_count(endpoint: str) -> None
+
+      Increases the in progress regions for the specified endpoint by 1.
+
+      :param endpoint: str = Sagemaker endpoint name
+
+      :return: None
+
+
+
+   .. py:method:: decrement_region_count(endpoint: str) -> None
+
+      Decreases the in progress regions for the specified endpoint by 1.
+
+      :param endpoint: str = Sagemaker endpoint name
+
+      :return: None
+
+
+
+   .. py:method:: current_in_progress_regions(endpoint: str) -> int
+
+      Retrieve the current number of in progress regions for the specified endpoint
+
+      :param endpoint: str = Sagemaker endpoint name
+
+      :return: int = current number of in progress regions
+
+
+
+.. py:exception:: AddFeaturesException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: CompleteRegionException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: DDBUpdateException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: EndImageException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: GetImageRequestItemException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: GetRegionRequestItemException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: IsImageCompleteException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: StartImageException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: StartRegionException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: UpdateRegionException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:class:: FeatureTable(table_name: str, tile_size: aws.osml.model_runner.common.ImageDimensions, overlap: aws.osml.model_runner.common.ImageDimensions)
+
+   Bases: :py:obj:`model_runner.database.ddb_helper.DDBHelper`
+
+
+   .. py:attribute:: tile_size
+
+
+   .. py:attribute:: overlap
+
+
+   .. py:attribute:: hash_salt
+      :value: 50
+
+
+
+   .. py:method:: add_features(features: List[geojson.Feature], metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None)
+
+      Group all the features together and add/update an item in the DDB
+
+      :param features: The list of features to add to the DDB table.
+      :param metrics: Metrics logger to use to report metrics.
+      :return: None
+
+
+
+   .. py:method:: get_features(image_id: str, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None) -> List[geojson.Feature]
+
+      Parallelized version to query the database for all items with a given image_id,
+      then convert them into feature items.
+
+      :param image_id: The image_id to aggregate features from DDB for.
+      :param metrics: MetricsLogger = the metrics logger to use to report metrics.
+      :return: List of features aggregated from the DDB table.
+
+
+
+   .. py:method:: group_features_by_key(features: List[geojson.Feature]) -> Dict[str, List[geojson.Feature]]
+
+      Group all the feature items by key
+
+      :param features: The list of features
+
+      :return: Map of keys containing a list of features
+
+
+
+   .. py:method:: generate_tile_key(feature: geojson.Feature) -> str
+
+      Generate the tile key based on the given feature.
+
+      :param feature: Properties of a feature
+      :return: The tile key associated with this list of features.
+
+
+
+   .. py:method:: aggregate_features(image_request_item: model_runner.database.job_table.JobItem, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None) -> List[geojson.Feature]
+
+      For a given image processing job - aggregate all the features that were collected for it and
+      put them in the correct output sink locations.
+
+      :param image_request_item: JobItem = the image request
+      :param metrics: the current metrics scope
+
+      :return: List[geojson.Feature] = the list of features
+
+
+
+.. py:class:: JobItem
+
+   Bases: :py:obj:`model_runner.database.ddb_helper.DDBItem`
+
+
+   JobItem is a dataclass meant to represent a single item in the JobStatus table.
+
+   The data schema is defined as follows:
+   image_id: str = unique identifier for the image associated with the job
+   job_id: Optional[str] = unique identifier for the job
+   image_url: Optional[str] = S3 URL or another source location for the image
+   image_read_role: Optional[str] = IAM role ARN for accessing the image from its source
+   model_invoke_mode: Optional[str] = mode in which the model is invoked (e.g., batch or streaming)
+   start_time: Optional[int] = time in epoch milliseconds when the job started
+   expire_time: Optional[int] = time in epoch seconds when the job will expire
+   end_time: Optional[int] = time in epoch milliseconds when the job ended
+   region_success: Optional[int] = current count of regions that have successfully processed for this image
+   region_error: Optional[int] = current count of regions that have errored during processing
+   region_count: Optional[int] = total count of regions expected for this image
+   width: Optional[int] = width of the image in pixels
+   height: Optional[int] = height of the image in pixels
+   extents: Optional[str] = string representation of the image extents
+   tile_size: Optional[str] = size of the tiles used during processing
+   tile_overlap: Optional[str] = overlap between tiles during processing
+   model_name: Optional[str] = name of the model used for processing
+   outputs: Optional[str] = details about the job output
+   processing_duration: Optional[int] = time in seconds taken to complete processing
+   feature_properties: Optional[str] = additional feature properties or metadata from the image processing
+   feature_distillation_option: Optional[str] = the options used in selecting features (e.g., NMS/SOFT_NMS, thresholds)
+   roi_wkt: Optional[str] = a Well-Known Text (WKT) representation of the requested processing bounds
+
+
+   .. py:attribute:: image_id
+      :type:  str
+
+
+   .. py:attribute:: job_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: image_url
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: image_read_role
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: model_invoke_mode
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: start_time
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: expire_time
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: end_time
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: region_success
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: region_error
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: region_count
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: width
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: height
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: extents
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: tile_size
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: tile_overlap
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: model_name
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: outputs
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: processing_duration
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: feature_properties
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: feature_distillation_option
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: roi_wkt
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:method:: __post_init__()
+
+
+   .. py:method:: from_image_request(image_request: aws.osml.model_runner.api.ImageRequest) -> JobItem
+      :classmethod:
+
+
+      Create a JobItem from an ImageRequest instance.
+
+      :param image_request: ImageRequest = The image request from which to generate the JobItem.
+
+      :return: JobItem = A new JobItem instance with the relevant fields populated.
+
+
+
+.. py:class:: JobTable(table_name: str)
+
+   Bases: :py:obj:`model_runner.database.ddb_helper.DDBHelper`
+
+
+   JobTable is a class meant to help OSML with accessing and interacting with the image processing jobs we track
+   as part of the job status table. It extends the DDBHelper class and provides its own item data class for use when
+   working with items from the table. It also  sets the key for which we index on this table in the constructor.
+
+   :param table_name: str = the name of the table to interact with
+
+   :return: None
+
+
+   .. py:method:: start_image_request(image_request_item: JobItem) -> JobItem
+
+      Start an image processing request for given image_id, this should be the first record for this image in the
+      table.
+
+      :param image_request_item: the unique identifier for the image we want to add to ddb
+
+      :return: JobItem = response from ddb
+
+
+
+   .. py:method:: complete_region_request(image_id: str, error: bool) -> JobItem
+
+      Update the image job to reflect that a region has succeeded or failed.
+
+      :param image_id: str = the unique identifier for the image we want to update
+      :param error: bool = if there was an error processing the region, is true else false
+
+      :return: None
+
+
+
+   .. py:method:: is_image_request_complete(image_request_item: JobItem) -> bool
+      :staticmethod:
+
+
+      Read the table for a ddb item and determine if the image_id associated with the job has completed processing all
+      regions associated with that image.
+
+      :param image_request_item: JobItem = the unique identifier for the image we want to check if the image is completed
+
+      :return: bool
+
+
+
+   .. py:method:: end_image_request(image_id: str) -> JobItem
+
+      Stop an image processing job for given image_id and record the time the job ended, this should be the last
+      record for this image in the table.
+
+      :param image_id: str = the unique identifier for the image we want to stop processing
+
+      :return: None
+
+
+
+   .. py:method:: get_image_request(image_id: str) -> JobItem
+
+      Get a JobItem object from the table based on the image_id provided
+
+      :param image_id: str = the unique identifier for the image we want to start processing
+
+      :return: JobItem = updated image request item from ddb
+
+
+
+   .. py:method:: update_image_request(image_request_item: JobItem) -> JobItem
+
+      Get a JobItem object from the table based on the image_id provided
+
+      :param image_request_item: JobItem =
+
+      :return: ImageRequestItem = updated image request item from ddb
+
+
+
+   .. py:method:: get_processing_duration(start_time: int) -> int
+      :staticmethod:
+
+
+
+.. py:class:: RegionRequestItem
+
+   Bases: :py:obj:`model_runner.database.ddb_helper.DDBItem`
+
+
+   RegionRequestItem is a dataclass meant to represent a single item in the Region table.
+
+   The data schema is defined as follows:
+   region_id: str = primary key - formatted as region (pixel bounds) + "-" + unique_identifier
+   image_id: str = secondary key - image_id for the job
+   job_id: Optional[str] = job identifier for tracking
+   start_time: Optional[int] = time in epoch seconds when the job started
+   last_updated_time: Optional[int] = time in epoch seconds when the job is processing (periodically updated)
+   end_time: Optional[int] = time in epoch seconds when the job ended
+   expire_time: Optional[int] = time in epoch seconds when the item will expire from the table
+   image_read_role: Optional[str] = IAM role to read the image for processing
+   processing_duration: Optional[int] = time in seconds to complete region processing
+   message: Optional[str] = additional information about the region job
+   region_status: Optional[str] = region job status - PROCESSING, COMPLETED, FAILED
+   total_tiles: Optional[int] = total number of tiles to be processed for the region
+   failed_tiles: Optional[List] = list of tiles that failed processing
+   failed_tile_count: Optional[int] = count of failed tiles that failed to process
+   succeeded_tiles: Optional[List] = list of tiles that succeeded processing
+   succeeded_tile_count: Optional[int] = count of successfully processed tiles
+   region_bounds: Optional[List[List[int]]] = list of pixel bounds that define the region
+   region_retry_count: Optional[int] = number of times the region processing has been retried
+   tile_compression: Optional[str] = compression type of tiles for the region (e.g., 'LZW', 'JPEG')
+   tile_format: Optional[str] = file format of the tiles (e.g., 'tif', 'ntf')
+   tile_overlap: Optional[List[int]] = overlap dimensions for the tiles in the region
+   tile_size: Optional[List[int]] = size dimensions of the tiles in the region
+
+
+   .. py:attribute:: region_id
+      :type:  str
+
+
+   .. py:attribute:: image_id
+      :type:  str
+
+
+   .. py:attribute:: job_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: start_time
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: last_updated_time
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: end_time
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: expire_time
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: image_read_role
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: processing_duration
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: message
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: region_status
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: total_tiles
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: failed_tiles
+      :type:  Optional[List]
+      :value: None
+
+
+
+   .. py:attribute:: failed_tile_count
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: succeeded_tiles
+      :type:  Optional[List]
+      :value: None
+
+
+
+   .. py:attribute:: succeeded_tile_count
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: region_bounds
+      :type:  Optional[List[List[int]]]
+      :value: None
+
+
+
+   .. py:attribute:: region_retry_count
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: tile_compression
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: tile_format
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: tile_overlap
+      :type:  Optional[List[int]]
+      :value: None
+
+
+
+   .. py:attribute:: tile_size
+      :type:  Optional[List[int]]
+      :value: None
+
+
+
+   .. py:method:: __post_init__()
+
+
+   .. py:method:: from_region_request(region_request: aws.osml.model_runner.api.RegionRequest) -> RegionRequestItem
+      :classmethod:
+
+
+      Helper method to create a RegionRequestItem from a RegionRequest object.
+
+      :param region_request: A RegionRequest object.
+      :return: A RegionRequestItem instance with the relevant fields populated.
+
+
+
+.. py:class:: RegionRequestTable(table_name: str)
+
+   Bases: :py:obj:`model_runner.database.ddb_helper.DDBHelper`
+
+
+   RegionRequestTable is a class meant to help OSML with accessing and interacting with the region processing jobs we
+   track as part of the region table. It extends the DDBHelper class and provides its own item data class for use when
+   working with items from the table. It also sets the key for which we index on this table in the constructor.
+
+   :param table_name: str = the name of the table to interact with
+
+   :return: None
+
+
+   .. py:method:: start_region_request(region_request_item: RegionRequestItem) -> RegionRequestItem
+
+      Start a region processing request for given region pixel bounds, this should be the first record
+      for this region in the table.
+
+      :param region_request_item: RegionRequestItem = the unique identifier for the region we want to add to ddb
+
+      :return: RegionRequestItem = Updated region request item
+
+
+
+   .. py:method:: complete_region_request(region_request_item: RegionRequestItem, region_status: aws.osml.model_runner.common.RequestStatus)
+
+      Update the region job to reflect that a region has succeeded or failed.
+
+      :param region_request_item: RegionRequestItem = the unique identifier for the region we want to update
+      :param region_status: RegionRequestStatus = Status of region at completion (FAILURE, PARTIAL, SUCCESS, etc.)
+
+      :return: RegionRequestItem = Updated region request item
+
+
+
+   .. py:method:: update_region_request(region_request_item: RegionRequestItem) -> RegionRequestItem
+
+      Update the region info in the ddb
+
+      :param region_request_item: RegionRequestItem = the unique identifier for the region we want to update
+
+      :return: RegionRequestItem = Updated region request item
+
+
+
+   .. py:method:: get_region_request(region_id: str, image_id: str) -> Optional[RegionRequestItem]
+
+      Get a RegionRequestItem object from the table based on the region_id and image_id provided
+
+      :param region_id: str = the unique identifier for the region we want to start processing
+      :param image_id: str = the unique identifier for the image (range key)
+
+      :return: Optional[RegionRequestItem] = region request item
+
+
+
+   .. py:method:: add_tile(image_id: str, region_id: str, tile: aws.osml.model_runner.common.ImageRegion, state: aws.osml.model_runner.common.TileState) -> RegionRequestItem
+
+      Append tile to the with the associated state to associated RegionRequestItem in the table.
+
+      :param image_id: str = the id of the image request we want to update
+      :param region_id: str = the id of the region request we want to update
+      :param tile: ImageRegion = list of values to append to the 'succeeded_tiles' property
+      :param state: str = state of the tile to add, i.e. succeeded or failed
+      :return: The new updated DDB item.
+
+
+

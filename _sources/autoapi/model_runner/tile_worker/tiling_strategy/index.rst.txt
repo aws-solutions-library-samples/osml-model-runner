@@ -1,0 +1,106 @@
+model_runner.tile_worker.tiling_strategy
+========================================
+
+.. py:module:: model_runner.tile_worker.tiling_strategy
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.tile_worker.tiling_strategy.TilingStrategy
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   model_runner.tile_worker.tiling_strategy.generate_crops
+   model_runner.tile_worker.tiling_strategy.ceildiv
+
+
+Module Contents
+---------------
+
+.. py:class:: TilingStrategy
+
+   Bases: :py:obj:`abc.ABC`
+
+
+   TilingStrategy defines an abstract interface for the code that determines how a large image is broken down into
+   regions and tiles.
+
+
+   .. py:method:: compute_regions(processing_bounds: model_runner.common.ImageRegion, region_size: model_runner.common.ImageDimensions, tile_size: model_runner.common.ImageDimensions, overlap: model_runner.common.ImageDimensions) -> List[model_runner.common.ImageRegion]
+      :abstractmethod:
+
+
+      Identify the regions that should be created from this image.
+
+      :param processing_bounds: the bounds of the full image or area of interest in pixels ((r, c), (w, h))
+      :param region_size: the size of the regions in pixels (w, h)
+      :param tile_size: the size of the tiles in pixels (w, y)
+      :param overlap: the amount of overlap (w, h)
+
+      :return: a collection of region boundaries
+
+
+
+   .. py:method:: compute_tiles(region: model_runner.common.ImageRegion, tile_size: model_runner.common.ImageDimensions, overlap: model_runner.common.ImageDimensions) -> List[model_runner.common.ImageRegion]
+      :abstractmethod:
+
+
+      Identify the tiles that should be created from this region.
+
+      :param region: the bounds of the region in pixels ((r, c), (w, h))
+      :param tile_size: the size of the tiles in pixels (w, h)
+      :param overlap: the amount of overlap (w, h)
+
+      :return: a collection of tile boundaries
+
+
+
+   .. py:method:: cleanup_duplicate_features(processing_bounds: model_runner.common.ImageRegion, region_size: model_runner.common.ImageDimensions, tile_size: model_runner.common.ImageDimensions, overlap: model_runner.common.ImageDimensions, features: List[geojson.Feature], feature_selector: model_runner.inference.FeatureSelector) -> List[geojson.Feature]
+      :abstractmethod:
+
+
+      This method handles cleaning up duplicates caused by tiling by applying the feature selector to any features
+      that come from overlap regions.
+
+      :param processing_bounds: the bounds of the full image or area of interest in pixels ((r, c), (w, h))
+      :param region_size: the size of the regions in pixels (w, h)
+      :param tile_size: the size of the tiles in pixels (w, y)
+      :param overlap: the amount of overlap (w, h)
+      :param features: the collection of features to deduplicate
+      :param feature_selector: the algorithm that will be used to resolve duplicates
+
+      :return: the collection of features with duplicates removed
+
+
+
+.. py:function:: generate_crops(region: model_runner.common.ImageRegion, chip_size: model_runner.common.ImageDimensions, overlap: model_runner.common.ImageDimensions, only_full_tiles: bool = False) -> List[model_runner.common.ImageRegion]
+
+   Yields a list of overlapping chip bounding boxes for the given region. Chips will start
+   in the upper left corner of the region (i.e. region[0][0], region[0][1]) and will be spaced
+   such that they have the specified horizontal and vertical overlap.
+
+   :param region: a tuple for the bounding box of the region ((ul_r, ul_c), (width, height))
+   :param chip_size: a tuple for the chip dimensions (width, height)
+   :param overlap: a tuple for the overlap (width, height)
+   :param only_full_tiles: true if we only want to generate tiles that match the chip_size
+
+   :return: an iterable list of tuples for the chip bounding boxes [((ul_r, ul_c), (w, h)), ...]
+
+
+.. py:function:: ceildiv(a: int, b: int) -> int
+
+   Integer ceiling division
+
+   :param a: numerator
+   :param b: denominator
+
+   :return: ceil(a/b)
+
+

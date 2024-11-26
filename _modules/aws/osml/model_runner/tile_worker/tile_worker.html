@@ -1,0 +1,339 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.tile_worker.tile_worker &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.tile_worker.tile_worker</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.model_runner.tile_worker.tile_worker</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span> <span class="nn">queue</span> <span class="kn">import</span> <span class="n">Queue</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">geojson</span>
+<span class="kn">from</span> <span class="nn">aws_embedded_metrics.logger.metrics_logger</span> <span class="kn">import</span> <span class="n">MetricsLogger</span>
+<span class="kn">from</span> <span class="nn">aws_embedded_metrics.metric_scope</span> <span class="kn">import</span> <span class="n">metric_scope</span>
+<span class="kn">from</span> <span class="nn">aws_embedded_metrics.unit</span> <span class="kn">import</span> <span class="n">Unit</span>
+<span class="kn">from</span> <span class="nn">shapely.affinity</span> <span class="kn">import</span> <span class="n">translate</span>
+
+<span class="kn">from</span> <span class="nn">aws.osml.features</span> <span class="kn">import</span> <span class="n">Geolocator</span><span class="p">,</span> <span class="n">ImagedFeaturePropertyAccessor</span>
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.app_config</span> <span class="kn">import</span> <span class="n">MetricLabels</span>
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.common</span> <span class="kn">import</span> <span class="n">ThreadingLocalContextFilter</span><span class="p">,</span> <span class="n">TileState</span><span class="p">,</span> <span class="n">Timer</span>
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.database</span> <span class="kn">import</span> <span class="n">FeatureTable</span><span class="p">,</span> <span class="n">RegionRequestTable</span>
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.inference</span> <span class="kn">import</span> <span class="n">Detector</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="TileWorker">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.tile_worker.tile_worker.html#aws.osml.model_runner.tile_worker.tile_worker.TileWorker">[docs]</a>
+<span class="k">class</span> <span class="nc">TileWorker</span><span class="p">(</span><span class="n">Thread</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">in_queue</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span>
+        <span class="n">feature_detector</span><span class="p">:</span> <span class="n">Detector</span><span class="p">,</span>
+        <span class="n">geolocator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Geolocator</span><span class="p">],</span>
+        <span class="n">feature_table</span><span class="p">:</span> <span class="n">FeatureTable</span><span class="p">,</span>
+        <span class="n">region_request_table</span><span class="p">:</span> <span class="n">RegionRequestTable</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_queue</span> <span class="o">=</span> <span class="n">in_queue</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_detector</span> <span class="o">=</span> <span class="n">feature_detector</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">geolocator</span> <span class="o">=</span> <span class="n">geolocator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_table</span> <span class="o">=</span> <span class="n">feature_table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">region_request_table</span> <span class="o">=</span> <span class="n">region_request_table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">property_accessor</span> <span class="o">=</span> <span class="n">ImagedFeaturePropertyAccessor</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">failed_tile_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="TileWorker.run">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.tile_worker.tile_worker.html#aws.osml.model_runner.tile_worker.tile_worker.TileWorker.run">[docs]</a>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">thread_event_loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="n">asyncio</span><span class="o">.</span><span class="n">set_event_loop</span><span class="p">(</span><span class="n">thread_event_loop</span><span class="p">)</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">image_info</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+            <span class="n">ThreadingLocalContextFilter</span><span class="o">.</span><span class="n">set_context</span><span class="p">(</span><span class="n">image_info</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">image_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;All images processed. Stopping tile worker.&quot;</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Feature Detector Stats: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_detector</span><span class="o">.</span><span class="n">request_count</span><span class="si">}</span><span class="s2"> requests &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">failed_tile_count</span><span class="si">}</span><span class="s2"> failed tiles.&quot;</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="k">break</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">process_tile</span><span class="p">(</span><span class="n">image_info</span><span class="p">)</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">in_queue</span><span class="o">.</span><span class="n">task_done</span><span class="p">()</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">thread_event_loop</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="n">thread_event_loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Failed to stop and close the thread event loop&quot;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TileWorker.process_tile">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.tile_worker.tile_worker.html#aws.osml.model_runner.tile_worker.tile_worker.TileWorker.process_tile">[docs]</a>
+    <span class="nd">@metric_scope</span>
+    <span class="k">def</span> <span class="nf">process_tile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_info</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">MetricsLogger</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method handles the processing of a single tile by invoking the ML model, geolocating the detections to</span>
+<span class="sd">        create features and finally storing the features in the database.</span>
+
+<span class="sd">        :param image_info: description of the tile to be processed</span>
+<span class="sd">        :param metrics: the current metric scope</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">set_dimensions</span><span class="p">()</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_dimensions</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">OPERATION_DIMENSION</span><span class="p">:</span> <span class="n">MetricLabels</span><span class="o">.</span><span class="n">TILE_PROCESSING_OPERATION</span><span class="p">,</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">MODEL_NAME_DIMENSION</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_detector</span><span class="o">.</span><span class="n">endpoint</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">INVOCATIONS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">Timer</span><span class="p">(</span>
+                <span class="n">task_str</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Processing Tile </span><span class="si">{</span><span class="n">image_info</span><span class="p">[</span><span class="s1">&#39;image_path&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">metric_name</span><span class="o">=</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">DURATION</span><span class="p">,</span>
+                <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span>
+                <span class="n">metrics_logger</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">image_info</span><span class="p">[</span><span class="s2">&quot;image_path&quot;</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">payload</span><span class="p">:</span>
+                    <span class="n">feature_collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_detector</span><span class="o">.</span><span class="n">find_features</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+
+                <span class="n">features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refine_features</span><span class="p">(</span><span class="n">feature_collection</span><span class="p">,</span> <span class="n">image_info</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">features</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">feature_table</span><span class="o">.</span><span class="n">add_features</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">region_request_table</span><span class="o">.</span><span class="n">add_tile</span><span class="p">(</span>
+                    <span class="n">image_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;image_id&quot;</span><span class="p">),</span> <span class="n">image_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;region_id&quot;</span><span class="p">),</span> <span class="n">image_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;region&quot;</span><span class="p">),</span> <span class="n">TileState</span><span class="o">.</span><span class="n">SUCCEEDED</span>
+                <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">failed_tile_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to process region tile with error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">region_request_table</span><span class="o">.</span><span class="n">add_tile</span><span class="p">(</span>
+                <span class="n">image_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;image_id&quot;</span><span class="p">),</span> <span class="n">image_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;region_id&quot;</span><span class="p">),</span> <span class="n">image_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;region&quot;</span><span class="p">),</span> <span class="n">TileState</span><span class="o">.</span><span class="n">FAILED</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">ERRORS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span></div>
+
+
+    <span class="nd">@metric_scope</span>
+    <span class="k">def</span> <span class="nf">_refine_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_collection</span><span class="p">,</span> <span class="n">image_info</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">MetricsLogger</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">geojson</span><span class="o">.</span><span class="n">Feature</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method converts the detections returned by the model into geolocated features. It first updates the</span>
+<span class="sd">        image coordinates of each detection to be in relation to the full image then it geolocates the image feature.</span>
+
+<span class="sd">        :param feature_collection: the features from the ML model</span>
+<span class="sd">        :param image_info: a description of the image tile containing the features</span>
+<span class="sd">        :param metrics: the current metric scope</span>
+<span class="sd">        :return: a list of GeoJSON features</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">set_dimensions</span><span class="p">()</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_dimensions</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">OPERATION_DIMENSION</span><span class="p">:</span> <span class="n">MetricLabels</span><span class="o">.</span><span class="n">FEATURE_REFINEMENT_OPERATION</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">Timer</span><span class="p">(</span>
+            <span class="n">task_str</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Refining Features for Tile:</span><span class="si">{</span><span class="n">image_info</span><span class="p">[</span><span class="s1">&#39;image_path&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">metric_name</span><span class="o">=</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">DURATION</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span>
+            <span class="n">metrics_logger</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="c1"># TODO: Consider move invocations to Timer</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">INVOCATIONS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+
+            <span class="n">features</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">ulx</span> <span class="o">=</span> <span class="n">image_info</span><span class="p">[</span><span class="s2">&quot;region&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">uly</span> <span class="o">=</span> <span class="n">image_info</span><span class="p">[</span><span class="s2">&quot;region&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">feature_collection</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;features&quot;</span> <span class="ow">in</span> <span class="n">feature_collection</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SM Model returned </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">feature_collection</span><span class="p">[</span><span class="s1">&#39;features&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2"> features&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">feature_collection</span><span class="p">[</span><span class="s2">&quot;features&quot;</span><span class="p">]:</span>
+                    <span class="c1"># Check to see if there is a bbox defined in image coordinates. If so, update it to</span>
+                    <span class="c1"># use full image coordinates and store the updated value in the feature properties.</span>
+                    <span class="n">tiled_image_bbox</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">property_accessor</span><span class="o">.</span><span class="n">get_image_bbox</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">tiled_image_bbox</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">full_image_bbox</span> <span class="o">=</span> <span class="n">translate</span><span class="p">(</span><span class="n">tiled_image_bbox</span><span class="p">,</span> <span class="n">xoff</span><span class="o">=</span><span class="n">ulx</span><span class="p">,</span> <span class="n">yoff</span><span class="o">=</span><span class="n">uly</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">property_accessor</span><span class="o">.</span><span class="n">set_image_bbox</span><span class="p">(</span><span class="n">feature</span><span class="p">,</span> <span class="n">full_image_bbox</span><span class="p">)</span>
+
+                    <span class="c1"># Check to see if there is a geometry defined in image coordinates. If not and</span>
+                    <span class="c1"># there also isn&#39;t a bbox then search to see if some of the older deprecated</span>
+                    <span class="c1"># image properties are in use and if so use the geometry from those properties.</span>
+                    <span class="c1"># Note that this property search will be deprecated and removed in a future release.</span>
+                    <span class="n">tiled_image_geometry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">property_accessor</span><span class="o">.</span><span class="n">get_image_geometry</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">tiled_image_bbox</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">tiled_image_geometry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Feature may be using deprecated attributes.&quot;</span><span class="p">)</span>
+                        <span class="n">tiled_image_geometry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">property_accessor</span><span class="o">.</span><span class="n">find_image_geometry</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">tiled_image_geometry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;There isn&#39;t a valid detection shape for feature: </span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># If we found an image geometry update it to use full image coordinates and store the</span>
+                    <span class="c1"># value in the feature properties.</span>
+                    <span class="k">if</span> <span class="n">tiled_image_geometry</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">full_image_geometry</span> <span class="o">=</span> <span class="n">translate</span><span class="p">(</span><span class="n">tiled_image_geometry</span><span class="p">,</span> <span class="n">xoff</span><span class="o">=</span><span class="n">ulx</span><span class="p">,</span> <span class="n">yoff</span><span class="o">=</span><span class="n">uly</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">property_accessor</span><span class="o">.</span><span class="n">set_image_geometry</span><span class="p">(</span><span class="n">feature</span><span class="p">,</span> <span class="n">full_image_geometry</span><span class="p">)</span>
+
+                    <span class="n">feature</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span><span class="s2">&quot;image_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">image_info</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">]</span>
+                    <span class="n">feature</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span><span class="s2">&quot;inferenceTime&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">tz</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">&quot;seconds&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;+00:00&quot;</span><span class="p">,</span> <span class="s2">&quot;Z&quot;</span><span class="p">)</span>
+                    <span class="p">)</span>
+
+                    <span class="c1"># This conversion only happens here so the rest of the system can depend on a standard</span>
+                    <span class="c1"># set of properties. Eventually this call should be removed once the old properties are</span>
+                    <span class="c1"># no longer used by CV models.</span>
+                    <span class="n">TileWorker</span><span class="o">.</span><span class="n">convert_deprecated_feature_properties</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+
+                    <span class="n">features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# Features Created: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">features</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">features</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">geolocator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># Create a geometry for each feature in the result. The geographic coordinates of these</span>
+                    <span class="c1"># features are computed using the sensor model provided in the image metadata</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">geolocator</span><span class="o">.</span><span class="n">geolocate_features</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Created Geographic Coordinates for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">features</span><span class="p">)</span><span class="si">}</span><span class="s2"> features&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">features</span>
+
+<div class="viewcode-block" id="TileWorker.convert_deprecated_feature_properties">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.tile_worker.tile_worker.html#aws.osml.model_runner.tile_worker.tile_worker.TileWorker.convert_deprecated_feature_properties">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">convert_deprecated_feature_properties</span><span class="p">(</span><span class="n">feature</span><span class="p">:</span> <span class="n">geojson</span><span class="o">.</span><span class="n">Feature</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function converts the legacy properties produced by CV models into the feature properties used</span>
+<span class="sd">        by OversightML.</span>
+
+<span class="sd">        :param feature: the feature that needs its &quot;properties&quot; updated.</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Create an ontology based on the models returned feature_types</span>
+        <span class="k">if</span> <span class="s2">&quot;feature_types&quot;</span> <span class="ow">in</span> <span class="n">feature</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="s2">&quot;featureClasses&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">feature</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">]:</span>
+            <span class="n">feature_classes</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">feature_type</span> <span class="ow">in</span> <span class="n">feature</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span><span class="s2">&quot;feature_types&quot;</span><span class="p">]:</span>
+                <span class="n">feature_classes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;iri&quot;</span><span class="p">:</span> <span class="n">feature_type</span><span class="p">,</span>
+                        <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="n">feature</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span><span class="s2">&quot;feature_types&quot;</span><span class="p">][</span><span class="n">feature_type</span><span class="p">],</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+            <span class="n">feature</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span><span class="s2">&quot;featureClasses&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">feature_classes</span>
+            <span class="n">feature</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;feature_types&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

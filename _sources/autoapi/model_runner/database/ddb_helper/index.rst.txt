@@ -1,0 +1,209 @@
+model_runner.database.ddb_helper
+================================
+
+.. py:module:: model_runner.database.ddb_helper
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.database.ddb_helper.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.database.ddb_helper.DDBKey
+   model_runner.database.ddb_helper.DDBItem
+   model_runner.database.ddb_helper.DDBHelper
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:class:: DDBKey
+
+   DDBKey is a dataclass meant to represent a single item in a DynamoDB table via a key-value pair.
+
+   Attributes:
+       hash_key (str): The name of the hash key (partition key) used to identify the item in the DynamoDB table.
+       hash_value (str): The value of the hash key (partition key) that uniquely identifies the item in the table.
+       range_key (Optional[str]): The name of the range key (sort key) used to further refine the item's location.
+       range_value (Optional[str]): The value of the range key (sort key) that, together with the hash key, identifies.
+
+
+   .. py:attribute:: hash_key
+      :type:  str
+
+
+   .. py:attribute:: hash_value
+      :type:  str
+
+
+   .. py:attribute:: range_key
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: range_value
+      :type:  Optional[str]
+      :value: None
+
+
+
+.. py:class:: DDBItem
+
+   DDBItem is a dataclass meant to represent a single item in a DynamoDB table via a key-value pair.
+
+   Attributes:
+       ddb_key (DDBKey): The key object representing the hash and range key pair for this DynamoDB item.
+
+
+   .. py:attribute:: ddb_key
+      :type:  DDBKey
+
+
+   .. py:method:: to_put() -> Dict[str, str]
+
+
+   .. py:method:: to_update() -> Dict[str, str]
+
+
+   .. py:method:: __get_fields()
+      :staticmethod:
+
+
+
+.. py:class:: DDBHelper(table_name: str)
+
+   DDBHelper is a class meant to help OSML with accessing and interacting with DynamoDB tables.
+
+   Attributes:
+       table_name (str): The name of the DynamoDB table to interact with.
+       client (boto3.resources.factory.dynamodb.ServiceResource): A DynamoDB service resource instance used.
+       table (boto3.resources.factory.dynamodb.Table): A reference to the DynamoDB table for performing operations.
+
+
+   .. py:attribute:: table_name
+
+
+   .. py:attribute:: client
+
+
+   .. py:attribute:: table
+
+
+   .. py:method:: get_ddb_item(ddb_item: DDBItem) -> Dict[str, Any]
+
+      Get a DynamoDB item from table and convert Decimal values to native types
+
+      :param ddb_item: DDBItem = item that we want to get (required)
+
+      :return: Dict[str, Any] = response from the get_item request
+
+
+
+   .. py:method:: put_ddb_item(ddb_item: DDBItem, condition_expression: str = None) -> Dict[str, Any]
+
+      Put a DynamoDB item into the table with a jitter-delayed retry logic for unprocessed items.
+
+      :param ddb_item: DDBItem = item that we want to put (required)
+      :param condition_expression: str = Condition that must be satisfied in order for a PutItem operation to succeed.
+
+      :return: Dict[str, Any] = item from the put_item response
+
+
+
+   .. py:method:: batch_write_items(ddb_items: List[DDBItem], max_retries: int = 500, max_delay: float = 8) -> None
+
+      Write multiple DynamoDB items in a batch with jitter-delayed retry logic for unprocessed items.
+
+      This method splits the provided list of `ddb_items` into batches of up to 25 items (the maximum batch size
+      supported by DynamoDB). Each batch is written to the table, and if unprocessed items are returned,
+      the method retries the operation with an exponential backoff with jitter. The number of retries and the
+      maximum delay between retries are configurable.
+
+      :param ddb_items: List[DDBItem] = List of items that we want to write in batch mode to the DynamoDB table.
+      :param max_retries: int = Maximum number of retries for unprocessed items. Defaults to 500.
+      :param max_delay: float = Maximum delay in seconds between retries, applied with jitter. Defaults to 8 seconds.
+
+      :return: None
+
+
+
+   .. py:method:: delete_ddb_item(ddb_item: DDBItem) -> Dict[str, Any]
+
+      Delete a DynamoDB item from the table
+
+      :param ddb_item: DDBItem = item that we want to delete (required)
+
+      :return: Dict[str, Any] = response from the delete_item request
+
+
+
+   .. py:method:: update_ddb_item(ddb_item: DDBItem, update_exp: str = None, update_attr: Dict = None) -> Dict[str, Any]
+
+      Update the DynamoDB item based on the contents of an input dictionary. If the user doesn't
+      provide an update expression and attributes, one will be generated from the body.
+
+      :param ddb_item: DDBItem = item that we want to update (required)
+      :param update_exp: Optional[str] = the update expression to use for the update
+      :param update_attr: Optional[list] = attribute string to use when updating DDB item
+
+      :return: Dict[str, Any] = the new ddb item as a dict
+
+
+
+   .. py:method:: query_items(ddb_item: DDBItem) -> List[Dict[str, Any]]
+
+      Query the table for all items of a given hash_key.
+
+      :param ddb_item: DDBItem = the hash key we want to query the table for
+
+      :return: List[Dict[str, Any]] = the list of dictionary responses corresponding to the items returned
+
+
+
+   .. py:method:: get_update_params(body: Dict, ddb_item: DDBItem) -> Tuple[str, Dict[str, Any]]
+      :staticmethod:
+
+
+      Generate an update expression and a dict of values to update a dynamodb table.
+
+      :param body: Dict = the body of the request that contains the updated data
+      :param ddb_item: DDBItem = the hash key we want to query the table for
+
+      :return: Tuple[str, Dict[str, Any]] = the generated update expression and attributes
+
+
+
+   .. py:method:: get_keys(ddb_item: DDBItem) -> Dict[str, Any]
+      :staticmethod:
+
+
+      Determine to see if we need to use both keys to search an item in DDB
+
+      :param ddb_item: DDBItem = the hash key we want to query the table for
+
+      return Dict[str, Any] = Holding either Hash Key or both Keys (Hash and Range)
+
+
+
+   .. py:method:: convert_decimal(data: Any) -> Any
+      :staticmethod:
+
+
+      Convert any Decimal values in the data to int or float, depending on the value.
+
+      :param data: Any = the data to convert
+      :returns: Any = the converted data
+
+
+

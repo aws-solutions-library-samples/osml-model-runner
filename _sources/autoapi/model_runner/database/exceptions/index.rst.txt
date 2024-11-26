@@ -1,0 +1,124 @@
+model_runner.database.exceptions
+================================
+
+.. py:module:: model_runner.database.exceptions
+
+
+Exceptions
+----------
+
+.. autoapisummary::
+
+   model_runner.database.exceptions.AddFeaturesException
+   model_runner.database.exceptions.DDBUpdateException
+   model_runner.database.exceptions.DDBBatchWriteException
+   model_runner.database.exceptions.EndImageException
+   model_runner.database.exceptions.GetImageRequestItemException
+   model_runner.database.exceptions.IsImageCompleteException
+   model_runner.database.exceptions.StartImageException
+   model_runner.database.exceptions.StartRegionException
+   model_runner.database.exceptions.InvalidRegionRequestException
+   model_runner.database.exceptions.GetRegionRequestItemException
+   model_runner.database.exceptions.UpdateRegionException
+   model_runner.database.exceptions.CompleteRegionException
+
+
+Module Contents
+---------------
+
+.. py:exception:: AddFeaturesException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: DDBUpdateException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: DDBBatchWriteException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: EndImageException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: GetImageRequestItemException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: IsImageCompleteException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: StartImageException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: StartRegionException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: InvalidRegionRequestException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: GetRegionRequestItemException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: UpdateRegionException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: CompleteRegionException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+

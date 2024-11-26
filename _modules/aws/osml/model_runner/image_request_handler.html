@@ -1,0 +1,666 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.image_request_handler &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.image_request_handler</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.model_runner.image_request_handler</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">ast</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">asdict</span>
+<span class="kn">from</span> <span class="nn">json</span> <span class="kn">import</span> <span class="n">dumps</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">shapely.geometry.base</span>
+<span class="kn">from</span> <span class="nn">aws_embedded_metrics</span> <span class="kn">import</span> <span class="n">MetricsLogger</span><span class="p">,</span> <span class="n">metric_scope</span>
+<span class="kn">from</span> <span class="nn">aws_embedded_metrics.unit</span> <span class="kn">import</span> <span class="n">Unit</span>
+<span class="kn">from</span> <span class="nn">geojson</span> <span class="kn">import</span> <span class="n">Feature</span>
+<span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">gdal</span>
+<span class="kn">from</span> <span class="nn">osgeo.gdal</span> <span class="kn">import</span> <span class="n">Dataset</span>
+
+<span class="kn">from</span> <span class="nn">aws.osml.gdal</span> <span class="kn">import</span> <span class="n">GDALConfigEnv</span><span class="p">,</span> <span class="n">get_image_extension</span><span class="p">,</span> <span class="n">load_gdal_dataset</span>
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.api</span> <span class="kn">import</span> <span class="n">get_image_path</span>
+<span class="kn">from</span> <span class="nn">aws.osml.photogrammetry</span> <span class="kn">import</span> <span class="n">SensorModel</span>
+
+<span class="kn">from</span> <span class="nn">.api</span> <span class="kn">import</span> <span class="n">VALID_MODEL_HOSTING_OPTIONS</span><span class="p">,</span> <span class="n">ImageRequest</span><span class="p">,</span> <span class="n">RegionRequest</span>
+<span class="kn">from</span> <span class="nn">.app_config</span> <span class="kn">import</span> <span class="n">MetricLabels</span><span class="p">,</span> <span class="n">ServiceConfig</span>
+<span class="kn">from</span> <span class="nn">.common</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">EndpointUtils</span><span class="p">,</span>
+    <span class="n">ImageDimensions</span><span class="p">,</span>
+    <span class="n">ImageRegion</span><span class="p">,</span>
+    <span class="n">RequestStatus</span><span class="p">,</span>
+    <span class="n">Timer</span><span class="p">,</span>
+    <span class="n">get_credentials_for_assumed_role</span><span class="p">,</span>
+    <span class="n">mr_post_processing_options_factory</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.database</span> <span class="kn">import</span> <span class="n">EndpointStatisticsTable</span><span class="p">,</span> <span class="n">FeatureTable</span><span class="p">,</span> <span class="n">JobItem</span><span class="p">,</span> <span class="n">JobTable</span><span class="p">,</span> <span class="n">RegionRequestItem</span><span class="p">,</span> <span class="n">RegionRequestTable</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AggregateFeaturesException</span><span class="p">,</span>
+    <span class="n">AggregateOutputFeaturesException</span><span class="p">,</span>
+    <span class="n">LoadImageException</span><span class="p">,</span>
+    <span class="n">ProcessImageException</span><span class="p">,</span>
+    <span class="n">UnsupportedModelException</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.inference</span> <span class="kn">import</span> <span class="n">calculate_processing_bounds</span><span class="p">,</span> <span class="n">get_source_property</span>
+<span class="kn">from</span> <span class="nn">.inference.feature_utils</span> <span class="kn">import</span> <span class="n">add_properties_to_features</span><span class="p">,</span> <span class="n">get_extents</span>
+<span class="kn">from</span> <span class="nn">.queue</span> <span class="kn">import</span> <span class="n">RequestQueue</span>
+<span class="kn">from</span> <span class="nn">.region_request_handler</span> <span class="kn">import</span> <span class="n">RegionRequestHandler</span>
+<span class="kn">from</span> <span class="nn">.sink</span> <span class="kn">import</span> <span class="n">SinkFactory</span>
+<span class="kn">from</span> <span class="nn">.status</span> <span class="kn">import</span> <span class="n">ImageStatusMonitor</span>
+<span class="kn">from</span> <span class="nn">.tile_worker</span> <span class="kn">import</span> <span class="n">TilingStrategy</span><span class="p">,</span> <span class="n">select_features</span>
+
+<span class="c1"># Set up logging configuration</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1"># GDAL 4.0 will begin using exceptions as the default; at this point the software is written to assume</span>
+<span class="c1"># no exceptions so we call this explicitly until the software can be updated to match.</span>
+<span class="n">gdal</span><span class="o">.</span><span class="n">UseExceptions</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="ImageRequestHandler">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.image_request_handler.html#aws.osml.model_runner.image_request_handler.ImageRequestHandler">[docs]</a>
+<span class="k">class</span> <span class="nc">ImageRequestHandler</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class responsible for handling ImageRequest processing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">job_table</span><span class="p">:</span> <span class="n">JobTable</span><span class="p">,</span>
+        <span class="n">image_status_monitor</span><span class="p">:</span> <span class="n">ImageStatusMonitor</span><span class="p">,</span>
+        <span class="n">endpoint_statistics_table</span><span class="p">:</span> <span class="n">EndpointStatisticsTable</span><span class="p">,</span>
+        <span class="n">tiling_strategy</span><span class="p">:</span> <span class="n">TilingStrategy</span><span class="p">,</span>
+        <span class="n">region_request_queue</span><span class="p">:</span> <span class="n">RequestQueue</span><span class="p">,</span>
+        <span class="n">region_request_table</span><span class="p">:</span> <span class="n">RegionRequestTable</span><span class="p">,</span>
+        <span class="n">endpoint_utils</span><span class="p">:</span> <span class="n">EndpointUtils</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">ServiceConfig</span><span class="p">,</span>
+        <span class="n">region_request_handler</span><span class="p">:</span> <span class="n">RegionRequestHandler</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the ImageRequestHandler with the necessary dependencies.</span>
+
+<span class="sd">        :param job_table: The job table for managing image processing jobs.</span>
+<span class="sd">        :param image_status_monitor: A monitor to track image request statuses.</span>
+<span class="sd">        :param endpoint_statistics_table: Table for tracking endpoint statistics.</span>
+<span class="sd">        :param tiling_strategy: The strategy for handling image tiling into regions.</span>
+<span class="sd">        :param region_request_queue: Queue to send region requests for processing.</span>
+<span class="sd">        :param region_request_table: Table to track region request progress and results.</span>
+<span class="sd">        :param endpoint_utils: Utility class for handling endpoint-related operations.</span>
+<span class="sd">        :param config: Configuration settings for the service.</span>
+<span class="sd">        :param region_request_handler: Handler for processing individual region requests.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">job_table</span> <span class="o">=</span> <span class="n">job_table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_status_monitor</span> <span class="o">=</span> <span class="n">image_status_monitor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">endpoint_statistics_table</span> <span class="o">=</span> <span class="n">endpoint_statistics_table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tiling_strategy</span> <span class="o">=</span> <span class="n">tiling_strategy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">region_request_queue</span> <span class="o">=</span> <span class="n">region_request_queue</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">region_request_table</span> <span class="o">=</span> <span class="n">region_request_table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">endpoint_utils</span> <span class="o">=</span> <span class="n">endpoint_utils</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">region_request_handler</span> <span class="o">=</span> <span class="n">region_request_handler</span>
+
+<div class="viewcode-block" id="ImageRequestHandler.process_image_request">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.image_request_handler.html#aws.osml.model_runner.image_request_handler.ImageRequestHandler.process_image_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">process_image_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_request</span><span class="p">:</span> <span class="n">ImageRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Processes an ImageRequest object. Loads the specified image into memory, splits it into regions,</span>
+<span class="sd">        and sends these regions for downstream processing via RegionRequest. The first region is processed</span>
+<span class="sd">        directly by this method, while the remaining regions are queued for other workers.</span>
+
+<span class="sd">        :param image_request: The image request to process, derived from the ImageRequest SQS message.</span>
+
+<span class="sd">        :raises ProcessImageException: If image processing fails.</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">job_item</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">self_throttling</span><span class="p">:</span>
+                <span class="n">max_regions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">endpoint_utils</span><span class="o">.</span><span class="n">calculate_max_regions</span><span class="p">(</span>
+                    <span class="n">image_request</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span> <span class="n">image_request</span><span class="o">.</span><span class="n">model_invocation_role</span>
+                <span class="p">)</span>
+                <span class="c1"># Add entry to the endpoint statistics table</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">endpoint_statistics_table</span><span class="o">.</span><span class="n">upsert_endpoint</span><span class="p">(</span><span class="n">image_request</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span> <span class="n">max_regions</span><span class="p">)</span>
+
+            <span class="c1"># Update the image status to started and include relevant image meta-data</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Starting processing of </span><span class="si">{</span><span class="n">image_request</span><span class="o">.</span><span class="n">image_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">job_item</span> <span class="o">=</span> <span class="n">JobItem</span><span class="o">.</span><span class="n">from_image_request</span><span class="p">(</span><span class="n">image_request</span><span class="p">)</span>
+            <span class="n">feature_distillation_option_list</span> <span class="o">=</span> <span class="n">image_request</span><span class="o">.</span><span class="n">get_feature_distillation_option</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">feature_distillation_option_list</span><span class="p">:</span>
+                <span class="n">job_item</span><span class="o">.</span><span class="n">feature_distillation_option</span> <span class="o">=</span> <span class="n">dumps</span><span class="p">(</span>
+                    <span class="n">asdict</span><span class="p">(</span><span class="n">feature_distillation_option_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dict_factory</span><span class="o">=</span><span class="n">mr_post_processing_options_factory</span><span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Start the image processing</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">job_table</span><span class="o">.</span><span class="n">start_image_request</span><span class="p">(</span><span class="n">job_item</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_status_monitor</span><span class="o">.</span><span class="n">process_event</span><span class="p">(</span><span class="n">job_item</span><span class="p">,</span> <span class="n">RequestStatus</span><span class="o">.</span><span class="n">STARTED</span><span class="p">,</span> <span class="s2">&quot;Started image request&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Check we have a valid image request, throws if not</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validate_model_hosting</span><span class="p">(</span><span class="n">job_item</span><span class="p">)</span>
+
+            <span class="c1"># Load the relevant image meta data into memory</span>
+            <span class="n">extension</span><span class="p">,</span> <span class="n">ds</span><span class="p">,</span> <span class="n">sensor_model</span><span class="p">,</span> <span class="n">regions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_image_request</span><span class="p">(</span><span class="n">job_item</span><span class="p">,</span> <span class="n">image_request</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">sensor_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dataset </span><span class="si">{</span><span class="n">job_item</span><span class="o">.</span><span class="n">image_id</span><span class="si">}</span><span class="s2"> has no geo transform. Results are not geo-referenced.&quot;</span><span class="p">)</span>
+
+            <span class="c1"># If we got valid outputs</span>
+            <span class="k">if</span> <span class="n">ds</span> <span class="ow">and</span> <span class="n">regions</span> <span class="ow">and</span> <span class="n">extension</span><span class="p">:</span>
+                <span class="n">job_item</span><span class="o">.</span><span class="n">region_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">regions</span><span class="p">)</span>
+                <span class="n">job_item</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">RasterXSize</span><span class="p">)</span>
+                <span class="n">job_item</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">RasterYSize</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">job_item</span><span class="o">.</span><span class="n">extents</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">get_extents</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">sensor_model</span><span class="p">))</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not get extents for image: </span><span class="si">{</span><span class="n">job_item</span><span class="o">.</span><span class="n">image_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+                <span class="n">feature_properties</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">job_item</span><span class="o">.</span><span class="n">feature_properties</span><span class="p">)</span>
+
+                <span class="c1"># If we can get a valid source metadata from the source image - attach it to features</span>
+                <span class="c1"># else, just pass in whatever custom features if they were provided</span>
+                <span class="n">source_metadata</span> <span class="o">=</span> <span class="n">get_source_property</span><span class="p">(</span><span class="n">job_item</span><span class="o">.</span><span class="n">image_url</span><span class="p">,</span> <span class="n">extension</span><span class="p">,</span> <span class="n">ds</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_metadata</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="n">feature_properties</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">source_metadata</span><span class="p">)</span>
+
+                <span class="c1"># Update the feature properties</span>
+                <span class="n">job_item</span><span class="o">.</span><span class="n">feature_properties</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">feature_properties</span><span class="p">)</span>
+
+                <span class="c1"># Update the image request job to have new derived image data</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">job_table</span><span class="o">.</span><span class="n">update_image_request</span><span class="p">(</span><span class="n">job_item</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">image_status_monitor</span><span class="o">.</span><span class="n">process_event</span><span class="p">(</span><span class="n">job_item</span><span class="p">,</span> <span class="n">RequestStatus</span><span class="o">.</span><span class="n">IN_PROGRESS</span><span class="p">,</span> <span class="s2">&quot;Processing regions&quot;</span><span class="p">)</span>
+
+                <span class="c1"># Place the resulting region requests on the appropriate work queue</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">queue_region_request</span><span class="p">(</span><span class="n">regions</span><span class="p">,</span> <span class="n">image_request</span><span class="p">,</span> <span class="n">ds</span><span class="p">,</span> <span class="n">sensor_model</span><span class="p">,</span> <span class="n">extension</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="c1"># We failed try and gracefully update our image request</span>
+            <span class="k">if</span> <span class="n">job_item</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fail_image_request</span><span class="p">(</span><span class="n">job_item</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">minimal_job_item</span> <span class="o">=</span> <span class="n">JobItem</span><span class="p">(</span>
+                    <span class="n">image_id</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span>
+                    <span class="n">job_id</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">job_id</span><span class="p">,</span>
+                    <span class="n">processing_duration</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fail_image_request</span><span class="p">(</span><span class="n">minimal_job_item</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+
+            <span class="c1"># Let the application know that we failed to process image</span>
+            <span class="k">raise</span> <span class="n">ProcessImageException</span><span class="p">(</span><span class="s2">&quot;Failed to process image region!&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span></div>
+
+
+<div class="viewcode-block" id="ImageRequestHandler.queue_region_request">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.image_request_handler.html#aws.osml.model_runner.image_request_handler.ImageRequestHandler.queue_region_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">queue_region_request</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">all_regions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ImageRegion</span><span class="p">],</span>
+        <span class="n">image_request</span><span class="p">:</span> <span class="n">ImageRequest</span><span class="p">,</span>
+        <span class="n">raster_dataset</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">,</span>
+        <span class="n">sensor_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SensorModel</span><span class="p">],</span>
+        <span class="n">image_extension</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Queue all image regions for processing. Each region is added to the queue, with traceability maintained</span>
+<span class="sd">        in the RegionRequestTable. The first region is processed directly, while the others are sent to the queue.</span>
+
+<span class="sd">        :param all_regions: List of image regions to process.</span>
+<span class="sd">        :param image_request: The image request associated with these regions.</span>
+<span class="sd">        :param raster_dataset: The GDAL dataset containing the image regions.</span>
+<span class="sd">        :param sensor_model: The sensor model for this raster dataset, if available.</span>
+<span class="sd">        :param image_extension: The file extension of the image.</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Set aside the first region</span>
+        <span class="n">first_region</span> <span class="o">=</span> <span class="n">all_regions</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="n">all_regions</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Queueing region: </span><span class="si">{</span><span class="n">region</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="n">region_request</span> <span class="o">=</span> <span class="n">RegionRequest</span><span class="p">(</span>
+                <span class="n">image_request</span><span class="o">.</span><span class="n">get_shared_values</span><span class="p">(),</span>
+                <span class="n">region_bounds</span><span class="o">=</span><span class="n">region</span><span class="p">,</span>
+                <span class="n">region_id</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">region</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}{</span><span class="n">region</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">image_request</span><span class="o">.</span><span class="n">job_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">image_extension</span><span class="o">=</span><span class="n">image_extension</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Create a new entry to the region request being started</span>
+            <span class="n">region_request_item</span> <span class="o">=</span> <span class="n">RegionRequestItem</span><span class="o">.</span><span class="n">from_region_request</span><span class="p">(</span><span class="n">region_request</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">region_request_table</span><span class="o">.</span><span class="n">start_region_request</span><span class="p">(</span><span class="n">region_request_item</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Adding region request: image id: </span><span class="si">{</span><span class="n">region_request_item</span><span class="o">.</span><span class="n">image_id</span><span class="si">}</span><span class="s2"> - &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;region id: </span><span class="si">{</span><span class="n">region_request_item</span><span class="o">.</span><span class="n">region_id</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Send the attributes of the region request as the message.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">region_request_queue</span><span class="o">.</span><span class="n">send_request</span><span class="p">(</span><span class="n">region_request</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+
+        <span class="c1"># Go ahead and process the first region</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing first region </span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">first_region</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">first_region_request</span> <span class="o">=</span> <span class="n">RegionRequest</span><span class="p">(</span>
+            <span class="n">image_request</span><span class="o">.</span><span class="n">get_shared_values</span><span class="p">(),</span>
+            <span class="n">region_bounds</span><span class="o">=</span><span class="n">first_region</span><span class="p">,</span>
+            <span class="n">region_id</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">first_region</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}{</span><span class="n">first_region</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">image_request</span><span class="o">.</span><span class="n">job_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">image_extension</span><span class="o">=</span><span class="n">image_extension</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Add item to RegionRequestTable</span>
+        <span class="n">first_region_request_item</span> <span class="o">=</span> <span class="n">RegionRequestItem</span><span class="o">.</span><span class="n">from_region_request</span><span class="p">(</span><span class="n">first_region_request</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">region_request_table</span><span class="o">.</span><span class="n">start_region_request</span><span class="p">(</span><span class="n">first_region_request_item</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding region_id: </span><span class="si">{</span><span class="n">first_region_request_item</span><span class="o">.</span><span class="n">region_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Processes our region request and return the updated item</span>
+        <span class="n">job_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">region_request_handler</span><span class="o">.</span><span class="n">process_region_request</span><span class="p">(</span>
+            <span class="n">first_region_request</span><span class="p">,</span> <span class="n">first_region_request_item</span><span class="p">,</span> <span class="n">raster_dataset</span><span class="p">,</span> <span class="n">sensor_model</span>
+        <span class="p">)</span>
+
+        <span class="c1"># If the image is finished then complete it</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_table</span><span class="o">.</span><span class="n">is_image_request_complete</span><span class="p">(</span><span class="n">job_item</span><span class="p">):</span>
+            <span class="n">image_format</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">raster_dataset</span><span class="o">.</span><span class="n">GetDriver</span><span class="p">()</span><span class="o">.</span><span class="n">ShortName</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">complete_image_request</span><span class="p">(</span><span class="n">first_region_request</span><span class="p">,</span> <span class="n">image_format</span><span class="p">,</span> <span class="n">raster_dataset</span><span class="p">,</span> <span class="n">sensor_model</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImageRequestHandler.load_image_request">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.image_request_handler.html#aws.osml.model_runner.image_request_handler.ImageRequestHandler.load_image_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">load_image_request</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">job_item</span><span class="p">:</span> <span class="n">JobItem</span><span class="p">,</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">shapely</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">BaseGeometry</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SensorModel</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">ImageRegion</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loads image metadata and prepares it for processing. The image is divided into regions</span>
+<span class="sd">        for distribution across workers.</span>
+
+<span class="sd">        :param job_item: The image request object containing job information.</span>
+<span class="sd">        :param roi: Region of interest to restrict image processing, provided as a geometry.</span>
+
+<span class="sd">        :raises InvalidImageURLException: If the image URL is not valid.</span>
+<span class="sd">        :raises LoadImageException: If loading image or processing bounds fails.</span>
+<span class="sd">        :return: Tuple containing image extension, GDAL dataset, optional sensor model, and list of regions to process.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># If this request contains an execution role retrieve credentials that will be used to</span>
+        <span class="c1"># access data</span>
+        <span class="n">assumed_credentials</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">job_item</span><span class="o">.</span><span class="n">image_read_role</span><span class="p">:</span>
+            <span class="n">assumed_credentials</span> <span class="o">=</span> <span class="n">get_credentials_for_assumed_role</span><span class="p">(</span><span class="n">job_item</span><span class="o">.</span><span class="n">image_read_role</span><span class="p">)</span>
+
+        <span class="c1"># This will update the GDAL configuration options to use the security credentials for this</span>
+        <span class="c1"># request. Any GDAL managed AWS calls (i.e. incrementally fetching pixels from a dataset</span>
+        <span class="c1"># stored in S3) within this &quot;with&quot; statement will be made using customer credentials. At</span>
+        <span class="c1"># the end of the &quot;with&quot; scope the credentials will be removed.</span>
+        <span class="k">with</span> <span class="n">GDALConfigEnv</span><span class="p">()</span><span class="o">.</span><span class="n">with_aws_credentials</span><span class="p">(</span><span class="n">assumed_credentials</span><span class="p">):</span>
+            <span class="c1"># Extract the virtual image path from the request</span>
+            <span class="n">image_path</span> <span class="o">=</span> <span class="n">get_image_path</span><span class="p">(</span><span class="n">job_item</span><span class="o">.</span><span class="n">image_url</span><span class="p">,</span> <span class="n">job_item</span><span class="o">.</span><span class="n">image_read_role</span><span class="p">)</span>
+
+            <span class="c1"># Use gdal to load the image url we were given</span>
+            <span class="n">raster_dataset</span><span class="p">,</span> <span class="n">sensor_model</span> <span class="o">=</span> <span class="n">load_gdal_dataset</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
+            <span class="n">image_extension</span> <span class="o">=</span> <span class="n">get_image_extension</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
+
+            <span class="c1"># Determine how much of this image should be processed.</span>
+            <span class="c1"># Bounds are: UL corner (row, column) , dimensions (w, h)</span>
+            <span class="n">processing_bounds</span> <span class="o">=</span> <span class="n">calculate_processing_bounds</span><span class="p">(</span><span class="n">raster_dataset</span><span class="p">,</span> <span class="n">roi</span><span class="p">,</span> <span class="n">sensor_model</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">processing_bounds</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Requested ROI does not intersect image. Nothing to do&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">LoadImageException</span><span class="p">(</span><span class="s2">&quot;Failed to create processing bounds for image!&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Calculate a set of ML engine-sized regions that we need to process for this image</span>
+                <span class="c1"># Region size chosen to break large images into pieces that can be handled by a</span>
+                <span class="c1"># single tile worker</span>
+                <span class="n">region_size</span><span class="p">:</span> <span class="n">ImageDimensions</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">region_size</span><span class="p">)</span>
+                <span class="n">tile_size</span><span class="p">:</span> <span class="n">ImageDimensions</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">job_item</span><span class="o">.</span><span class="n">tile_size</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">job_item</span><span class="o">.</span><span class="n">tile_overlap</span><span class="p">:</span>
+                    <span class="n">minimum_overlap</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">minimum_overlap</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">job_item</span><span class="o">.</span><span class="n">tile_overlap</span><span class="p">)</span>
+
+                <span class="n">all_regions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tiling_strategy</span><span class="o">.</span><span class="n">compute_regions</span><span class="p">(</span>
+                    <span class="n">processing_bounds</span><span class="p">,</span> <span class="n">region_size</span><span class="p">,</span> <span class="n">tile_size</span><span class="p">,</span> <span class="n">minimum_overlap</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">image_extension</span><span class="p">,</span> <span class="n">raster_dataset</span><span class="p">,</span> <span class="n">sensor_model</span><span class="p">,</span> <span class="n">all_regions</span></div>
+
+
+<div class="viewcode-block" id="ImageRequestHandler.fail_image_request">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.image_request_handler.html#aws.osml.model_runner.image_request_handler.ImageRequestHandler.fail_image_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">fail_image_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_item</span><span class="p">:</span> <span class="n">JobItem</span><span class="p">,</span> <span class="n">err</span><span class="p">:</span> <span class="ne">Exception</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handles image request failure. Updates the status to &#39;failed&#39; and ends the request in the job table.</span>
+
+<span class="sd">        :param job_item: The job item for the failed image request.</span>
+<span class="sd">        :param err: The exception that caused the failure.</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to start image processing!: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_status_monitor</span><span class="o">.</span><span class="n">process_event</span><span class="p">(</span><span class="n">job_item</span><span class="p">,</span> <span class="n">RequestStatus</span><span class="o">.</span><span class="n">FAILED</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">job_table</span><span class="o">.</span><span class="n">end_image_request</span><span class="p">(</span><span class="n">job_item</span><span class="o">.</span><span class="n">image_id</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImageRequestHandler.complete_image_request">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.image_request_handler.html#aws.osml.model_runner.image_request_handler.ImageRequestHandler.complete_image_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">complete_image_request</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">region_request</span><span class="p">:</span> <span class="n">RegionRequest</span><span class="p">,</span> <span class="n">image_format</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">raster_dataset</span><span class="p">:</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">sensor_model</span><span class="p">:</span> <span class="n">SensorModel</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Completes the image request after all regions have been processed. Aggregates and sinks the features,</span>
+<span class="sd">        then finalizes the request.</span>
+
+<span class="sd">        :param region_request: The region request that completed.</span>
+<span class="sd">        :param image_format: The format of the image file.</span>
+<span class="sd">        :param raster_dataset: The GDAL dataset of the processed image.</span>
+<span class="sd">        :param sensor_model: The sensor model for the image, if available.</span>
+
+<span class="sd">        :raises AggregateFeaturesException: If feature aggregation fails.</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Retrieve the full image request</span>
+            <span class="n">job_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_table</span><span class="o">.</span><span class="n">get_image_request</span><span class="p">(</span><span class="n">region_request</span><span class="o">.</span><span class="n">image_id</span><span class="p">)</span>
+
+            <span class="c1"># Log the completion of the last region and proceed with aggregation</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Last region of image request was completed, aggregating features for image!&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Set up the feature table</span>
+            <span class="n">feature_table</span> <span class="o">=</span> <span class="n">FeatureTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">feature_table</span><span class="p">,</span> <span class="n">region_request</span><span class="o">.</span><span class="n">tile_size</span><span class="p">,</span> <span class="n">region_request</span><span class="o">.</span><span class="n">tile_overlap</span><span class="p">)</span>
+
+            <span class="c1"># Aggregate features</span>
+            <span class="n">features</span> <span class="o">=</span> <span class="n">feature_table</span><span class="o">.</span><span class="n">aggregate_features</span><span class="p">(</span><span class="n">job_item</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Aggregated </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">features</span><span class="p">)</span><span class="si">}</span><span class="s2"> features for region </span><span class="si">{</span><span class="n">region_request</span><span class="o">.</span><span class="n">region_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Deduplicate features</span>
+            <span class="n">deduped_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">deduplicate</span><span class="p">(</span><span class="n">job_item</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">raster_dataset</span><span class="p">,</span> <span class="n">sensor_model</span><span class="p">)</span>
+
+            <span class="c1"># Add the relevant properties to our final features</span>
+            <span class="n">final_features</span> <span class="o">=</span> <span class="n">add_properties_to_features</span><span class="p">(</span><span class="n">job_item</span><span class="o">.</span><span class="n">job_id</span><span class="p">,</span> <span class="n">job_item</span><span class="o">.</span><span class="n">feature_properties</span><span class="p">,</span> <span class="n">deduped_features</span><span class="p">)</span>
+
+            <span class="c1"># Sink features to target outputs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sink_features</span><span class="p">(</span><span class="n">job_item</span><span class="p">,</span> <span class="n">final_features</span><span class="p">)</span>
+
+            <span class="c1"># Finalize and update the job table with the completed request</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">end_image_request</span><span class="p">(</span><span class="n">job_item</span><span class="p">,</span> <span class="n">image_format</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">AggregateFeaturesException</span><span class="p">(</span><span class="s2">&quot;Failed to aggregate features for region!&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span></div>
+
+
+<div class="viewcode-block" id="ImageRequestHandler.deduplicate">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.image_request_handler.html#aws.osml.model_runner.image_request_handler.ImageRequestHandler.deduplicate">[docs]</a>
+    <span class="nd">@metric_scope</span>
+    <span class="k">def</span> <span class="nf">deduplicate</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">job_item</span><span class="p">:</span> <span class="n">JobItem</span><span class="p">,</span>
+        <span class="n">features</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">],</span>
+        <span class="n">raster_dataset</span><span class="p">:</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span>
+        <span class="n">sensor_model</span><span class="p">:</span> <span class="n">SensorModel</span><span class="p">,</span>
+        <span class="n">metrics</span><span class="p">:</span> <span class="n">MetricsLogger</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deduplicate the features and add additional properties to them, if applicable.</span>
+
+<span class="sd">        :param metrics:</span>
+<span class="sd">        :param job_item: The image processing job item containing job-specific information.</span>
+<span class="sd">        :param features: A list of GeoJSON features to deduplicate.</span>
+<span class="sd">        :param raster_dataset: The GDAL dataset representing the image being processed.</span>
+<span class="sd">        :param sensor_model: The sensor model associated with the dataset, used for georeferencing.</span>
+<span class="sd">        :param metrics: Optional metrics logger for tracking performance metrics.</span>
+
+<span class="sd">        :return: A list of deduplicated features with additional properties added.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">set_dimensions</span><span class="p">()</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_dimensions</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">OPERATION_DIMENSION</span><span class="p">:</span> <span class="n">MetricLabels</span><span class="o">.</span><span class="n">FEATURE_SELECTION_OPERATION</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="k">with</span> <span class="n">Timer</span><span class="p">(</span>
+            <span class="n">task_str</span><span class="o">=</span><span class="s2">&quot;Select (deduplicate) image features&quot;</span><span class="p">,</span>
+            <span class="n">metric_name</span><span class="o">=</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">DURATION</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span>
+            <span class="n">metrics_logger</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="c1"># Calculate processing bounds based on the region of interest (ROI) and sensor model</span>
+            <span class="n">processing_bounds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_processing_bounds</span><span class="p">(</span><span class="n">raster_dataset</span><span class="p">,</span> <span class="n">sensor_model</span><span class="p">,</span> <span class="n">job_item</span><span class="o">.</span><span class="n">roi_wkt</span><span class="p">)</span>
+
+            <span class="c1"># Select and deduplicate features based on configuration options and processing bounds</span>
+            <span class="n">deduplicated_features</span> <span class="o">=</span> <span class="n">select_features</span><span class="p">(</span>
+                <span class="n">job_item</span><span class="o">.</span><span class="n">feature_distillation_option</span><span class="p">,</span>
+                <span class="n">features</span><span class="p">,</span>
+                <span class="n">processing_bounds</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">region_size</span><span class="p">,</span>
+                <span class="n">job_item</span><span class="o">.</span><span class="n">tile_size</span><span class="p">,</span>
+                <span class="n">job_item</span><span class="o">.</span><span class="n">tile_overlap</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tiling_strategy</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">deduplicated_features</span></div>
+
+
+<div class="viewcode-block" id="ImageRequestHandler.validate_model_hosting">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.image_request_handler.html#aws.osml.model_runner.image_request_handler.ImageRequestHandler.validate_model_hosting">[docs]</a>
+    <span class="k">def</span> <span class="nf">validate_model_hosting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_request</span><span class="p">:</span> <span class="n">JobItem</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validates that the image request&#39;s model invocation mode is supported. If not, raises an exception.</span>
+
+<span class="sd">        :param image_request: The image processing job item to validate.</span>
+
+<span class="sd">        :raises UnsupportedModelException: If the model invocation mode is not supported.</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">image_request</span><span class="o">.</span><span class="n">model_invoke_mode</span> <span class="ow">or</span> <span class="n">image_request</span><span class="o">.</span><span class="n">model_invoke_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">VALID_MODEL_HOSTING_OPTIONS</span><span class="p">:</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Application only supports </span><span class="si">{</span><span class="n">VALID_MODEL_HOSTING_OPTIONS</span><span class="si">}</span><span class="s2"> Endpoints&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_status_monitor</span><span class="o">.</span><span class="n">process_event</span><span class="p">(</span>
+                <span class="n">image_request</span><span class="p">,</span>
+                <span class="n">RequestStatus</span><span class="o">.</span><span class="n">FAILED</span><span class="p">,</span>
+                <span class="n">error</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="n">UnsupportedModelException</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImageRequestHandler.end_image_request">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.image_request_handler.html#aws.osml.model_runner.image_request_handler.ImageRequestHandler.end_image_request">[docs]</a>
+    <span class="nd">@metric_scope</span>
+    <span class="k">def</span> <span class="nf">end_image_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_item</span><span class="p">:</span> <span class="n">JobItem</span><span class="p">,</span> <span class="n">image_format</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">MetricsLogger</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finalizes the image request, updates the job status, and logs the necessary metrics.</span>
+
+<span class="sd">        :param job_item: The image processing job item to finalize.</span>
+<span class="sd">        :param image_format: The format of the image being processed (e.g., TIFF, NITF).</span>
+<span class="sd">        :param metrics: Optional metrics logger for tracking performance metrics.</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">completed_job_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_table</span><span class="o">.</span><span class="n">end_image_request</span><span class="p">(</span><span class="n">job_item</span><span class="o">.</span><span class="n">image_id</span><span class="p">)</span>
+
+        <span class="c1"># Retrieve the image request status and send status updates</span>
+        <span class="n">image_request_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_status_monitor</span><span class="o">.</span><span class="n">get_status</span><span class="p">(</span><span class="n">completed_job_item</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_status_monitor</span><span class="o">.</span><span class="n">process_event</span><span class="p">(</span><span class="n">completed_job_item</span><span class="p">,</span> <span class="n">image_request_status</span><span class="p">,</span> <span class="s2">&quot;Completed image processing&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Log metrics for the image processing duration, invocation, and errors (if any)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">set_dimensions</span><span class="p">()</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_dimensions</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">OPERATION_DIMENSION</span><span class="p">:</span> <span class="n">MetricLabels</span><span class="o">.</span><span class="n">IMAGE_PROCESSING_OPERATION</span><span class="p">,</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">MODEL_NAME_DIMENSION</span><span class="p">:</span> <span class="n">job_item</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">INPUT_FORMAT_DIMENSION</span><span class="p">:</span> <span class="n">image_format</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">DURATION</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">job_item</span><span class="o">.</span><span class="n">processing_duration</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">SECONDS</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">INVOCATIONS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">job_item</span><span class="o">.</span><span class="n">region_error</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">ERRORS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="ImageRequestHandler.calculate_processing_bounds">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.image_request_handler.html#aws.osml.model_runner.image_request_handler.ImageRequestHandler.calculate_processing_bounds">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">calculate_processing_bounds</span><span class="p">(</span>
+        <span class="n">raster_dataset</span><span class="p">:</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span>
+        <span class="n">sensor_model</span><span class="p">:</span> <span class="n">SensorModel</span><span class="p">,</span>
+        <span class="n">roi_wkt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the processing bounds for the image, based on the region of interest (ROI) and sensor model.</span>
+
+<span class="sd">        :param raster_dataset: The GDAL dataset representing the image being processed.</span>
+<span class="sd">        :param sensor_model: The sensor model used to georeference the dataset.</span>
+<span class="sd">        :param roi_wkt: Optional Well-Known Text (WKT) representing the region of interest for image processing.</span>
+
+<span class="sd">        :raises AggregateFeaturesException: If the processing bounds cannot be calculated.</span>
+<span class="sd">        :return: A tuple representing the upper-left corner (row, column) and dimensions (width, height) of the bounds.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">roi</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">roi_wkt</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using ROI from request to set processing boundary: </span><span class="si">{</span><span class="n">roi_wkt</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">roi</span> <span class="o">=</span> <span class="n">shapely</span><span class="o">.</span><span class="n">to_wkt</span><span class="p">(</span><span class="n">roi_wkt</span><span class="p">)</span>
+
+        <span class="n">processing_bounds</span> <span class="o">=</span> <span class="n">calculate_processing_bounds</span><span class="p">(</span><span class="n">raster_dataset</span><span class="p">,</span> <span class="n">roi</span><span class="p">,</span> <span class="n">sensor_model</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing boundary from </span><span class="si">{</span><span class="n">roi</span><span class="si">}</span><span class="s2"> is </span><span class="si">{</span><span class="n">processing_bounds</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">processing_bounds</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">AggregateFeaturesException</span><span class="p">(</span><span class="s2">&quot;Failed to calculate processing bounds!&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">processing_bounds</span></div>
+
+
+<div class="viewcode-block" id="ImageRequestHandler.sink_features">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.image_request_handler.html#aws.osml.model_runner.image_request_handler.ImageRequestHandler.sink_features">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@metric_scope</span>
+    <span class="k">def</span> <span class="nf">sink_features</span><span class="p">(</span><span class="n">job_item</span><span class="p">:</span> <span class="n">JobItem</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">],</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">MetricsLogger</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sink the deduplicated features to the specified output (e.g., S3, Kinesis, etc.).</span>
+
+<span class="sd">        :param job_item: The job item representing the image processing request.</span>
+<span class="sd">        :param features: The list of deduplicated GeoJSON features to sink.</span>
+<span class="sd">        :param metrics: Optional metrics logger to track feature sinking performance.</span>
+
+<span class="sd">        :raises AggregateOutputFeaturesException: If sinking the features to the output fails.</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">set_dimensions</span><span class="p">()</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_dimensions</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">OPERATION_DIMENSION</span><span class="p">:</span> <span class="n">MetricLabels</span><span class="o">.</span><span class="n">FEATURE_DISSEMINATE_OPERATION</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="k">with</span> <span class="n">Timer</span><span class="p">(</span>
+            <span class="n">task_str</span><span class="o">=</span><span class="s2">&quot;Sink image features&quot;</span><span class="p">,</span>
+            <span class="n">metric_name</span><span class="o">=</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">DURATION</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span>
+            <span class="n">metrics_logger</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="c1"># Sink features to the desired output (S3, Kinesis, etc.)</span>
+            <span class="n">is_write_succeeded</span> <span class="o">=</span> <span class="n">SinkFactory</span><span class="o">.</span><span class="n">sink_features</span><span class="p">(</span><span class="n">job_item</span><span class="o">.</span><span class="n">job_id</span><span class="p">,</span> <span class="n">job_item</span><span class="o">.</span><span class="n">outputs</span><span class="p">,</span> <span class="n">features</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_write_succeeded</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">AggregateOutputFeaturesException</span><span class="p">(</span><span class="s2">&quot;Failed to write features to S3 or Kinesis!&quot;</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

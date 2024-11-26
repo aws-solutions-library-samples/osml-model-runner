@@ -1,0 +1,34 @@
+model_runner.status.exceptions
+==============================
+
+.. py:module:: model_runner.status.exceptions
+
+
+Exceptions
+----------
+
+.. autoapisummary::
+
+   model_runner.status.exceptions.SNSPublishException
+   model_runner.status.exceptions.StatusMonitorException
+
+
+Module Contents
+---------------
+
+.. py:exception:: SNSPublishException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: StatusMonitorException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+

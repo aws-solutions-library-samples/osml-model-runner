@@ -1,0 +1,94 @@
+model_runner.sink.s3_sink
+=========================
+
+.. py:module:: model_runner.sink.s3_sink
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.sink.s3_sink.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.sink.s3_sink.S3Sink
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:class:: S3Sink(bucket: str, prefix: str, assumed_role: Optional[str] = None)
+
+   Bases: :py:obj:`model_runner.sink.sink.Sink`
+
+
+   A sink for writing aggregated GeoJSON feature collections to an S3 bucket.
+
+   This class handles uploading GeoJSON data to a specified S3 bucket, optionally using an
+   assumed IAM role for accessing the bucket. It validates the bucket's accessibility and writes
+   the aggregated features to S3.
+
+   :param bucket: The name of the S3 bucket.
+   :param prefix: The prefix within the bucket where the files will be stored.
+   :param assumed_role: Optional IAM role ARN to assume for accessing the bucket.
+
+
+   .. py:attribute:: bucket
+
+
+   .. py:attribute:: prefix
+
+
+   .. py:property:: mode
+      :type: aws.osml.model_runner.api.SinkMode
+
+
+      The mode of the sink, which is aggregate.
+
+      :return: The `SinkMode` enumeration value representing the aggregate mode.
+
+
+
+   .. py:method:: write(image_id: str, features: List[geojson.Feature]) -> bool
+
+      Write aggregated GeoJSON feature collection to the S3 bucket.
+
+      Validates if the S3 bucket is accessible and uploads a temporary file containing
+      the aggregated features. The object key is derived from the `image_id`.
+
+      :param image_id: The identifier for the image, used to generate the S3 object key.
+      :param features: A list of GeoJSON features to be aggregated and written to S3.
+      :return: `True` if the upload was successful, `False` otherwise.
+
+      :raises ClientError: If there are errors while uploading the file to S3.
+
+
+
+   .. py:method:: validate_s3_bucket() -> bool
+
+      Check if the output S3 bucket exists and can be read/written to.
+
+      :return: `True` if the bucket exists and can be accessed, `False` otherwise.
+
+      :raises ClientError: If there are issues accessing the S3 bucket.
+
+
+
+   .. py:method:: name() -> str
+      :staticmethod:
+
+
+      Retrieve the name of the sink type.
+
+      :return: The string representation of the sink type.
+
+
+

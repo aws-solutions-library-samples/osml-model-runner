@@ -1,0 +1,92 @@
+model_runner.inference.sm_detector
+==================================
+
+.. py:module:: model_runner.inference.sm_detector
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.inference.sm_detector.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.inference.sm_detector.SMDetector
+   model_runner.inference.sm_detector.SMDetectorBuilder
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:class:: SMDetector(endpoint: str, assumed_credentials: Dict[str, str] = None)
+
+   Bases: :py:obj:`model_runner.inference.detector.Detector`
+
+
+   SMDetector is responsible for invoking SageMaker endpoints to run model inference for feature detection.
+
+   This class interacts with SageMaker runtime to send a payload for model inference and receive geojson-formatted
+   feature detection results. It supports both managed AWS endpoints and cross-account invocation using
+   provided IAM credentials.
+
+
+   .. py:property:: mode
+      :type: aws.osml.model_runner.api.ModelInvokeMode
+
+
+      Defines the invocation mode for the detector as SageMaker endpoint.
+
+      :return: ModelInvokeMode.SM_ENDPOINT
+
+
+
+   .. py:method:: find_features(payload: io.BufferedReader, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger) -> geojson.FeatureCollection
+
+      Invokes the SageMaker model endpoint to detect features from the given payload.
+
+      This method sends a payload to the SageMaker model endpoint and retrieves feature detection results
+      in the form of a geojson FeatureCollection. If configured, it logs metrics about the invocation process.
+
+      :param payload: BufferedReader = The data to be sent to the SageMaker model for feature detection.
+      :param metrics: MetricsLogger = The metrics logger to capture system performance and log metrics.
+
+      :return: FeatureCollection = A geojson FeatureCollection containing the detected features.
+
+      :raises ClientError: Raised if there is an error while invoking the SageMaker endpoint.
+      :raises JSONDecodeError: Raised if there is an error decoding the model's response.
+
+
+
+.. py:class:: SMDetectorBuilder(endpoint: str, assumed_credentials: Dict[str, str] = None)
+
+   Bases: :py:obj:`model_runner.inference.endpoint_builder.FeatureEndpointBuilder`
+
+
+   SMDetectorBuilder is responsible for building an SMDetector configured with a SageMaker endpoint.
+
+   This builder constructs an SMDetector instance with an optional set of assumed credentials for cross-account
+   invocation of SageMaker models.
+
+
+   .. py:attribute:: endpoint
+
+
+   .. py:attribute:: assumed_credentials
+
+
+   .. py:method:: build() -> Optional[model_runner.inference.detector.Detector]
+
+      Builds and returns an SMDetector based on the configured parameters.
+
+      :return: Optional[Detector] = An SMDetector instance configured for the specified SageMaker endpoint.
+
+
+

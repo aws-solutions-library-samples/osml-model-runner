@@ -1,0 +1,254 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.sink.kinesis_sink &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.sink.kinesis_sink</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.model_runner.sink.kinesis_sink</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">boto3</span>
+<span class="kn">import</span> <span class="nn">geojson</span>
+<span class="kn">from</span> <span class="nn">geojson</span> <span class="kn">import</span> <span class="n">Feature</span><span class="p">,</span> <span class="n">FeatureCollection</span>
+
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.api</span> <span class="kn">import</span> <span class="n">SinkMode</span><span class="p">,</span> <span class="n">SinkType</span>
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.app_config</span> <span class="kn">import</span> <span class="n">BotoConfig</span><span class="p">,</span> <span class="n">ServiceConfig</span>
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.common</span> <span class="kn">import</span> <span class="n">get_credentials_for_assumed_role</span>
+
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">InvalidKinesisStreamException</span>
+<span class="kn">from</span> <span class="nn">.sink</span> <span class="kn">import</span> <span class="n">Sink</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="KinesisSink">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.sink.kinesis_sink.html#aws.osml.model_runner.sink.kinesis_sink.KinesisSink">[docs]</a>
+<span class="k">class</span> <span class="nc">KinesisSink</span><span class="p">(</span><span class="n">Sink</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">stream</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">assumed_role</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span> <span class="o">=</span> <span class="n">stream</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
+        <span class="k">if</span> <span class="n">assumed_role</span><span class="p">:</span>
+            <span class="n">assumed_credentials</span> <span class="o">=</span> <span class="n">get_credentials_for_assumed_role</span><span class="p">(</span><span class="n">assumed_role</span><span class="p">)</span>
+            <span class="c1"># Here we will be writing to Kinesis using an IAM role other than the one for this process.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kinesis_client</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">client</span><span class="p">(</span>
+                <span class="s2">&quot;kinesis&quot;</span><span class="p">,</span>
+                <span class="n">aws_access_key_id</span><span class="o">=</span><span class="n">assumed_credentials</span><span class="p">[</span><span class="s2">&quot;AccessKeyId&quot;</span><span class="p">],</span>
+                <span class="n">aws_secret_access_key</span><span class="o">=</span><span class="n">assumed_credentials</span><span class="p">[</span><span class="s2">&quot;SecretAccessKey&quot;</span><span class="p">],</span>
+                <span class="n">aws_session_token</span><span class="o">=</span><span class="n">assumed_credentials</span><span class="p">[</span><span class="s2">&quot;SessionToken&quot;</span><span class="p">],</span>
+                <span class="n">config</span><span class="o">=</span><span class="n">BotoConfig</span><span class="o">.</span><span class="n">default</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If no invocation role is provided the assumption is that the default role for this</span>
+            <span class="c1"># container will be sufficient to write to the Kinesis stream.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kinesis_client</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">client</span><span class="p">(</span><span class="s2">&quot;kinesis&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">BotoConfig</span><span class="o">.</span><span class="n">default</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_flush_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">records</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Flushes a batch of records to the Kinesis stream.</span>
+
+<span class="sd">        :param records: A list of records to be sent to the Kinesis stream.</span>
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kinesis_client</span><span class="o">.</span><span class="n">put_records</span><span class="p">(</span><span class="n">StreamName</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">,</span> <span class="n">Records</span><span class="o">=</span><span class="n">records</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidKinesisStreamException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to write records to Kinesis stream &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SinkMode</span><span class="p">:</span>
+        <span class="c1"># Only aggregate mode is supported at the moment</span>
+        <span class="k">return</span> <span class="n">SinkMode</span><span class="o">.</span><span class="n">AGGREGATE</span>
+
+<div class="viewcode-block" id="KinesisSink.write">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.sink.kinesis_sink.html#aws.osml.model_runner.sink.kinesis_sink.KinesisSink.write">[docs]</a>
+    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Writes a list of features to the Kinesis stream. Each feature is serialized and sent</span>
+<span class="sd">        as a record. If the batch of records exceeds the 5 MB limit, the current batch is flushed.</span>
+
+<span class="sd">        :param job_id: The ID of the job associated with the features.</span>
+<span class="sd">        :param features: A list of features to be written to the stream.</span>
+
+<span class="sd">        :returns: True if the features were successfully written, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pending_features</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">pending_features_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate_kinesis_stream</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">features</span><span class="p">:</span>
+                <span class="c1"># Serialize feature data to JSON</span>
+                <span class="n">record_data</span> <span class="o">=</span> <span class="n">geojson</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">FeatureCollection</span><span class="p">([</span><span class="n">feature</span><span class="p">]))</span>
+
+                <span class="c1"># Create the record dict</span>
+                <span class="n">record</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Data&quot;</span><span class="p">:</span> <span class="n">record_data</span><span class="p">,</span> <span class="s2">&quot;PartitionKey&quot;</span><span class="p">:</span> <span class="n">job_id</span><span class="p">}</span>
+
+                <span class="c1"># Calculate size of the entire record (Data + PartitionKey)</span>
+                <span class="n">record_size</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">getsizeof</span><span class="p">(</span><span class="n">geojson</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">record</span><span class="p">))</span>
+
+                <span class="c1"># If adding the next record would exceed the 5 MB batch limit, flush the current batch</span>
+                <span class="k">if</span> <span class="n">pending_features_size</span> <span class="o">+</span> <span class="n">record_size</span> <span class="o">&gt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">ServiceConfig</span><span class="o">.</span><span class="n">kinesis_max_record_size_batch</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span>
+                    <span class="n">pending_features</span>
+                <span class="p">)</span> <span class="o">&gt;=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ServiceConfig</span><span class="o">.</span><span class="n">kinesis_max_record_per_batch</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_flush_stream</span><span class="p">(</span><span class="n">pending_features</span><span class="p">)</span>
+                    <span class="n">pending_features</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="n">pending_features_size</span> <span class="o">=</span> <span class="mi">0</span>
+
+                <span class="n">pending_features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+                <span class="n">pending_features_size</span> <span class="o">+=</span> <span class="n">record_size</span>
+
+            <span class="c1"># Flush any remaining records</span>
+            <span class="k">if</span> <span class="n">pending_features</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_flush_stream</span><span class="p">(</span><span class="n">pending_features</span><span class="p">)</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Wrote </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">features</span><span class="p">)</span><span class="si">}</span><span class="s2"> features for job &#39;</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">&#39; to Kinesis Stream &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot write </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">features</span><span class="p">)</span><span class="si">}</span><span class="s2"> features for job &#39;</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">&#39; to Kinesis Stream &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="KinesisSink.validate_kinesis_stream">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.sink.kinesis_sink.html#aws.osml.model_runner.sink.kinesis_sink.KinesisSink.validate_kinesis_stream">[docs]</a>
+    <span class="k">def</span> <span class="nf">validate_kinesis_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ensure output Kinesis stream exists/can be written to</span>
+
+<span class="sd">        :return: True if kinesis stream exist and can be read/written to it</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">describe_stream_response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kinesis_client</span><span class="o">.</span><span class="n">describe_stream</span><span class="p">(</span><span class="n">StreamName</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+
+            <span class="c1"># check if Stream is ACTIVE</span>
+            <span class="n">stream_status</span> <span class="o">=</span> <span class="n">describe_stream_response</span><span class="p">[</span><span class="s2">&quot;StreamDescription&quot;</span><span class="p">][</span><span class="s2">&quot;StreamStatus&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">stream_status</span> <span class="o">==</span> <span class="s2">&quot;ACTIVE&quot;</span> <span class="ow">or</span> <span class="n">stream_status</span> <span class="o">==</span> <span class="s2">&quot;UPDATING&quot;</span><span class="p">:</span>
+                <span class="c1"># reason to include UPDATING is that Kinesis Stream functions during these operations</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="si">}</span><span class="s2"> current status is: </span><span class="si">{</span><span class="n">stream_status</span><span class="si">}</span><span class="s2">. It is not in ACTIVE or UPDATING state.&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to fetch Kinesis stream - </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="KinesisSink.name">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.sink.kinesis_sink.html#aws.osml.model_runner.sink.kinesis_sink.KinesisSink.name">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ensure output Kinesis stream exists/can be written to</span>
+
+<span class="sd">        :return: The name of the instantiated Sink.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">SinkType</span><span class="o">.</span><span class="n">KINESIS</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

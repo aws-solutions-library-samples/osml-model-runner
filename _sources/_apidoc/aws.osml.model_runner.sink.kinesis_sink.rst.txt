@@ -1,0 +1,7 @@
+aws.osml.model\_runner.sink.kinesis\_sink module
+================================================
+
+.. automodule:: aws.osml.model_runner.sink.kinesis_sink
+   :members:
+   :undoc-members:
+   :show-inheritance:

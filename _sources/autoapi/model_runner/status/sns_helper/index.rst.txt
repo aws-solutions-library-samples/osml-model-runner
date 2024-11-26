@@ -1,0 +1,52 @@
+model_runner.status.sns_helper
+==============================
+
+.. py:module:: model_runner.status.sns_helper
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.status.sns_helper.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.status.sns_helper.SNSHelper
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:class:: SNSHelper(topic_arn: Optional[str])
+
+   Encapsulates Amazon SNS topic functions.
+
+
+   .. py:attribute:: sns_client
+
+
+   .. py:attribute:: topic_arn
+
+
+   .. py:method:: publish_message(message: str, attributes: Dict[str, Any]) -> Optional[str]
+
+      Publishes a message, with attributes, to a topic. Subscriptions can be filtered
+      based on message attributes so that a subscription receives messages only
+      when specified attributes are present.
+
+      :param message: str = the message to publish.
+      :param attributes: Dict[str, Any] = the key-value attributes to attach to the message. Values
+                         must be either `str` or `bytes`.
+
+      :return: Optional[str] The ID of the message.
+
+
+

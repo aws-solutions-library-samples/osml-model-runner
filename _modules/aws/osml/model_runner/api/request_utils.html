@@ -1,0 +1,252 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.api.request_utils &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.api.request_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.model_runner.api.request_utils</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">boto3</span>
+
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.app_config</span> <span class="kn">import</span> <span class="n">BotoConfig</span>
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.common</span> <span class="kn">import</span> <span class="n">VALID_IMAGE_COMPRESSION</span><span class="p">,</span> <span class="n">VALID_IMAGE_FORMATS</span><span class="p">,</span> <span class="n">get_credentials_for_assumed_role</span>
+
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">InvalidS3ObjectException</span>
+<span class="kn">from</span> <span class="nn">.inference</span> <span class="kn">import</span> <span class="n">VALID_MODEL_HOSTING_OPTIONS</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="shared_properties_are_valid">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.api.request_utils.html#aws.osml.model_runner.api.request_utils.shared_properties_are_valid">[docs]</a>
+<span class="k">def</span> <span class="nf">shared_properties_are_valid</span><span class="p">(</span><span class="n">request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validates that the request contains all mandatory attributes with acceptable values.</span>
+
+<span class="sd">    This function checks attributes shared between ImageRequests and RegionRequests, ensuring</span>
+<span class="sd">    they contain all required metadata for processing.</span>
+
+<span class="sd">    :param request: An object of either ImageRequests or RegionRequests.</span>
+<span class="sd">    :return: True if the request is valid; False otherwise. Logs warnings for each failed validation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">request</span><span class="o">.</span><span class="n">image_id</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">request</span><span class="o">.</span><span class="n">image_url</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Validation failed: `image_id` or `image_url` is missing.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">request</span><span class="o">.</span><span class="n">model_name</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Validation failed: `model_name` is missing.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">request</span><span class="o">.</span><span class="n">model_invoke_mode</span> <span class="ow">or</span> <span class="n">request</span><span class="o">.</span><span class="n">model_invoke_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">VALID_MODEL_HOSTING_OPTIONS</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Validation failed: `model_invoke_mode` is either missing or invalid. &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Expected one of </span><span class="si">{</span><span class="n">VALID_MODEL_HOSTING_OPTIONS</span><span class="si">}</span><span class="s2">, but got &#39;</span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">model_invoke_mode</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">request</span><span class="o">.</span><span class="n">tile_size</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">tile_size</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Validation failed: `tile_size` is missing or does not contain two dimensions.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">tile_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">request</span><span class="o">.</span><span class="n">tile_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Validation failed: `tile_size` dimensions must be positive values.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">request</span><span class="o">.</span><span class="n">tile_overlap</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">tile_overlap</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Validation failed: `tile_overlap` is missing or does not contain two dimensions.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">tile_overlap</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span>
+        <span class="ow">or</span> <span class="n">request</span><span class="o">.</span><span class="n">tile_overlap</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">request</span><span class="o">.</span><span class="n">tile_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="ow">or</span> <span class="n">request</span><span class="o">.</span><span class="n">tile_overlap</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span>
+        <span class="ow">or</span> <span class="n">request</span><span class="o">.</span><span class="n">tile_overlap</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">request</span><span class="o">.</span><span class="n">tile_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Validation failed: `tile_overlap` values must be non-negative and less than `tile_size` dimensions.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">request</span><span class="o">.</span><span class="n">tile_format</span> <span class="ow">or</span> <span class="n">request</span><span class="o">.</span><span class="n">tile_format</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">VALID_IMAGE_FORMATS</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Validation failed: `tile_format` is either missing or invalid. &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Expected one of </span><span class="si">{</span><span class="n">VALID_IMAGE_FORMATS</span><span class="si">}</span><span class="s2">, but got &#39;</span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">tile_format</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">tile_compression</span> <span class="ow">and</span> <span class="n">request</span><span class="o">.</span><span class="n">tile_compression</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">VALID_IMAGE_COMPRESSION</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Validation failed: `tile_compression` is invalid. &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Expected one of </span><span class="si">{</span><span class="n">VALID_IMAGE_COMPRESSION</span><span class="si">}</span><span class="s2">, but got &#39;</span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">tile_compression</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">image_read_role</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">request</span><span class="o">.</span><span class="n">image_read_role</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;arn:&quot;</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Validation failed: `image_read_role` does not start with &#39;arn:&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">model_invocation_role</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">request</span><span class="o">.</span><span class="n">model_invocation_role</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;arn:&quot;</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Validation failed: `model_invocation_role` does not start with &#39;arn:&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+
+<div class="viewcode-block" id="get_image_path">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.api.request_utils.html#aws.osml.model_runner.api.request_utils.get_image_path">[docs]</a>
+<span class="k">def</span> <span class="nf">get_image_path</span><span class="p">(</span><span class="n">image_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">assumed_role</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the formatted image path for GDAL to read the image, either from S3 or a local file.</span>
+
+<span class="sd">    If the image URL points to an S3 path, this method validates the image&#39;s existence in S3</span>
+<span class="sd">    and reformats the path to use GDAL&#39;s /vsis3/ driver. Otherwise, it returns the local or</span>
+<span class="sd">    network image path.</span>
+
+<span class="sd">    :param image_url: str = formatted image path to S3 bucket</span>
+<span class="sd">    :param assumed_role: str = containing a formatted arn role</span>
+
+<span class="sd">    :return: The formatted image path.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;s3:/&quot;</span> <span class="ow">in</span> <span class="n">image_url</span><span class="p">:</span>
+        <span class="n">validate_image_path</span><span class="p">(</span><span class="n">image_url</span><span class="p">,</span> <span class="n">assumed_role</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image_url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;s3:/&quot;</span><span class="p">,</span> <span class="s2">&quot;/vsis3&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">image_url</span></div>
+
+
+
+<div class="viewcode-block" id="validate_image_path">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.api.request_utils.html#aws.osml.model_runner.api.request_utils.validate_image_path">[docs]</a>
+<span class="k">def</span> <span class="nf">validate_image_path</span><span class="p">(</span><span class="n">image_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">assumed_role</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate if an image exists in S3 bucket</span>
+
+<span class="sd">    :param image_url: str = formatted image path to S3 bucket</span>
+<span class="sd">    :param assumed_role: str = containing a formatted arn role</span>
+
+<span class="sd">    :return: bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="n">image_url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;s3://&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">assumed_role</span><span class="p">:</span>
+        <span class="n">assumed_credentials</span> <span class="o">=</span> <span class="n">get_credentials_for_assumed_role</span><span class="p">(</span><span class="n">assumed_role</span><span class="p">)</span>
+        <span class="c1"># Here we will be writing to S3 using an IAM role other than the one for this process.</span>
+        <span class="n">s3_client</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">client</span><span class="p">(</span>
+            <span class="s2">&quot;s3&quot;</span><span class="p">,</span>
+            <span class="n">aws_access_key_id</span><span class="o">=</span><span class="n">assumed_credentials</span><span class="p">[</span><span class="s2">&quot;AccessKeyId&quot;</span><span class="p">],</span>
+            <span class="n">aws_secret_access_key</span><span class="o">=</span><span class="n">assumed_credentials</span><span class="p">[</span><span class="s2">&quot;SecretAccessKey&quot;</span><span class="p">],</span>
+            <span class="n">aws_session_token</span><span class="o">=</span><span class="n">assumed_credentials</span><span class="p">[</span><span class="s2">&quot;SessionToken&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="o">=</span><span class="n">BotoConfig</span><span class="o">.</span><span class="n">default</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># If no invocation role is provided the assumption is that the default role for this</span>
+        <span class="c1"># container will be sufficient to read/write to the S3 bucket.</span>
+        <span class="n">s3_client</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">client</span><span class="p">(</span><span class="s2">&quot;s3&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">BotoConfig</span><span class="o">.</span><span class="n">default</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># head_object is the fastest approach to determine if it exists in S3</span>
+        <span class="c1"># also its less expensive to do the head_object approach</span>
+        <span class="n">s3_client</span><span class="o">.</span><span class="n">head_object</span><span class="p">(</span><span class="n">Bucket</span><span class="o">=</span><span class="n">bucket</span><span class="p">,</span> <span class="n">Key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InvalidS3ObjectException</span><span class="p">(</span><span class="s2">&quot;This image does not exist!&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

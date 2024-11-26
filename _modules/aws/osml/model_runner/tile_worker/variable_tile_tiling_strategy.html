@@ -1,0 +1,278 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.tile_worker.variable_tile_tiling_strategy &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.tile_worker.variable_tile_tiling_strategy</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.model_runner.tile_worker.variable_tile_tiling_strategy</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span> <span class="nn">geojson</span> <span class="kn">import</span> <span class="n">Feature</span>
+
+<span class="kn">from</span> <span class="nn">..common</span> <span class="kn">import</span> <span class="n">ImageDimensions</span><span class="p">,</span> <span class="n">ImageRegion</span><span class="p">,</span> <span class="n">get_feature_image_bounds</span>
+<span class="kn">from</span> <span class="nn">..inference</span> <span class="kn">import</span> <span class="n">FeatureSelector</span>
+<span class="kn">from</span> <span class="nn">.tiling_strategy</span> <span class="kn">import</span> <span class="n">TilingStrategy</span><span class="p">,</span> <span class="n">generate_crops</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="VariableTileTilingStrategy">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.tile_worker.variable_tile_tiling_strategy.html#aws.osml.model_runner.tile_worker.variable_tile_tiling_strategy.VariableTileTilingStrategy">[docs]</a>
+<span class="k">class</span> <span class="nc">VariableTileTilingStrategy</span><span class="p">(</span><span class="n">TilingStrategy</span><span class="p">):</span>
+<div class="viewcode-block" id="VariableTileTilingStrategy.compute_regions">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.tile_worker.variable_tile_tiling_strategy.html#aws.osml.model_runner.tile_worker.variable_tile_tiling_strategy.VariableTileTilingStrategy.compute_regions">[docs]</a>
+    <span class="k">def</span> <span class="nf">compute_regions</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">processing_bounds</span><span class="p">:</span> <span class="n">ImageRegion</span><span class="p">,</span>
+        <span class="n">region_size</span><span class="p">:</span> <span class="n">ImageDimensions</span><span class="p">,</span>
+        <span class="n">tile_size</span><span class="p">:</span> <span class="n">ImageDimensions</span><span class="p">,</span>
+        <span class="n">overlap</span><span class="p">:</span> <span class="n">ImageDimensions</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ImageRegion</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Identify the regions that should be created from this image.</span>
+
+<span class="sd">        :param processing_bounds: the bounds of the full image or area of interest in pixels ((r, c), (w, h))</span>
+<span class="sd">        :param region_size: the size of the regions in pixels (w, h)</span>
+<span class="sd">        :param tile_size: the size of the tiles in pixels (w, y)</span>
+<span class="sd">        :param overlap: the amount of overlap (w, h)</span>
+
+<span class="sd">        :return: a collection of region boundaries</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">generate_crops</span><span class="p">(</span><span class="n">processing_bounds</span><span class="p">,</span> <span class="n">region_size</span><span class="p">,</span> <span class="n">overlap</span><span class="p">,</span> <span class="n">only_full_tiles</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VariableTileTilingStrategy.compute_tiles">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.tile_worker.variable_tile_tiling_strategy.html#aws.osml.model_runner.tile_worker.variable_tile_tiling_strategy.VariableTileTilingStrategy.compute_tiles">[docs]</a>
+    <span class="k">def</span> <span class="nf">compute_tiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region</span><span class="p">:</span> <span class="n">ImageRegion</span><span class="p">,</span> <span class="n">tile_size</span><span class="p">:</span> <span class="n">ImageDimensions</span><span class="p">,</span> <span class="n">overlap</span><span class="p">:</span> <span class="n">ImageDimensions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ImageRegion</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Identify the tiles that should be created from this region.</span>
+
+<span class="sd">        :param region: the bounds of the region in pixels ((r, c), (w, h))</span>
+<span class="sd">        :param tile_size: the size of the tiles in pixels (w, h)</span>
+<span class="sd">        :param overlap: the amount of overlap (w, h)</span>
+
+<span class="sd">        :return: a collection of tile boundaries</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">generate_crops</span><span class="p">(</span><span class="n">region</span><span class="p">,</span> <span class="n">tile_size</span><span class="p">,</span> <span class="n">overlap</span><span class="p">,</span> <span class="n">only_full_tiles</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VariableTileTilingStrategy.cleanup_duplicate_features">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.tile_worker.variable_tile_tiling_strategy.html#aws.osml.model_runner.tile_worker.variable_tile_tiling_strategy.VariableTileTilingStrategy.cleanup_duplicate_features">[docs]</a>
+    <span class="k">def</span> <span class="nf">cleanup_duplicate_features</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">processing_bounds</span><span class="p">:</span> <span class="n">ImageRegion</span><span class="p">,</span>
+        <span class="n">region_size</span><span class="p">:</span> <span class="n">ImageDimensions</span><span class="p">,</span>
+        <span class="n">tile_size</span><span class="p">:</span> <span class="n">ImageDimensions</span><span class="p">,</span>
+        <span class="n">overlap</span><span class="p">:</span> <span class="n">ImageDimensions</span><span class="p">,</span>
+        <span class="n">features</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">],</span>
+        <span class="n">feature_selector</span><span class="p">:</span> <span class="n">FeatureSelector</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method handles cleaning up duplicates caused by tiling by applying the feature selector to any features</span>
+<span class="sd">        that come from overlap regions.</span>
+
+<span class="sd">        :param processing_bounds: the bounds of the full image or area of interest in pixels ((r, c), (w, h))</span>
+<span class="sd">        :param region_size: the size of the regions in pixels (w, h)</span>
+<span class="sd">        :param tile_size: the size of the tiles in pixels (w, y)</span>
+<span class="sd">        :param overlap: the amount of overlap (w, h)</span>
+<span class="sd">        :param features: the collection of features to deduplicate</span>
+<span class="sd">        :param feature_selector: the algorithm that will be used to resolve duplicates</span>
+
+<span class="sd">        :return: the collection of features with duplicates removed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;FeatureSelection: Starting overlap-aware deduplication of features.&quot;</span><span class="p">)</span>
+
+        <span class="n">total_skipped</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">deduped_features</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">features_grouped_by_region</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_group_features_by_overlap</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">region_size</span><span class="p">,</span> <span class="n">overlap</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">region_key</span><span class="p">,</span> <span class="n">region_features</span> <span class="ow">in</span> <span class="n">features_grouped_by_region</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">region_stride</span> <span class="o">=</span> <span class="p">(</span><span class="n">region_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">region_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">region_origin</span> <span class="o">=</span> <span class="p">(</span><span class="n">region_stride</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">region_key</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">region_stride</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">region_key</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="n">region_key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">region_key</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="n">region_key</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="n">region_key</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+                <span class="c1"># The Group contains contributions from multiple regions, run selection on the entire group</span>
+                <span class="n">deduped_features</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">feature_selector</span><span class="o">.</span><span class="n">select_features</span><span class="p">(</span><span class="n">region_features</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Not an overlap between regions group these features using tile size to identify overlaps</span>
+                <span class="n">features_grouped_by_tile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_group_features_by_overlap</span><span class="p">(</span>
+                    <span class="n">region_features</span><span class="p">,</span> <span class="n">tile_size</span><span class="p">,</span> <span class="n">overlap</span><span class="p">,</span> <span class="n">region_origin</span>
+                <span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">tile_key</span><span class="p">,</span> <span class="n">tile_features</span> <span class="ow">in</span> <span class="n">features_grouped_by_tile</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">tile_key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">tile_key</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="n">tile_key</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="n">tile_key</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+                        <span class="c1"># Group contains contributions from multiple tiles, run selection</span>
+                        <span class="n">deduped_features</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">feature_selector</span><span class="o">.</span><span class="n">select_features</span><span class="p">(</span><span class="n">tile_features</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># No overlap between tiles, features can be added directly to the result</span>
+                        <span class="n">total_skipped</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tile_features</span><span class="p">)</span>
+                        <span class="n">deduped_features</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tile_features</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;FeatureSelection: Skipped processing of </span><span class="si">{</span><span class="n">total_skipped</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">features</span><span class="p">)</span><span class="si">}</span><span class="s2"> features. &quot;</span>
+            <span class="s2">&quot;They were not inside an overlap region.&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">deduped_features</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_identify_overlap</span><span class="p">(</span>
+        <span class="n">feature</span><span class="p">:</span> <span class="n">Feature</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">overlap</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">origin</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a tuple that contains the min and max indexes of adjacent tiles or regions for a given feature. If</span>
+<span class="sd">        the min and max values for both x and y are the same then this feature does not touch an overlap region.</span>
+
+<span class="sd">        :param feature: the geojson Feature that must contain properties to identify its location in an image</span>
+<span class="sd">        :param shape: the width, height of the area in pixels</span>
+<span class="sd">        :param overlap: the x, y overlap between areas in pixels</span>
+<span class="sd">        :param origin: the x, y coordinate of the area in relation to the full image</span>
+
+<span class="sd">        :return: a tuple: minx, maxx, miny, maxy that identifies any overlap.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bbox</span> <span class="o">=</span> <span class="n">get_feature_image_bounds</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+
+        <span class="c1"># If an offset origin was supplied adjust the bbox so the key is relative to the origin.</span>
+        <span class="n">bbox</span> <span class="o">=</span> <span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">origin</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">origin</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">origin</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">origin</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">stride_x</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">stride_y</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">max_x_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">stride_x</span><span class="p">)</span>
+        <span class="n">max_y_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="n">stride_y</span><span class="p">)</span>
+
+        <span class="n">min_x_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">stride_x</span><span class="p">)</span>
+        <span class="n">min_y_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">stride_y</span><span class="p">)</span>
+        <span class="n">min_x_offset</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">%</span> <span class="n">stride_x</span>
+        <span class="n">min_y_offset</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">%</span> <span class="n">stride_y</span>
+
+        <span class="k">if</span> <span class="n">min_x_offset</span> <span class="o">&lt;</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">min_x_index</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">min_x_index</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">min_y_offset</span> <span class="o">&lt;</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">min_y_index</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">min_y_index</span> <span class="o">-=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">min_x_index</span><span class="p">,</span> <span class="n">max_x_index</span><span class="p">,</span> <span class="n">min_y_index</span><span class="p">,</span> <span class="n">max_y_index</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_group_features_by_overlap</span><span class="p">(</span>
+        <span class="n">features</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">],</span> <span class="n">shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">overlap</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">origin</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Group all the feature items by tile id</span>
+
+<span class="sd">        :param features: List[FeatureItem] = the list of feature items</span>
+<span class="sd">        :param shape: the width, height of the area in pixels</span>
+<span class="sd">        :param overlap: the x, y overlap between areas in pixels</span>
+<span class="sd">        :param origin: the x, y coordinate of the area in relation to the full image</span>
+
+<span class="sd">        :return: a mapping of overlap id to a list of features that intersect that overlap region</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">grouped_features</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">features</span><span class="p">:</span>
+            <span class="n">overlap_key</span> <span class="o">=</span> <span class="n">VariableTileTilingStrategy</span><span class="o">.</span><span class="n">_identify_overlap</span><span class="p">(</span><span class="n">feature</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">overlap</span><span class="p">,</span> <span class="n">origin</span><span class="p">)</span>
+            <span class="n">grouped_features</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">overlap_key</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">grouped_features</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

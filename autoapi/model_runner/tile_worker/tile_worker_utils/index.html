@@ -1,0 +1,278 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>model_runner.tile_worker.tile_worker_utils &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="model_runner.tile_worker.tiling_strategy" href="../tiling_strategy/index.html" />
+    <link rel="prev" title="model_runner.tile_worker.tile_worker" href="../tile_worker/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">model_runner</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../index.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../api/index.html">model_runner.api</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../app_config/index.html">model_runner.app_config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../common/index.html">model_runner.common</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../database/index.html">model_runner.database</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../exceptions/index.html">model_runner.exceptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../image_request_handler/index.html">model_runner.image_request_handler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../inference/index.html">model_runner.inference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../model_runner/index.html">model_runner.model_runner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../queue/index.html">model_runner.queue</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../region_request_handler/index.html">model_runner.region_request_handler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../sink/index.html">model_runner.sink</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../status/index.html">model_runner.status</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../index.html">model_runner.tile_worker</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../index.html#classes">Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../index.html#package-contents">Package Contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">model_runner</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">model_runner.tile_worker</a></li>
+      <li class="breadcrumb-item active">model_runner.tile_worker.tile_worker_utils</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/autoapi/model_runner/tile_worker/tile_worker_utils/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-model_runner.tile_worker.tile_worker_utils">
+<span id="model-runner-tile-worker-tile-worker-utils"></span><h1>model_runner.tile_worker.tile_worker_utils<a class="headerlink" href="#module-model_runner.tile_worker.tile_worker_utils" title="Link to this heading"></a></h1>
+<section id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.tile_worker.tile_worker_utils.logger" title="model_runner.tile_worker.tile_worker_utils.logger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logger</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.tile_worker.tile_worker_utils.setup_tile_workers" title="model_runner.tile_worker.tile_worker_utils.setup_tile_workers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_tile_workers</span></code></a>(→ Tuple[queue.Queue, ...)</p></td>
+<td><p>Sets up a pool of tile-workers to process image tiles from a region request</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#model_runner.tile_worker.tile_worker_utils.process_tiles" title="model_runner.tile_worker.tile_worker_utils.process_tiles"><code class="xref py py-obj docutils literal notranslate"><span class="pre">process_tiles</span></code></a>(→ Tuple[int, int])</p></td>
+<td><p>Loads a GDAL dataset into memory and processes it with a pool of tile workers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.tile_worker.tile_worker_utils._create_tile" title="model_runner.tile_worker.tile_worker_utils._create_tile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_create_tile</span></code></a>(→ Optional[str])</p></td>
+<td><p>Create an encoded tile of the requested image region.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#model_runner.tile_worker.tile_worker_utils.sizeof_fmt" title="model_runner.tile_worker.tile_worker_utils.sizeof_fmt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sizeof_fmt</span></code></a>(→ str)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.tile_worker.tile_worker_utils.select_features" title="model_runner.tile_worker.tile_worker_utils.select_features"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_features</span></code></a>(→ List[geojson.Feature])</p></td>
+<td><p>Selects the desired features using the options in the JobItem (NMS, SOFT_NMS, etc.).</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="model_runner.tile_worker.tile_worker_utils.logger">
+<span class="sig-prename descclassname"><span class="pre">model_runner.tile_worker.tile_worker_utils.</span></span><span class="sig-name descname"><span class="pre">logger</span></span><a class="headerlink" href="#model_runner.tile_worker.tile_worker_utils.logger" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="model_runner.tile_worker.tile_worker_utils.setup_tile_workers">
+<span class="sig-prename descclassname"><span class="pre">model_runner.tile_worker.tile_worker_utils.</span></span><span class="sig-name descname"><span class="pre">setup_tile_workers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">region_request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.model_runner.api.RegionRequest</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.photogrammetry.SensorModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elevation_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.photogrammetry.ElevationModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/queue.html#queue.Queue" title="(in Python v3.13)"><span class="pre">queue.Queue</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../tile_worker/index.html#model_runner.tile_worker.tile_worker.TileWorker" title="model_runner.tile_worker.tile_worker.TileWorker"><span class="pre">model_runner.tile_worker.tile_worker.TileWorker</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#model_runner.tile_worker.tile_worker_utils.setup_tile_workers" title="Link to this definition"></a></dt>
+<dd><p>Sets up a pool of tile-workers to process image tiles from a region request</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>region_request</strong> – RegionRequest = the region request to update.</p></li>
+<li><p><strong>sensor_model</strong> – Optional[SensorModel] = the sensor model for this raster dataset</p></li>
+<li><p><strong>elevation_model</strong> – Optional[ElevationModel] = an elevation model used to fix the elevation of the image coordinate</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple[Queue, List[TileWorker] = a list of tile workers and the queue that manages them</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="model_runner.tile_worker.tile_worker_utils.process_tiles">
+<span class="sig-prename descclassname"><span class="pre">model_runner.tile_worker.tile_worker_utils.</span></span><span class="sig-name descname"><span class="pre">process_tiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tiling_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../tiling_strategy/index.html#model_runner.tile_worker.tiling_strategy.TilingStrategy" title="model_runner.tile_worker.tiling_strategy.TilingStrategy"><span class="pre">model_runner.tile_worker.tiling_strategy.TilingStrategy</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">region_request_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.model_runner.database.RegionRequestItem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tile_queue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/queue.html#queue.Queue" title="(in Python v3.13)"><span class="pre">queue.Queue</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">tile_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../tile_worker/index.html#model_runner.tile_worker.tile_worker.TileWorker" title="model_runner.tile_worker.tile_worker.TileWorker"><span class="pre">model_runner.tile_worker.tile_worker.TileWorker</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raster_dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">osgeo.gdal.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.photogrammetry.SensorModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#model_runner.tile_worker.tile_worker_utils.process_tiles" title="Link to this definition"></a></dt>
+<dd><p>Loads a GDAL dataset into memory and processes it with a pool of tile workers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tiling_strategy</strong> – the approach used to decompose the region into tiles for the ML model</p></li>
+<li><p><strong>region_request_item</strong> – RegionRequestItem = the region request to update.</p></li>
+<li><p><strong>tile_queue</strong> – Queue = keeps the image in the queue for processing</p></li>
+<li><p><strong>tile_workers</strong> – List[TileWorker] = the list of tile workers</p></li>
+<li><p><strong>raster_dataset</strong> – gdal.Dataset = the raster dataset containing the region</p></li>
+<li><p><strong>sensor_model</strong> – Optional[SensorModel] = the sensor model for this raster dataset</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple[int, int, List[ImageRegion]] = number of tiles processed, number of tiles with an error</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="model_runner.tile_worker.tile_worker_utils._create_tile">
+<span class="sig-prename descclassname"><span class="pre">model_runner.tile_worker.tile_worker_utils.</span></span><span class="sig-name descname"><span class="pre">_create_tile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gdal_tile_factory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tile_bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tmp_image_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws_embedded_metrics.MetricsLogger</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#model_runner.tile_worker.tile_worker_utils._create_tile" title="Link to this definition"></a></dt>
+<dd><p>Create an encoded tile of the requested image region.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gdal_tile_factory</strong> – the factory used to create the tile</p></li>
+<li><p><strong>tile_bounds</strong> – the requested tile boundary</p></li>
+<li><p><strong>tmp_image_path</strong> – the output location of the tile</p></li>
+<li><p><strong>metrics</strong> – the current metrics scope</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the resulting tile path or None if the tile could not be created</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="model_runner.tile_worker.tile_worker_utils.sizeof_fmt">
+<span class="sig-prename descclassname"><span class="pre">model_runner.tile_worker.tile_worker_utils.</span></span><span class="sig-name descname"><span class="pre">sizeof_fmt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'B'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#model_runner.tile_worker.tile_worker_utils.sizeof_fmt" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="model_runner.tile_worker.tile_worker_utils.select_features">
+<span class="sig-prename descclassname"><span class="pre">model_runner.tile_worker.tile_worker_utils.</span></span><span class="sig-name descname"><span class="pre">select_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_distillation_option</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">geojson.Feature</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processing_bounds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.model_runner.common.ImageRegion</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">tile_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">tile_overlap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">tiling_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../tiling_strategy/index.html#model_runner.tile_worker.tiling_strategy.TilingStrategy" title="model_runner.tile_worker.tiling_strategy.TilingStrategy"><span class="pre">model_runner.tile_worker.tiling_strategy.TilingStrategy</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">geojson.Feature</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#model_runner.tile_worker.tile_worker_utils.select_features" title="Link to this definition"></a></dt>
+<dd><p>Selects the desired features using the options in the JobItem (NMS, SOFT_NMS, etc.).
+This code applies a feature selector only to the features that came from regions of the image
+that were processed multiple times. First features are grouped based on the region they were
+processed in. Any features found in the overlap area between regions are run through the
+FeatureSelector. If they were not part of an overlap area between regions, they will be grouped
+based on tile boundaries. Any features that fall into the overlap of adjacent tiles are filtered
+by the FeatureSelector. All other features should not be duplicates; they are added to the result
+without additional filtering.</p>
+<p>Computationally, this implements two critical factors that lower the overall processing time for the
+O(N^2) selection algorithms. First, it will filter out the majority of features that couldn’t possibly
+have duplicates generated by our tiled image processing; Second, it runs the selection algorithms
+incrementally on much smaller groups of features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>region_size</strong></p></li>
+<li><p><strong>feature_distillation_option</strong> – str = the options used in selecting features (e.g., NMS/SOFT_NMS, thresholds)</p></li>
+<li><p><strong>features</strong> – List[Feature] = the list of geojson features to process</p></li>
+<li><p><strong>processing_bounds</strong> – the requested area of the image</p></li>
+<li><p><strong>region_size</strong> – str = region size to use for feature dedup</p></li>
+<li><p><strong>tile_size</strong> – str = size of the tiles used during processing</p></li>
+<li><p><strong>tile_overlap</strong> – str = overlap between tiles during processing</p></li>
+<li><p><strong>tiling_strategy</strong> – the tiling strategy to use for feature dedup</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[Feature] = the list of geojson features after processing</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../tile_worker/index.html" class="btn btn-neutral float-left" title="model_runner.tile_worker.tile_worker" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../tiling_strategy/index.html" class="btn btn-neutral float-right" title="model_runner.tile_worker.tiling_strategy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

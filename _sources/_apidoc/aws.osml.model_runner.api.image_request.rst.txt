@@ -1,0 +1,7 @@
+aws.osml.model\_runner.api.image\_request module
+================================================
+
+.. automodule:: aws.osml.model_runner.api.image_request
+   :members:
+   :undoc-members:
+   :show-inheritance:

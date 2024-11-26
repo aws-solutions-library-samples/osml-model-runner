@@ -1,0 +1,55 @@
+model_runner.status.base_status_monitor
+=======================================
+
+.. py:module:: model_runner.status.base_status_monitor
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.status.base_status_monitor.BaseStatusMonitor
+
+
+Module Contents
+---------------
+
+.. py:class:: BaseStatusMonitor(sns_topic: str)
+
+   Bases: :py:obj:`abc.ABC`
+
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+
+   .. py:attribute:: sns_helper
+
+
+   .. py:method:: process_event(request_item: aws.osml.model_runner.database.DDBItem, status: aws.osml.model_runner.common.RequestStatus, message: str) -> None
+      :abstractmethod:
+
+
+      Publishes the message via SNS. Must be implemented by subclasses.
+
+      :param request_item: DDBItem = the request item (image/region)
+      :param status: RequestStatus = the status of a request
+      :param message: str = the message to notify the user
+
+      :return: None
+
+
+
+   .. py:method:: get_status(request_item: aws.osml.model_runner.database.DDBItem) -> aws.osml.model_runner.common.RequestStatus
+      :abstractmethod:
+
+
+      Produce a request status from a given request item. Must be implemented by subclasses.
+
+      :param request_item: DDBItem = the request item (image/region)
+
+      :return: RequestStatus = the current status of the request
+
+
+

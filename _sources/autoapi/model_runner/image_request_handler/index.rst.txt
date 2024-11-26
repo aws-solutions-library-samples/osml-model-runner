@@ -1,0 +1,195 @@
+model_runner.image_request_handler
+==================================
+
+.. py:module:: model_runner.image_request_handler
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.image_request_handler.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.image_request_handler.ImageRequestHandler
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:class:: ImageRequestHandler(job_table: model_runner.database.JobTable, image_status_monitor: model_runner.status.ImageStatusMonitor, endpoint_statistics_table: model_runner.database.EndpointStatisticsTable, tiling_strategy: model_runner.tile_worker.TilingStrategy, region_request_queue: model_runner.queue.RequestQueue, region_request_table: model_runner.database.RegionRequestTable, endpoint_utils: model_runner.common.EndpointUtils, config: model_runner.app_config.ServiceConfig, region_request_handler: model_runner.region_request_handler.RegionRequestHandler)
+
+   Class responsible for handling ImageRequest processing.
+
+
+   .. py:attribute:: job_table
+
+
+   .. py:attribute:: image_status_monitor
+
+
+   .. py:attribute:: endpoint_statistics_table
+
+
+   .. py:attribute:: tiling_strategy
+
+
+   .. py:attribute:: region_request_queue
+
+
+   .. py:attribute:: region_request_table
+
+
+   .. py:attribute:: endpoint_utils
+
+
+   .. py:attribute:: config
+
+
+   .. py:attribute:: region_request_handler
+
+
+   .. py:method:: process_image_request(image_request: model_runner.api.ImageRequest) -> None
+
+      Processes an ImageRequest object. Loads the specified image into memory, splits it into regions,
+      and sends these regions for downstream processing via RegionRequest. The first region is processed
+      directly by this method, while the remaining regions are queued for other workers.
+
+      :param image_request: The image request to process, derived from the ImageRequest SQS message.
+
+      :raises ProcessImageException: If image processing fails.
+      :return: None
+
+
+
+   .. py:method:: queue_region_request(all_regions: List[model_runner.common.ImageRegion], image_request: model_runner.api.ImageRequest, raster_dataset: osgeo.gdal.Dataset, sensor_model: Optional[aws.osml.photogrammetry.SensorModel], image_extension: Optional[str]) -> None
+
+      Queue all image regions for processing. Each region is added to the queue, with traceability maintained
+      in the RegionRequestTable. The first region is processed directly, while the others are sent to the queue.
+
+      :param all_regions: List of image regions to process.
+      :param image_request: The image request associated with these regions.
+      :param raster_dataset: The GDAL dataset containing the image regions.
+      :param sensor_model: The sensor model for this raster dataset, if available.
+      :param image_extension: The file extension of the image.
+
+      :return: None
+
+
+
+   .. py:method:: load_image_request(job_item: model_runner.database.JobItem, roi: shapely.geometry.base.BaseGeometry) -> Tuple[str, osgeo.gdal.Dataset, Optional[aws.osml.photogrammetry.SensorModel], List[model_runner.common.ImageRegion]]
+
+      Loads image metadata and prepares it for processing. The image is divided into regions
+      for distribution across workers.
+
+      :param job_item: The image request object containing job information.
+      :param roi: Region of interest to restrict image processing, provided as a geometry.
+
+      :raises InvalidImageURLException: If the image URL is not valid.
+      :raises LoadImageException: If loading image or processing bounds fails.
+      :return: Tuple containing image extension, GDAL dataset, optional sensor model, and list of regions to process.
+
+
+
+   .. py:method:: fail_image_request(job_item: model_runner.database.JobItem, err: Exception) -> None
+
+      Handles image request failure. Updates the status to 'failed' and ends the request in the job table.
+
+      :param job_item: The job item for the failed image request.
+      :param err: The exception that caused the failure.
+
+      :return: None
+
+
+
+   .. py:method:: complete_image_request(region_request: model_runner.api.RegionRequest, image_format: str, raster_dataset: osgeo.gdal.Dataset, sensor_model: aws.osml.photogrammetry.SensorModel) -> None
+
+      Completes the image request after all regions have been processed. Aggregates and sinks the features,
+      then finalizes the request.
+
+      :param region_request: The region request that completed.
+      :param image_format: The format of the image file.
+      :param raster_dataset: The GDAL dataset of the processed image.
+      :param sensor_model: The sensor model for the image, if available.
+
+      :raises AggregateFeaturesException: If feature aggregation fails.
+      :return: None
+
+
+
+   .. py:method:: deduplicate(job_item: model_runner.database.JobItem, features: List[geojson.Feature], raster_dataset: osgeo.gdal.Dataset, sensor_model: aws.osml.photogrammetry.SensorModel, metrics: aws_embedded_metrics.MetricsLogger = None) -> List[geojson.Feature]
+
+      Deduplicate the features and add additional properties to them, if applicable.
+
+      :param metrics:
+      :param job_item: The image processing job item containing job-specific information.
+      :param features: A list of GeoJSON features to deduplicate.
+      :param raster_dataset: The GDAL dataset representing the image being processed.
+      :param sensor_model: The sensor model associated with the dataset, used for georeferencing.
+      :param metrics: Optional metrics logger for tracking performance metrics.
+
+      :return: A list of deduplicated features with additional properties added.
+
+
+
+   .. py:method:: validate_model_hosting(image_request: model_runner.database.JobItem)
+
+      Validates that the image request's model invocation mode is supported. If not, raises an exception.
+
+      :param image_request: The image processing job item to validate.
+
+      :raises UnsupportedModelException: If the model invocation mode is not supported.
+      :return: None
+
+
+
+   .. py:method:: end_image_request(job_item: model_runner.database.JobItem, image_format: str, metrics: aws_embedded_metrics.MetricsLogger = None) -> None
+
+      Finalizes the image request, updates the job status, and logs the necessary metrics.
+
+      :param job_item: The image processing job item to finalize.
+      :param image_format: The format of the image being processed (e.g., TIFF, NITF).
+      :param metrics: Optional metrics logger for tracking performance metrics.
+
+      :return: None
+
+
+
+   .. py:method:: calculate_processing_bounds(raster_dataset: osgeo.gdal.Dataset, sensor_model: aws.osml.photogrammetry.SensorModel, roi_wkt: Optional[str] = None) -> tuple[tuple[int, int], tuple[int, int]]
+      :staticmethod:
+
+
+      Calculate the processing bounds for the image, based on the region of interest (ROI) and sensor model.
+
+      :param raster_dataset: The GDAL dataset representing the image being processed.
+      :param sensor_model: The sensor model used to georeference the dataset.
+      :param roi_wkt: Optional Well-Known Text (WKT) representing the region of interest for image processing.
+
+      :raises AggregateFeaturesException: If the processing bounds cannot be calculated.
+      :return: A tuple representing the upper-left corner (row, column) and dimensions (width, height) of the bounds.
+
+
+
+   .. py:method:: sink_features(job_item: model_runner.database.JobItem, features: List[geojson.Feature], metrics: aws_embedded_metrics.MetricsLogger = None) -> None
+      :staticmethod:
+
+
+      Sink the deduplicated features to the specified output (e.g., S3, Kinesis, etc.).
+
+      :param job_item: The job item representing the image processing request.
+      :param features: The list of deduplicated GeoJSON features to sink.
+      :param metrics: Optional metrics logger to track feature sinking performance.
+
+      :raises AggregateOutputFeaturesException: If sinking the features to the output fails.
+      :return: None
+
+
+

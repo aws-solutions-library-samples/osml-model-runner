@@ -1,0 +1,151 @@
+model_runner.common.typing
+==========================
+
+.. py:module:: model_runner.common.typing
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.common.typing.ImageCoord
+   model_runner.common.typing.ImageDimensions
+   model_runner.common.typing.ImageRegion
+   model_runner.common.typing.VALID_IMAGE_COMPRESSION
+   model_runner.common.typing.VALID_IMAGE_FORMATS
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.common.typing.ImageCompression
+   model_runner.common.typing.ImageFormats
+   model_runner.common.typing.RequestStatus
+   model_runner.common.typing.GeojsonDetectionField
+   model_runner.common.typing.TileState
+
+
+Module Contents
+---------------
+
+.. py:data:: ImageCoord
+
+.. py:data:: ImageDimensions
+
+.. py:data:: ImageRegion
+
+.. py:class:: ImageCompression
+
+   Bases: :py:obj:`str`, :py:obj:`aws.osml.model_runner.common.AutoStringEnum`
+
+
+   Enumeration defining compression algorithms for image.
+
+
+   .. py:attribute:: NONE
+
+
+   .. py:attribute:: JPEG
+
+
+   .. py:attribute:: J2K
+
+
+   .. py:attribute:: LZW
+
+
+.. py:class:: ImageFormats
+
+   Bases: :py:obj:`str`, :py:obj:`aws.osml.model_runner.common.AutoStringEnum`
+
+
+   Enumeration defining image encodings.
+
+
+   .. py:attribute:: NITF
+
+
+   .. py:attribute:: JPEG
+
+
+   .. py:attribute:: PNG
+
+
+   .. py:attribute:: GTIFF
+
+
+.. py:class:: RequestStatus
+
+   Bases: :py:obj:`str`, :py:obj:`aws.osml.model_runner.common.AutoStringEnum`
+
+
+   Enumeration defining the image request status
+
+
+   .. py:attribute:: STARTED
+
+
+   .. py:attribute:: IN_PROGRESS
+
+
+   .. py:attribute:: PARTIAL
+
+
+   .. py:attribute:: SUCCESS
+
+
+   .. py:attribute:: FAILED
+
+
+.. py:class:: GeojsonDetectionField
+
+   Bases: :py:obj:`str`, :py:obj:`enum.Enum`
+
+
+   Enumeration defining the model geojson field to index depending on the shape
+
+
+   .. py:attribute:: BOUNDS
+      :value: 'bounds_imcoords'
+
+
+
+   .. py:attribute:: GEOM
+      :value: 'geom_imcoords'
+
+
+
+.. py:class:: TileState
+
+   Bases: :py:obj:`str`, :py:obj:`enum.Enum`
+
+
+   str(object='') -> str
+   str(bytes_or_buffer[, encoding[, errors]]) -> str
+
+   Create a new string object from the given object. If encoding or
+   errors is specified, then the object must expose a data buffer
+   that will be decoded using the given encoding and error handler.
+   Otherwise, returns the result of object.__str__() (if defined)
+   or repr(object).
+   encoding defaults to sys.getdefaultencoding().
+   errors defaults to 'strict'.
+
+
+   .. py:attribute:: SUCCEEDED
+      :value: 'succeeded'
+
+
+
+   .. py:attribute:: FAILED
+      :value: 'failed'
+
+
+
+.. py:data:: VALID_IMAGE_COMPRESSION
+
+.. py:data:: VALID_IMAGE_FORMATS
+

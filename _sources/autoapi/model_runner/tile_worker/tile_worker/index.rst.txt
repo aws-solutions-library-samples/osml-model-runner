@@ -1,0 +1,111 @@
+model_runner.tile_worker.tile_worker
+====================================
+
+.. py:module:: model_runner.tile_worker.tile_worker
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.tile_worker.tile_worker.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.tile_worker.tile_worker.TileWorker
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:class:: TileWorker(in_queue: queue.Queue, feature_detector: aws.osml.model_runner.inference.Detector, geolocator: Optional[aws.osml.features.Geolocator], feature_table: aws.osml.model_runner.database.FeatureTable, region_request_table: aws.osml.model_runner.database.RegionRequestTable)
+
+   Bases: :py:obj:`threading.Thread`
+
+
+   A class that represents a thread of control.
+
+   This class can be safely subclassed in a limited fashion. There are two ways
+   to specify the activity: by passing a callable object to the constructor, or
+   by overriding the run() method in a subclass.
+
+
+
+   .. py:attribute:: in_queue
+
+
+   .. py:attribute:: feature_detector
+
+
+   .. py:attribute:: geolocator
+
+
+   .. py:attribute:: feature_table
+
+
+   .. py:attribute:: region_request_table
+
+
+   .. py:attribute:: property_accessor
+
+
+   .. py:attribute:: failed_tile_count
+      :type:  int
+      :value: 0
+
+
+
+   .. py:method:: run() -> None
+
+      Method representing the thread's activity.
+
+      You may override this method in a subclass. The standard run() method
+      invokes the callable object passed to the object's constructor as the
+      target argument, if any, with sequential and keyword arguments taken
+      from the args and kwargs arguments, respectively.
+
+
+
+
+   .. py:method:: process_tile(image_info: Dict, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None) -> None
+
+      This method handles the processing of a single tile by invoking the ML model, geolocating the detections to
+      create features and finally storing the features in the database.
+
+      :param image_info: description of the tile to be processed
+      :param metrics: the current metric scope
+
+
+
+   .. py:method:: _refine_features(feature_collection, image_info: Dict, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None) -> List[geojson.Feature]
+
+      This method converts the detections returned by the model into geolocated features. It first updates the
+      image coordinates of each detection to be in relation to the full image then it geolocates the image feature.
+
+      :param feature_collection: the features from the ML model
+      :param image_info: a description of the image tile containing the features
+      :param metrics: the current metric scope
+      :return: a list of GeoJSON features
+
+
+
+   .. py:method:: convert_deprecated_feature_properties(feature: geojson.Feature) -> None
+      :staticmethod:
+
+
+      This function converts the legacy properties produced by CV models into the feature properties used
+      by OversightML.
+
+      :param feature: the feature that needs its "properties" updated.
+
+      :return: None
+
+
+

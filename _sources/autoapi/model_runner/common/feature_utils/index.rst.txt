@@ -1,0 +1,36 @@
+model_runner.common.feature_utils
+=================================
+
+.. py:module:: model_runner.common.feature_utils
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.common.feature_utils.property_accessor
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   model_runner.common.feature_utils.get_feature_image_bounds
+
+
+Module Contents
+---------------
+
+.. py:data:: property_accessor
+
+.. py:function:: get_feature_image_bounds(feature: geojson.Feature) -> Optional[Tuple[float, float, float, float]]
+
+   This is a utility function that creates a [minx, miny, maxx, maxy] tuple for the boundary of the
+   image geometry of a feature. If no image geometry property can be found None is returned.
+
+   :param feature: the feature to calculate bounds for
+   :return: the bounds or None
+
+

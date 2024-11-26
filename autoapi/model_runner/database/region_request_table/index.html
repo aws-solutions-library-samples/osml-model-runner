@@ -1,0 +1,430 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>model_runner.database.region_request_table &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="model_runner.exceptions" href="../../exceptions/index.html" />
+    <link rel="prev" title="model_runner.database.job_table" href="../job_table/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">model_runner</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../index.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../api/index.html">model_runner.api</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../app_config/index.html">model_runner.app_config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../common/index.html">model_runner.common</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../index.html">model_runner.database</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../exceptions/index.html">model_runner.exceptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../image_request_handler/index.html">model_runner.image_request_handler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../inference/index.html">model_runner.inference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../model_runner/index.html">model_runner.model_runner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../queue/index.html">model_runner.queue</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../region_request_handler/index.html">model_runner.region_request_handler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../sink/index.html">model_runner.sink</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../status/index.html">model_runner.status</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../tile_worker/index.html">model_runner.tile_worker</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../index.html#classes">Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../index.html#package-contents">Package Contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">model_runner</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">model_runner.database</a></li>
+      <li class="breadcrumb-item active">model_runner.database.region_request_table</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/autoapi/model_runner/database/region_request_table/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-model_runner.database.region_request_table">
+<span id="model-runner-database-region-request-table"></span><h1>model_runner.database.region_request_table<a class="headerlink" href="#module-model_runner.database.region_request_table" title="Link to this heading"></a></h1>
+<section id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.database.region_request_table.logger" title="model_runner.database.region_request_table.logger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logger</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.database.region_request_table.RegionRequestItem" title="model_runner.database.region_request_table.RegionRequestItem"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RegionRequestItem</span></code></a></p></td>
+<td><p>RegionRequestItem is a dataclass meant to represent a single item in the Region table.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#model_runner.database.region_request_table.RegionRequestTable" title="model_runner.database.region_request_table.RegionRequestTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RegionRequestTable</span></code></a></p></td>
+<td><p>RegionRequestTable is a class meant to help OSML with accessing and interacting with the region processing jobs we</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.logger">
+<span class="sig-prename descclassname"><span class="pre">model_runner.database.region_request_table.</span></span><span class="sig-name descname"><span class="pre">logger</span></span><a class="headerlink" href="#model_runner.database.region_request_table.logger" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.database.region_request_table.</span></span><span class="sig-name descname"><span class="pre">RegionRequestItem</span></span><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="../ddb_helper/index.html#model_runner.database.ddb_helper.DDBItem" title="model_runner.database.ddb_helper.DDBItem"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_runner.database.ddb_helper.DDBItem</span></code></a></p>
+<p>RegionRequestItem is a dataclass meant to represent a single item in the Region table.</p>
+<p>The data schema is defined as follows:
+region_id: str = primary key - formatted as region (pixel bounds) + “-” + unique_identifier
+image_id: str = secondary key - image_id for the job
+job_id: Optional[str] = job identifier for tracking
+start_time: Optional[int] = time in epoch seconds when the job started
+last_updated_time: Optional[int] = time in epoch seconds when the job is processing (periodically updated)
+end_time: Optional[int] = time in epoch seconds when the job ended
+expire_time: Optional[int] = time in epoch seconds when the item will expire from the table
+image_read_role: Optional[str] = IAM role to read the image for processing
+processing_duration: Optional[int] = time in seconds to complete region processing
+message: Optional[str] = additional information about the region job
+region_status: Optional[str] = region job status - PROCESSING, COMPLETED, FAILED
+total_tiles: Optional[int] = total number of tiles to be processed for the region
+failed_tiles: Optional[List] = list of tiles that failed processing
+failed_tile_count: Optional[int] = count of failed tiles that failed to process
+succeeded_tiles: Optional[List] = list of tiles that succeeded processing
+succeeded_tile_count: Optional[int] = count of successfully processed tiles
+region_bounds: Optional[List[List[int]]] = list of pixel bounds that define the region
+region_retry_count: Optional[int] = number of times the region processing has been retried
+tile_compression: Optional[str] = compression type of tiles for the region (e.g., ‘LZW’, ‘JPEG’)
+tile_format: Optional[str] = file format of the tiles (e.g., ‘tif’, ‘ntf’)
+tile_overlap: Optional[List[int]] = overlap dimensions for the tiles in the region
+tile_size: Optional[List[int]] = size dimensions of the tiles in the region</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.region_id">
+<span class="sig-name descname"><span class="pre">region_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.region_id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.image_id">
+<span class="sig-name descname"><span class="pre">image_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.image_id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.job_id">
+<span class="sig-name descname"><span class="pre">job_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.job_id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.start_time">
+<span class="sig-name descname"><span class="pre">start_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.start_time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.last_updated_time">
+<span class="sig-name descname"><span class="pre">last_updated_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.last_updated_time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.end_time">
+<span class="sig-name descname"><span class="pre">end_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.end_time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.expire_time">
+<span class="sig-name descname"><span class="pre">expire_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.expire_time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.image_read_role">
+<span class="sig-name descname"><span class="pre">image_read_role</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.image_read_role" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.processing_duration">
+<span class="sig-name descname"><span class="pre">processing_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.processing_duration" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.message">
+<span class="sig-name descname"><span class="pre">message</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.message" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.region_status">
+<span class="sig-name descname"><span class="pre">region_status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.region_status" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.total_tiles">
+<span class="sig-name descname"><span class="pre">total_tiles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.total_tiles" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.failed_tiles">
+<span class="sig-name descname"><span class="pre">failed_tiles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.failed_tiles" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.failed_tile_count">
+<span class="sig-name descname"><span class="pre">failed_tile_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.failed_tile_count" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.succeeded_tiles">
+<span class="sig-name descname"><span class="pre">succeeded_tiles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.succeeded_tiles" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.succeeded_tile_count">
+<span class="sig-name descname"><span class="pre">succeeded_tile_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.succeeded_tile_count" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.region_bounds">
+<span class="sig-name descname"><span class="pre">region_bounds</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.region_bounds" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.region_retry_count">
+<span class="sig-name descname"><span class="pre">region_retry_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.region_retry_count" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.tile_compression">
+<span class="sig-name descname"><span class="pre">tile_compression</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.tile_compression" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.tile_format">
+<span class="sig-name descname"><span class="pre">tile_format</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.tile_format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.tile_overlap">
+<span class="sig-name descname"><span class="pre">tile_overlap</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.tile_overlap" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.tile_size">
+<span class="sig-name descname"><span class="pre">tile_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.tile_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.__post_init__">
+<span class="sig-name descname"><span class="pre">__post_init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.__post_init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestItem.from_region_request">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_region_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">region_request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.model_runner.api.RegionRequest</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#model_runner.database.region_request_table.RegionRequestItem" title="model_runner.database.region_request_table.RegionRequestItem"><span class="pre">RegionRequestItem</span></a></span></span><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestItem.from_region_request" title="Link to this definition"></a></dt>
+<dd><p>Helper method to create a RegionRequestItem from a RegionRequest object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>region_request</strong> – A RegionRequest object.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A RegionRequestItem instance with the relevant fields populated.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestTable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.database.region_request_table.</span></span><span class="sig-name descname"><span class="pre">RegionRequestTable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestTable" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="../ddb_helper/index.html#model_runner.database.ddb_helper.DDBHelper" title="model_runner.database.ddb_helper.DDBHelper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_runner.database.ddb_helper.DDBHelper</span></code></a></p>
+<p>RegionRequestTable is a class meant to help OSML with accessing and interacting with the region processing jobs we
+track as part of the region table. It extends the DDBHelper class and provides its own item data class for use when
+working with items from the table. It also sets the key for which we index on this table in the constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>table_name</strong> – str = the name of the table to interact with</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestTable.start_region_request">
+<span class="sig-name descname"><span class="pre">start_region_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">region_request_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#model_runner.database.region_request_table.RegionRequestItem" title="model_runner.database.region_request_table.RegionRequestItem"><span class="pre">RegionRequestItem</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#model_runner.database.region_request_table.RegionRequestItem" title="model_runner.database.region_request_table.RegionRequestItem"><span class="pre">RegionRequestItem</span></a></span></span><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestTable.start_region_request" title="Link to this definition"></a></dt>
+<dd><p>Start a region processing request for given region pixel bounds, this should be the first record
+for this region in the table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>region_request_item</strong> – RegionRequestItem = the unique identifier for the region we want to add to ddb</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>RegionRequestItem = Updated region request item</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestTable.complete_region_request">
+<span class="sig-name descname"><span class="pre">complete_region_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">region_request_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#model_runner.database.region_request_table.RegionRequestItem" title="model_runner.database.region_request_table.RegionRequestItem"><span class="pre">RegionRequestItem</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">region_status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.model_runner.common.RequestStatus</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestTable.complete_region_request" title="Link to this definition"></a></dt>
+<dd><p>Update the region job to reflect that a region has succeeded or failed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>region_request_item</strong> – RegionRequestItem = the unique identifier for the region we want to update</p></li>
+<li><p><strong>region_status</strong> – RegionRequestStatus = Status of region at completion (FAILURE, PARTIAL, SUCCESS, etc.)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>RegionRequestItem = Updated region request item</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestTable.update_region_request">
+<span class="sig-name descname"><span class="pre">update_region_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">region_request_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#model_runner.database.region_request_table.RegionRequestItem" title="model_runner.database.region_request_table.RegionRequestItem"><span class="pre">RegionRequestItem</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#model_runner.database.region_request_table.RegionRequestItem" title="model_runner.database.region_request_table.RegionRequestItem"><span class="pre">RegionRequestItem</span></a></span></span><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestTable.update_region_request" title="Link to this definition"></a></dt>
+<dd><p>Update the region info in the ddb</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>region_request_item</strong> – RegionRequestItem = the unique identifier for the region we want to update</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>RegionRequestItem = Updated region request item</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestTable.get_region_request">
+<span class="sig-name descname"><span class="pre">get_region_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">region_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#model_runner.database.region_request_table.RegionRequestItem" title="model_runner.database.region_request_table.RegionRequestItem"><span class="pre">RegionRequestItem</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestTable.get_region_request" title="Link to this definition"></a></dt>
+<dd><p>Get a RegionRequestItem object from the table based on the region_id and image_id provided</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>region_id</strong> – str = the unique identifier for the region we want to start processing</p></li>
+<li><p><strong>image_id</strong> – str = the unique identifier for the image (range key)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[RegionRequestItem] = region request item</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.database.region_request_table.RegionRequestTable.add_tile">
+<span class="sig-name descname"><span class="pre">add_tile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">region_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">tile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.model_runner.common.ImageRegion</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.model_runner.common.TileState</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#model_runner.database.region_request_table.RegionRequestItem" title="model_runner.database.region_request_table.RegionRequestItem"><span class="pre">RegionRequestItem</span></a></span></span><a class="headerlink" href="#model_runner.database.region_request_table.RegionRequestTable.add_tile" title="Link to this definition"></a></dt>
+<dd><p>Append tile to the with the associated state to associated RegionRequestItem in the table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_id</strong> – str = the id of the image request we want to update</p></li>
+<li><p><strong>region_id</strong> – str = the id of the region request we want to update</p></li>
+<li><p><strong>tile</strong> – ImageRegion = list of values to append to the ‘succeeded_tiles’ property</p></li>
+<li><p><strong>state</strong> – str = state of the tile to add, i.e. succeeded or failed</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The new updated DDB item.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../job_table/index.html" class="btn btn-neutral float-left" title="model_runner.database.job_table" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../exceptions/index.html" class="btn btn-neutral float-right" title="model_runner.exceptions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

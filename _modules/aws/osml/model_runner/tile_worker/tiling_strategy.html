@@ -1,0 +1,251 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.tile_worker.tiling_strategy &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.tile_worker.tiling_strategy</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.model_runner.tile_worker.tiling_strategy</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+
+<span class="kn">from</span> <span class="nn">geojson</span> <span class="kn">import</span> <span class="n">Feature</span>
+
+<span class="kn">from</span> <span class="nn">..common</span> <span class="kn">import</span> <span class="n">ImageDimensions</span><span class="p">,</span> <span class="n">ImageRegion</span>
+<span class="kn">from</span> <span class="nn">..inference</span> <span class="kn">import</span> <span class="n">FeatureSelector</span>
+
+
+<div class="viewcode-block" id="TilingStrategy">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.tile_worker.tiling_strategy.html#aws.osml.model_runner.tile_worker.tiling_strategy.TilingStrategy">[docs]</a>
+<span class="k">class</span> <span class="nc">TilingStrategy</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    TilingStrategy defines an abstract interface for the code that determines how a large image is broken down into</span>
+<span class="sd">    regions and tiles.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TilingStrategy.compute_regions">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.tile_worker.tiling_strategy.html#aws.osml.model_runner.tile_worker.tiling_strategy.TilingStrategy.compute_regions">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">compute_regions</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">processing_bounds</span><span class="p">:</span> <span class="n">ImageRegion</span><span class="p">,</span>
+        <span class="n">region_size</span><span class="p">:</span> <span class="n">ImageDimensions</span><span class="p">,</span>
+        <span class="n">tile_size</span><span class="p">:</span> <span class="n">ImageDimensions</span><span class="p">,</span>
+        <span class="n">overlap</span><span class="p">:</span> <span class="n">ImageDimensions</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ImageRegion</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Identify the regions that should be created from this image.</span>
+
+<span class="sd">        :param processing_bounds: the bounds of the full image or area of interest in pixels ((r, c), (w, h))</span>
+<span class="sd">        :param region_size: the size of the regions in pixels (w, h)</span>
+<span class="sd">        :param tile_size: the size of the tiles in pixels (w, y)</span>
+<span class="sd">        :param overlap: the amount of overlap (w, h)</span>
+
+<span class="sd">        :return: a collection of region boundaries</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="TilingStrategy.compute_tiles">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.tile_worker.tiling_strategy.html#aws.osml.model_runner.tile_worker.tiling_strategy.TilingStrategy.compute_tiles">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">compute_tiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region</span><span class="p">:</span> <span class="n">ImageRegion</span><span class="p">,</span> <span class="n">tile_size</span><span class="p">:</span> <span class="n">ImageDimensions</span><span class="p">,</span> <span class="n">overlap</span><span class="p">:</span> <span class="n">ImageDimensions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ImageRegion</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Identify the tiles that should be created from this region.</span>
+
+<span class="sd">        :param region: the bounds of the region in pixels ((r, c), (w, h))</span>
+<span class="sd">        :param tile_size: the size of the tiles in pixels (w, h)</span>
+<span class="sd">        :param overlap: the amount of overlap (w, h)</span>
+
+<span class="sd">        :return: a collection of tile boundaries</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="TilingStrategy.cleanup_duplicate_features">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.tile_worker.tiling_strategy.html#aws.osml.model_runner.tile_worker.tiling_strategy.TilingStrategy.cleanup_duplicate_features">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">cleanup_duplicate_features</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">processing_bounds</span><span class="p">:</span> <span class="n">ImageRegion</span><span class="p">,</span>
+        <span class="n">region_size</span><span class="p">:</span> <span class="n">ImageDimensions</span><span class="p">,</span>
+        <span class="n">tile_size</span><span class="p">:</span> <span class="n">ImageDimensions</span><span class="p">,</span>
+        <span class="n">overlap</span><span class="p">:</span> <span class="n">ImageDimensions</span><span class="p">,</span>
+        <span class="n">features</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">],</span>
+        <span class="n">feature_selector</span><span class="p">:</span> <span class="n">FeatureSelector</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method handles cleaning up duplicates caused by tiling by applying the feature selector to any features</span>
+<span class="sd">        that come from overlap regions.</span>
+
+<span class="sd">        :param processing_bounds: the bounds of the full image or area of interest in pixels ((r, c), (w, h))</span>
+<span class="sd">        :param region_size: the size of the regions in pixels (w, h)</span>
+<span class="sd">        :param tile_size: the size of the tiles in pixels (w, y)</span>
+<span class="sd">        :param overlap: the amount of overlap (w, h)</span>
+<span class="sd">        :param features: the collection of features to deduplicate</span>
+<span class="sd">        :param feature_selector: the algorithm that will be used to resolve duplicates</span>
+
+<span class="sd">        :return: the collection of features with duplicates removed</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="generate_crops">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.tile_worker.tiling_strategy.html#aws.osml.model_runner.tile_worker.tiling_strategy.generate_crops">[docs]</a>
+<span class="k">def</span> <span class="nf">generate_crops</span><span class="p">(</span>
+    <span class="n">region</span><span class="p">:</span> <span class="n">ImageRegion</span><span class="p">,</span> <span class="n">chip_size</span><span class="p">:</span> <span class="n">ImageDimensions</span><span class="p">,</span> <span class="n">overlap</span><span class="p">:</span> <span class="n">ImageDimensions</span><span class="p">,</span> <span class="n">only_full_tiles</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ImageRegion</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Yields a list of overlapping chip bounding boxes for the given region. Chips will start</span>
+<span class="sd">    in the upper left corner of the region (i.e. region[0][0], region[0][1]) and will be spaced</span>
+<span class="sd">    such that they have the specified horizontal and vertical overlap.</span>
+
+<span class="sd">    :param region: a tuple for the bounding box of the region ((ul_r, ul_c), (width, height))</span>
+<span class="sd">    :param chip_size: a tuple for the chip dimensions (width, height)</span>
+<span class="sd">    :param overlap: a tuple for the overlap (width, height)</span>
+<span class="sd">    :param only_full_tiles: true if we only want to generate tiles that match the chip_size</span>
+
+<span class="sd">    :return: an iterable list of tuples for the chip bounding boxes [((ul_r, ul_c), (w, h)), ...]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">chip_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">chip_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Overlap must be less than chip size! chip_size = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">chip_size</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; overlap = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">overlap</span><span class="p">))</span>
+
+    <span class="c1"># Calculate the spacing for the chips taking into account the horizontal and vertical overlap</span>
+    <span class="c1"># and how many are needed to cover the region</span>
+    <span class="n">stride_x</span> <span class="o">=</span> <span class="n">chip_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">stride_y</span> <span class="o">=</span> <span class="n">chip_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">num_x</span> <span class="o">=</span> <span class="n">ceildiv</span><span class="p">(</span><span class="n">region</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">stride_x</span><span class="p">)</span>
+    <span class="n">num_y</span> <span class="o">=</span> <span class="n">ceildiv</span><span class="p">(</span><span class="n">region</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">stride_y</span><span class="p">)</span>
+
+    <span class="n">crops</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_y</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_x</span><span class="p">):</span>
+            <span class="c1"># Calculate the bounds of the chip ensuring that the chip does not extend</span>
+            <span class="c1"># beyond the edge of the requested region</span>
+            <span class="n">ul_x</span> <span class="o">=</span> <span class="n">region</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span> <span class="o">*</span> <span class="n">stride_x</span>
+            <span class="n">ul_y</span> <span class="o">=</span> <span class="n">region</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">r</span> <span class="o">*</span> <span class="n">stride_y</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">chip_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="n">region</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">region</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="n">ul_x</span><span class="p">)</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">chip_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="n">region</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">region</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="n">ul_y</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">only_full_tiles</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">w</span> <span class="o">==</span> <span class="n">chip_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">h</span> <span class="o">==</span> <span class="n">chip_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                    <span class="n">crops</span><span class="o">.</span><span class="n">append</span><span class="p">(((</span><span class="n">ul_y</span><span class="p">,</span> <span class="n">ul_x</span><span class="p">),</span> <span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">)))</span>
+            <span class="k">elif</span> <span class="n">w</span> <span class="o">&gt;</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">h</span> <span class="o">&gt;</span> <span class="n">overlap</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">crops</span><span class="o">.</span><span class="n">append</span><span class="p">(((</span><span class="n">ul_y</span><span class="p">,</span> <span class="n">ul_x</span><span class="p">),</span> <span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">)))</span>
+
+    <span class="k">return</span> <span class="n">crops</span></div>
+
+
+
+<div class="viewcode-block" id="ceildiv">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.tile_worker.tiling_strategy.html#aws.osml.model_runner.tile_worker.tiling_strategy.ceildiv">[docs]</a>
+<span class="k">def</span> <span class="nf">ceildiv</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Integer ceiling division</span>
+
+<span class="sd">    :param a: numerator</span>
+<span class="sd">    :param b: denominator</span>
+
+<span class="sd">    :return: ceil(a/b)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="o">-</span><span class="p">(</span><span class="o">-</span><span class="n">a</span> <span class="o">//</span> <span class="n">b</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

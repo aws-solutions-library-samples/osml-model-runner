@@ -1,0 +1,58 @@
+model_runner.api.sink
+=====================
+
+.. py:module:: model_runner.api.sink
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.api.sink.VALID_SYNC_TYPES
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.api.sink.SinkMode
+   model_runner.api.sink.SinkType
+
+
+Module Contents
+---------------
+
+.. py:class:: SinkMode
+
+   Bases: :py:obj:`str`, :py:obj:`aws.osml.model_runner.common.AutoStringEnum`
+
+
+   Enumeration defining different sink output modes.
+
+
+   .. py:attribute:: AGGREGATE
+
+
+   .. py:attribute:: STREAMING
+
+
+.. py:class:: SinkType
+
+   Bases: :py:obj:`str`, :py:obj:`aws.osml.model_runner.common.AutoStringEnum`
+
+
+   Enumeration defining different sink output modes.
+
+
+   .. py:attribute:: S3
+
+
+   .. py:attribute:: KINESIS
+      :value: 'Kinesis'
+
+
+
+.. py:data:: VALID_SYNC_TYPES
+

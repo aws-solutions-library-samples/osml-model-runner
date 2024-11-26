@@ -1,0 +1,52 @@
+model_runner.common.endpoint_utils
+==================================
+
+.. py:module:: model_runner.common.endpoint_utils
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.common.endpoint_utils.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.common.endpoint_utils.EndpointUtils
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:class:: EndpointUtils
+
+   .. py:attribute:: max_region_cache
+      :type:  cachetools.TTLCache
+
+
+   .. py:attribute:: ec2_client
+
+
+   .. py:method:: calculate_max_regions(endpoint_name: str, model_invocation_role: Optional[str] = None) -> int
+
+      Calculates the max number of in-process regions for a given model endpoint. In
+      order to calculate the max regions we get the count of instances currently
+      running for the endpoint as well as the instance type. We then get the number
+      of vcpus for the instance type and calculate the max regions as:
+
+          math.floor(10 * VCPUs * Number of Instances) / Workers Per CPU
+
+      :param endpoint_name: str = the name of the endpoint
+      :param model_invocation_role: Optional[str] = the modal of an invocation role
+
+      :returns: int = max endpoint count for the endpoint
+
+
+

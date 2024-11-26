@@ -1,0 +1,421 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>model_runner.image_request_handler &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="model_runner.inference" href="../inference/index.html" />
+    <link rel="prev" title="model_runner.exceptions" href="../exceptions/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">model_runner</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../index.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../api/index.html">model_runner.api</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../app_config/index.html">model_runner.app_config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../common/index.html">model_runner.common</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../database/index.html">model_runner.database</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../exceptions/index.html">model_runner.exceptions</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">model_runner.image_request_handler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../inference/index.html">model_runner.inference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../model_runner/index.html">model_runner.model_runner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../queue/index.html">model_runner.queue</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../region_request_handler/index.html">model_runner.region_request_handler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sink/index.html">model_runner.sink</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../status/index.html">model_runner.status</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tile_worker/index.html">model_runner.tile_worker</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../index.html#classes">Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../index.html#package-contents">Package Contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">model_runner</a></li>
+      <li class="breadcrumb-item active">model_runner.image_request_handler</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/autoapi/model_runner/image_request_handler/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-model_runner.image_request_handler">
+<span id="model-runner-image-request-handler"></span><h1>model_runner.image_request_handler<a class="headerlink" href="#module-model_runner.image_request_handler" title="Link to this heading"></a></h1>
+<section id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.image_request_handler.logger" title="model_runner.image_request_handler.logger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logger</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.image_request_handler.ImageRequestHandler" title="model_runner.image_request_handler.ImageRequestHandler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ImageRequestHandler</span></code></a></p></td>
+<td><p>Class responsible for handling ImageRequest processing.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="model_runner.image_request_handler.logger">
+<span class="sig-prename descclassname"><span class="pre">model_runner.image_request_handler.</span></span><span class="sig-name descname"><span class="pre">logger</span></span><a class="headerlink" href="#model_runner.image_request_handler.logger" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.image_request_handler.ImageRequestHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.image_request_handler.</span></span><span class="sig-name descname"><span class="pre">ImageRequestHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../database/index.html#model_runner.database.JobTable" title="model_runner.database.JobTable"><span class="pre">model_runner.database.JobTable</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_status_monitor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../status/index.html#model_runner.status.ImageStatusMonitor" title="model_runner.status.ImageStatusMonitor"><span class="pre">model_runner.status.ImageStatusMonitor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">endpoint_statistics_table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../database/index.html#model_runner.database.EndpointStatisticsTable" title="model_runner.database.EndpointStatisticsTable"><span class="pre">model_runner.database.EndpointStatisticsTable</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">tiling_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../tile_worker/index.html#model_runner.tile_worker.TilingStrategy" title="model_runner.tile_worker.TilingStrategy"><span class="pre">model_runner.tile_worker.TilingStrategy</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">region_request_queue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../queue/index.html#model_runner.queue.RequestQueue" title="model_runner.queue.RequestQueue"><span class="pre">model_runner.queue.RequestQueue</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">region_request_table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../database/index.html#model_runner.database.RegionRequestTable" title="model_runner.database.RegionRequestTable"><span class="pre">model_runner.database.RegionRequestTable</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">endpoint_utils</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../common/index.html#model_runner.common.EndpointUtils" title="model_runner.common.EndpointUtils"><span class="pre">model_runner.common.EndpointUtils</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../app_config/index.html#model_runner.app_config.ServiceConfig" title="model_runner.app_config.ServiceConfig"><span class="pre">model_runner.app_config.ServiceConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">region_request_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../region_request_handler/index.html#model_runner.region_request_handler.RegionRequestHandler" title="model_runner.region_request_handler.RegionRequestHandler"><span class="pre">model_runner.region_request_handler.RegionRequestHandler</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_runner.image_request_handler.ImageRequestHandler" title="Link to this definition"></a></dt>
+<dd><p>Class responsible for handling ImageRequest processing.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.image_request_handler.ImageRequestHandler.job_table">
+<span class="sig-name descname"><span class="pre">job_table</span></span><a class="headerlink" href="#model_runner.image_request_handler.ImageRequestHandler.job_table" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.image_request_handler.ImageRequestHandler.image_status_monitor">
+<span class="sig-name descname"><span class="pre">image_status_monitor</span></span><a class="headerlink" href="#model_runner.image_request_handler.ImageRequestHandler.image_status_monitor" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.image_request_handler.ImageRequestHandler.endpoint_statistics_table">
+<span class="sig-name descname"><span class="pre">endpoint_statistics_table</span></span><a class="headerlink" href="#model_runner.image_request_handler.ImageRequestHandler.endpoint_statistics_table" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.image_request_handler.ImageRequestHandler.tiling_strategy">
+<span class="sig-name descname"><span class="pre">tiling_strategy</span></span><a class="headerlink" href="#model_runner.image_request_handler.ImageRequestHandler.tiling_strategy" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.image_request_handler.ImageRequestHandler.region_request_queue">
+<span class="sig-name descname"><span class="pre">region_request_queue</span></span><a class="headerlink" href="#model_runner.image_request_handler.ImageRequestHandler.region_request_queue" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.image_request_handler.ImageRequestHandler.region_request_table">
+<span class="sig-name descname"><span class="pre">region_request_table</span></span><a class="headerlink" href="#model_runner.image_request_handler.ImageRequestHandler.region_request_table" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.image_request_handler.ImageRequestHandler.endpoint_utils">
+<span class="sig-name descname"><span class="pre">endpoint_utils</span></span><a class="headerlink" href="#model_runner.image_request_handler.ImageRequestHandler.endpoint_utils" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.image_request_handler.ImageRequestHandler.config">
+<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#model_runner.image_request_handler.ImageRequestHandler.config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.image_request_handler.ImageRequestHandler.region_request_handler">
+<span class="sig-name descname"><span class="pre">region_request_handler</span></span><a class="headerlink" href="#model_runner.image_request_handler.ImageRequestHandler.region_request_handler" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.image_request_handler.ImageRequestHandler.process_image_request">
+<span class="sig-name descname"><span class="pre">process_image_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../api/index.html#model_runner.api.ImageRequest" title="model_runner.api.ImageRequest"><span class="pre">model_runner.api.ImageRequest</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#model_runner.image_request_handler.ImageRequestHandler.process_image_request" title="Link to this definition"></a></dt>
+<dd><p>Processes an ImageRequest object. Loads the specified image into memory, splits it into regions,
+and sends these regions for downstream processing via RegionRequest. The first region is processed
+directly by this method, while the remaining regions are queued for other workers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>image_request</strong> – The image request to process, derived from the ImageRequest SQS message.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="../../../_apidoc/aws.osml.model_runner.exceptions.html#aws.osml.model_runner.exceptions.ProcessImageException" title="aws.osml.model_runner.exceptions.ProcessImageException"><strong>ProcessImageException</strong></a> – If image processing fails.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.image_request_handler.ImageRequestHandler.queue_region_request">
+<span class="sig-name descname"><span class="pre">queue_region_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_regions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">model_runner.common.ImageRegion</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../api/index.html#model_runner.api.ImageRequest" title="model_runner.api.ImageRequest"><span class="pre">model_runner.api.ImageRequest</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">raster_dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">osgeo.gdal.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.photogrammetry.SensorModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_extension</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#model_runner.image_request_handler.ImageRequestHandler.queue_region_request" title="Link to this definition"></a></dt>
+<dd><p>Queue all image regions for processing. Each region is added to the queue, with traceability maintained
+in the RegionRequestTable. The first region is processed directly, while the others are sent to the queue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>all_regions</strong> – List of image regions to process.</p></li>
+<li><p><strong>image_request</strong> – The image request associated with these regions.</p></li>
+<li><p><strong>raster_dataset</strong> – The GDAL dataset containing the image regions.</p></li>
+<li><p><strong>sensor_model</strong> – The sensor model for this raster dataset, if available.</p></li>
+<li><p><strong>image_extension</strong> – The file extension of the image.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.image_request_handler.ImageRequestHandler.load_image_request">
+<span class="sig-name descname"><span class="pre">load_image_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../database/index.html#model_runner.database.JobItem" title="model_runner.database.JobItem"><span class="pre">model_runner.database.JobItem</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">shapely.geometry.base.BaseGeometry</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">osgeo.gdal.Dataset</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">aws.osml.photogrammetry.SensorModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">model_runner.common.ImageRegion</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#model_runner.image_request_handler.ImageRequestHandler.load_image_request" title="Link to this definition"></a></dt>
+<dd><p>Loads image metadata and prepares it for processing. The image is divided into regions
+for distribution across workers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>job_item</strong> – The image request object containing job information.</p></li>
+<li><p><strong>roi</strong> – Region of interest to restrict image processing, provided as a geometry.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="../../../_apidoc/aws.osml.model_runner.exceptions.html#aws.osml.model_runner.exceptions.InvalidImageURLException" title="aws.osml.model_runner.exceptions.InvalidImageURLException"><strong>InvalidImageURLException</strong></a> – If the image URL is not valid.</p></li>
+<li><p><a class="reference internal" href="../../../_apidoc/aws.osml.model_runner.exceptions.html#aws.osml.model_runner.exceptions.LoadImageException" title="aws.osml.model_runner.exceptions.LoadImageException"><strong>LoadImageException</strong></a> – If loading image or processing bounds fails.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple containing image extension, GDAL dataset, optional sensor model, and list of regions to process.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.image_request_handler.ImageRequestHandler.fail_image_request">
+<span class="sig-name descname"><span class="pre">fail_image_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../database/index.html#model_runner.database.JobItem" title="model_runner.database.JobItem"><span class="pre">model_runner.database.JobItem</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">err</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.13)"><span class="pre">Exception</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#model_runner.image_request_handler.ImageRequestHandler.fail_image_request" title="Link to this definition"></a></dt>
+<dd><p>Handles image request failure. Updates the status to ‘failed’ and ends the request in the job table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>job_item</strong> – The job item for the failed image request.</p></li>
+<li><p><strong>err</strong> – The exception that caused the failure.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.image_request_handler.ImageRequestHandler.complete_image_request">
+<span class="sig-name descname"><span class="pre">complete_image_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">region_request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../api/index.html#model_runner.api.RegionRequest" title="model_runner.api.RegionRequest"><span class="pre">model_runner.api.RegionRequest</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">raster_dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">osgeo.gdal.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.photogrammetry.SensorModel</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#model_runner.image_request_handler.ImageRequestHandler.complete_image_request" title="Link to this definition"></a></dt>
+<dd><p>Completes the image request after all regions have been processed. Aggregates and sinks the features,
+then finalizes the request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>region_request</strong> – The region request that completed.</p></li>
+<li><p><strong>image_format</strong> – The format of the image file.</p></li>
+<li><p><strong>raster_dataset</strong> – The GDAL dataset of the processed image.</p></li>
+<li><p><strong>sensor_model</strong> – The sensor model for the image, if available.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="../../../_apidoc/aws.osml.model_runner.exceptions.html#aws.osml.model_runner.exceptions.AggregateFeaturesException" title="aws.osml.model_runner.exceptions.AggregateFeaturesException"><strong>AggregateFeaturesException</strong></a> – If feature aggregation fails.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.image_request_handler.ImageRequestHandler.deduplicate">
+<span class="sig-name descname"><span class="pre">deduplicate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../database/index.html#model_runner.database.JobItem" title="model_runner.database.JobItem"><span class="pre">model_runner.database.JobItem</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">geojson.Feature</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raster_dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">osgeo.gdal.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.photogrammetry.SensorModel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws_embedded_metrics.MetricsLogger</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">geojson.Feature</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#model_runner.image_request_handler.ImageRequestHandler.deduplicate" title="Link to this definition"></a></dt>
+<dd><p>Deduplicate the features and add additional properties to them, if applicable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>metrics</strong></p></li>
+<li><p><strong>job_item</strong> – The image processing job item containing job-specific information.</p></li>
+<li><p><strong>features</strong> – A list of GeoJSON features to deduplicate.</p></li>
+<li><p><strong>raster_dataset</strong> – The GDAL dataset representing the image being processed.</p></li>
+<li><p><strong>sensor_model</strong> – The sensor model associated with the dataset, used for georeferencing.</p></li>
+<li><p><strong>metrics</strong> – Optional metrics logger for tracking performance metrics.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of deduplicated features with additional properties added.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.image_request_handler.ImageRequestHandler.validate_model_hosting">
+<span class="sig-name descname"><span class="pre">validate_model_hosting</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../database/index.html#model_runner.database.JobItem" title="model_runner.database.JobItem"><span class="pre">model_runner.database.JobItem</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_runner.image_request_handler.ImageRequestHandler.validate_model_hosting" title="Link to this definition"></a></dt>
+<dd><p>Validates that the image request’s model invocation mode is supported. If not, raises an exception.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>image_request</strong> – The image processing job item to validate.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="../../../_apidoc/aws.osml.model_runner.exceptions.html#aws.osml.model_runner.exceptions.UnsupportedModelException" title="aws.osml.model_runner.exceptions.UnsupportedModelException"><strong>UnsupportedModelException</strong></a> – If the model invocation mode is not supported.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.image_request_handler.ImageRequestHandler.end_image_request">
+<span class="sig-name descname"><span class="pre">end_image_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../database/index.html#model_runner.database.JobItem" title="model_runner.database.JobItem"><span class="pre">model_runner.database.JobItem</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws_embedded_metrics.MetricsLogger</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#model_runner.image_request_handler.ImageRequestHandler.end_image_request" title="Link to this definition"></a></dt>
+<dd><p>Finalizes the image request, updates the job status, and logs the necessary metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>job_item</strong> – The image processing job item to finalize.</p></li>
+<li><p><strong>image_format</strong> – The format of the image being processed (e.g., TIFF, NITF).</p></li>
+<li><p><strong>metrics</strong> – Optional metrics logger for tracking performance metrics.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.image_request_handler.ImageRequestHandler.calculate_processing_bounds">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculate_processing_bounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster_dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">osgeo.gdal.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws.osml.photogrammetry.SensorModel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi_wkt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#model_runner.image_request_handler.ImageRequestHandler.calculate_processing_bounds" title="Link to this definition"></a></dt>
+<dd><p>Calculate the processing bounds for the image, based on the region of interest (ROI) and sensor model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>raster_dataset</strong> – The GDAL dataset representing the image being processed.</p></li>
+<li><p><strong>sensor_model</strong> – The sensor model used to georeference the dataset.</p></li>
+<li><p><strong>roi_wkt</strong> – Optional Well-Known Text (WKT) representing the region of interest for image processing.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="../../../_apidoc/aws.osml.model_runner.exceptions.html#aws.osml.model_runner.exceptions.AggregateFeaturesException" title="aws.osml.model_runner.exceptions.AggregateFeaturesException"><strong>AggregateFeaturesException</strong></a> – If the processing bounds cannot be calculated.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tuple representing the upper-left corner (row, column) and dimensions (width, height) of the bounds.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.image_request_handler.ImageRequestHandler.sink_features">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sink_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../database/index.html#model_runner.database.JobItem" title="model_runner.database.JobItem"><span class="pre">model_runner.database.JobItem</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">geojson.Feature</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aws_embedded_metrics.MetricsLogger</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#model_runner.image_request_handler.ImageRequestHandler.sink_features" title="Link to this definition"></a></dt>
+<dd><p>Sink the deduplicated features to the specified output (e.g., S3, Kinesis, etc.).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>job_item</strong> – The job item representing the image processing request.</p></li>
+<li><p><strong>features</strong> – The list of deduplicated GeoJSON features to sink.</p></li>
+<li><p><strong>metrics</strong> – Optional metrics logger to track feature sinking performance.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="../../../_apidoc/aws.osml.model_runner.exceptions.html#aws.osml.model_runner.exceptions.AggregateOutputFeaturesException" title="aws.osml.model_runner.exceptions.AggregateOutputFeaturesException"><strong>AggregateOutputFeaturesException</strong></a> – If sinking the features to the output fails.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../exceptions/index.html" class="btn btn-neutral float-left" title="model_runner.exceptions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../inference/index.html" class="btn btn-neutral float-right" title="model_runner.inference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

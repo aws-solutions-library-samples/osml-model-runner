@@ -1,0 +1,411 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.database.feature_table &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.database.feature_table</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.model_runner.database.feature_table</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="kn">import</span> <span class="n">ThreadPoolExecutor</span><span class="p">,</span> <span class="n">as_completed</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">secrets</span> <span class="kn">import</span> <span class="n">token_hex</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">geojson</span>
+<span class="kn">from</span> <span class="nn">aws_embedded_metrics.logger.metrics_logger</span> <span class="kn">import</span> <span class="n">MetricsLogger</span>
+<span class="kn">from</span> <span class="nn">aws_embedded_metrics.metric_scope</span> <span class="kn">import</span> <span class="n">metric_scope</span>
+<span class="kn">from</span> <span class="nn">aws_embedded_metrics.unit</span> <span class="kn">import</span> <span class="n">Unit</span>
+<span class="kn">from</span> <span class="nn">botocore.parsers</span> <span class="kn">import</span> <span class="n">PROTOCOL_PARSERS</span>
+<span class="kn">from</span> <span class="nn">dacite</span> <span class="kn">import</span> <span class="n">from_dict</span>
+<span class="kn">from</span> <span class="nn">geojson</span> <span class="kn">import</span> <span class="n">Feature</span>
+
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.app_config</span> <span class="kn">import</span> <span class="n">MetricLabels</span><span class="p">,</span> <span class="n">ServiceConfig</span>
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.common</span> <span class="kn">import</span> <span class="n">ImageDimensions</span><span class="p">,</span> <span class="n">Timer</span><span class="p">,</span> <span class="n">get_feature_image_bounds</span>
+
+<span class="kn">from</span> <span class="nn">.ddb_helper</span> <span class="kn">import</span> <span class="n">DDBHelper</span><span class="p">,</span> <span class="n">DDBItem</span><span class="p">,</span> <span class="n">DDBKey</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">AddFeaturesException</span>
+<span class="kn">from</span> <span class="nn">.job_table</span> <span class="kn">import</span> <span class="n">JobItem</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1"># The logic below removes of some redundant type checking in the DDB client</span>
+<span class="c1"># https://maori.geek.nz/make-pythons-dynamodb-client-faster-with-this-one-simple-trick-2eb2888269ce</span>
+<span class="n">parser</span> <span class="o">=</span> <span class="n">PROTOCOL_PARSERS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;json&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="handle_json_body">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.feature_table.html#aws.osml.model_runner.database.feature_table.handle_json_body">[docs]</a>
+<span class="k">def</span> <span class="nf">handle_json_body</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw_body</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    :param self: Boto core class object.</span>
+<span class="sd">    :param raw_body: Raw JSON body content to be type checked.</span>
+<span class="sd">    :param shape: The type enforced shape to check against (none).</span>
+<span class="sd">    :return: The parsed body as a JSON object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_body_as_json</span><span class="p">(</span><span class="n">raw_body</span><span class="p">)</span></div>
+
+
+
+<span class="nb">setattr</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="s2">&quot;_handle_json_body&quot;</span><span class="p">,</span> <span class="n">handle_json_body</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="FeatureItem">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.feature_table.html#aws.osml.model_runner.database.feature_table.FeatureItem">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">FeatureItem</span><span class="p">(</span><span class="n">DDBItem</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    FeatureItem is a dataclass meant to represent a single item in the FeatureTable</span>
+<span class="sd">    The data schema is defined as follows:</span>
+<span class="sd">        hash_key: str</span>
+<span class="sd">        range_key: str</span>
+<span class="sd">        tile_id: str</span>
+<span class="sd">        features: [str]</span>
+<span class="sd">        expire_time: Optional[int] = None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">hash_key</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">range_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">tile_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">features</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">expire_time</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ddb_key</span> <span class="o">=</span> <span class="n">DDBKey</span><span class="p">(</span>
+            <span class="n">hash_key</span><span class="o">=</span><span class="s2">&quot;hash_key&quot;</span><span class="p">,</span>
+            <span class="n">hash_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hash_key</span><span class="p">,</span>
+            <span class="n">range_key</span><span class="o">=</span><span class="s2">&quot;range_key&quot;</span><span class="p">,</span>
+            <span class="n">range_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">range_key</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="FeatureTable">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.feature_table.html#aws.osml.model_runner.database.feature_table.FeatureTable">[docs]</a>
+<span class="k">class</span> <span class="nc">FeatureTable</span><span class="p">(</span><span class="n">DDBHelper</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">tile_size</span><span class="p">:</span> <span class="n">ImageDimensions</span><span class="p">,</span> <span class="n">overlap</span><span class="p">:</span> <span class="n">ImageDimensions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tile_size</span> <span class="o">=</span> <span class="n">tile_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">overlap</span> <span class="o">=</span> <span class="n">overlap</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hash_salt</span> <span class="o">=</span> <span class="mi">50</span>
+
+<div class="viewcode-block" id="FeatureTable.add_features">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.feature_table.html#aws.osml.model_runner.database.feature_table.FeatureTable.add_features">[docs]</a>
+    <span class="nd">@metric_scope</span>
+    <span class="k">def</span> <span class="nf">add_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">],</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">MetricsLogger</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Group all the features together and add/update an item in the DDB</span>
+
+<span class="sd">        :param features: The list of features to add to the DDB table.</span>
+<span class="sd">        :param metrics: Metrics logger to use to report metrics.</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">set_dimensions</span><span class="p">()</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_dimensions</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">OPERATION_DIMENSION</span><span class="p">:</span> <span class="n">MetricLabels</span><span class="o">.</span><span class="n">FEATURE_STORAGE_OPERATION</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">INVOCATIONS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+
+        <span class="n">start_time_millisec</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span>
+        <span class="c1"># These records are temporary and will expire 24 hours after creation. Jobs should take</span>
+        <span class="c1"># minutes to run, so this time should be conservative enough to let a team debug an urgent</span>
+        <span class="c1"># issue without leaving a ton of state leftover in the system.</span>
+        <span class="n">expire_time_epoch_sec</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">start_time_millisec</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span><span class="p">))</span>
+        <span class="k">with</span> <span class="n">Timer</span><span class="p">(</span>
+            <span class="n">task_str</span><span class="o">=</span><span class="s2">&quot;Add image features&quot;</span><span class="p">,</span>
+            <span class="n">metric_name</span><span class="o">=</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">DURATION</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span>
+            <span class="n">metrics_logger</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">grouped_features</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_features_by_key</span><span class="p">(</span><span class="n">features</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">image_id</span><span class="p">,</span> <span class="n">tile_id</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-region-&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Starting Add Features to DDB: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">grouped_features</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span> <span class="sa">f</span><span class="s2">&quot;features for </span><span class="si">{</span><span class="n">tile_id</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">image_id</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+                    <span class="n">feature_count</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">total_encoded_length</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">encoded_features</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">grouped_features</span><span class="p">:</span>
+                        <span class="n">feature_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="n">encoded_feature</span> <span class="o">=</span> <span class="n">geojson</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+                        <span class="n">total_encoded_length</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">encoded_feature</span><span class="p">)</span>
+                        <span class="n">encoded_features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">encoded_feature</span><span class="p">)</span>
+                        <span class="c1"># Once we exceed the 200K byte limit on our features, write them to DDB. We are</span>
+                        <span class="c1"># batching at this size because a single row in DDB only allows for 400K. We also</span>
+                        <span class="c1"># need to make sure we are processing the last item no matter what the size is.</span>
+                        <span class="k">if</span> <span class="n">total_encoded_length</span> <span class="o">&gt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">ServiceConfig</span><span class="o">.</span><span class="n">ddb_max_item_size</span><span class="p">)</span> <span class="ow">or</span> <span class="n">feature_count</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span>
+                            <span class="n">grouped_features</span>
+                        <span class="p">):</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                                <span class="sa">f</span><span class="s2">&quot;Putting Feature Batch of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">encoded_features</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
+                                <span class="sa">f</span><span class="s2">&quot;features with total size of </span><span class="si">{</span><span class="n">total_encoded_length</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">tile_id</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">image_id</span><span class="si">}</span><span class="s2">&quot;</span>
+                            <span class="p">)</span>
+
+                            <span class="c1"># Build up a feature item and put it in the table</span>
+                            <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                                <span class="n">FeatureItem</span><span class="p">(</span>
+                                    <span class="n">hash_key</span><span class="o">=</span><span class="n">image_id</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hash_salt</span><span class="p">)),</span>
+                                    <span class="n">range_key</span><span class="o">=</span><span class="n">token_hex</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span>
+                                    <span class="n">tile_id</span><span class="o">=</span><span class="n">tile_id</span><span class="p">,</span>
+                                    <span class="n">features</span><span class="o">=</span><span class="n">encoded_features</span><span class="p">,</span>
+                                    <span class="n">expire_time</span><span class="o">=</span><span class="n">expire_time_epoch_sec</span><span class="p">,</span>
+                                <span class="p">)</span>
+                            <span class="p">)</span>
+
+                            <span class="c1"># Reset the batch</span>
+                            <span class="n">total_encoded_length</span> <span class="o">=</span> <span class="mi">0</span>
+                            <span class="n">encoded_features</span> <span class="o">=</span> <span class="p">[]</span>
+
+                <span class="c1"># Write batch to the table and check that it succeeded for all items</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">batch_write_items</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+                    <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">ERRORS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="n">AddFeaturesException</span><span class="p">(</span><span class="s2">&quot;Failed to add features for tile!&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span></div>
+
+
+<div class="viewcode-block" id="FeatureTable.get_features">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.feature_table.html#aws.osml.model_runner.database.feature_table.FeatureTable.get_features">[docs]</a>
+    <span class="nd">@metric_scope</span>
+    <span class="k">def</span> <span class="nf">get_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">MetricsLogger</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parallelized version to query the database for all items with a given image_id,</span>
+<span class="sd">        then convert them into feature items.</span>
+
+<span class="sd">        :param image_id: The image_id to aggregate features from DDB for.</span>
+<span class="sd">        :param metrics: MetricsLogger = the metrics logger to use to report metrics.</span>
+<span class="sd">        :return: List of features aggregated from the DDB table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">process_query</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">FeatureItem</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query_items</span><span class="p">(</span><span class="n">FeatureItem</span><span class="p">(</span><span class="n">image_id</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">index</span><span class="p">)))</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+                <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">from_dict</span><span class="p">(</span><span class="n">FeatureItem</span><span class="p">,</span> <span class="n">row</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">items</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">set_dimensions</span><span class="p">()</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_dimensions</span><span class="p">({</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">OPERATION_DIMENSION</span><span class="p">:</span> <span class="n">MetricLabels</span><span class="o">.</span><span class="n">FEATURE_AGG_OPERATION</span><span class="p">})</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_metric</span><span class="p">(</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">INVOCATIONS</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Unit</span><span class="o">.</span><span class="n">COUNT</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+
+        <span class="n">features</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">with</span> <span class="n">Timer</span><span class="p">(</span>
+            <span class="n">task_str</span><span class="o">=</span><span class="s2">&quot;Aggregate image features&quot;</span><span class="p">,</span>
+            <span class="n">metric_name</span><span class="o">=</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">DURATION</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span>
+            <span class="n">metrics_logger</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="k">with</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+                <span class="c1"># Create a range of tasks to query the database for the salted image hash</span>
+                <span class="n">futures</span> <span class="o">=</span> <span class="p">[</span><span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">process_query</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hash_salt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+
+                <span class="c1"># For each of the salted index processes, add the features to the list</span>
+                <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">as_completed</span><span class="p">(</span><span class="n">futures</span><span class="p">):</span>
+                    <span class="n">feature_items</span> <span class="o">=</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">feature_items</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">features</span><span class="p">:</span>
+                            <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">features</span><span class="p">:</span>
+                                <span class="n">features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">geojson</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">feature</span><span class="p">))</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found FeatureTable item: </span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">range_key</span><span class="si">}</span><span class="s2"> with no features!&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">features</span></div>
+
+
+<div class="viewcode-block" id="FeatureTable.group_features_by_key">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.feature_table.html#aws.osml.model_runner.database.feature_table.FeatureTable.group_features_by_key">[docs]</a>
+    <span class="k">def</span> <span class="nf">group_features_by_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Group all the feature items by key</span>
+
+<span class="sd">        :param features: The list of features</span>
+
+<span class="sd">        :return: Map of keys containing a list of features</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">features</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_tile_key</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="FeatureTable.generate_tile_key">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.feature_table.html#aws.osml.model_runner.database.feature_table.FeatureTable.generate_tile_key">[docs]</a>
+    <span class="k">def</span> <span class="nf">generate_tile_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature</span><span class="p">:</span> <span class="n">Feature</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate the tile key based on the given feature.</span>
+
+<span class="sd">        :param feature: Properties of a feature</span>
+<span class="sd">        :return: The tile key associated with this list of features.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bbox</span> <span class="o">=</span> <span class="n">get_feature_image_bounds</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+
+        <span class="c1"># Handle cases where bounding box could not be determined</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">bbox</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">bbox</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid bounding box for feature: </span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unable to generate tile key: Invalid bounding box.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># This is the size of the unique pixels in each tile</span>
+        <span class="n">stride_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">overlap</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">stride_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">overlap</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">max_x_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">stride_x</span><span class="p">)</span>
+        <span class="n">max_y_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="n">stride_y</span><span class="p">)</span>
+
+        <span class="n">min_x_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">stride_x</span><span class="p">)</span>
+        <span class="n">min_y_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">stride_y</span><span class="p">)</span>
+        <span class="n">min_x_offset</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">%</span> <span class="n">stride_x</span>
+        <span class="n">min_y_offset</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">%</span> <span class="n">stride_y</span>
+
+        <span class="k">if</span> <span class="n">min_x_offset</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">overlap</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">min_x_index</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">min_x_index</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">min_y_offset</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">overlap</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">min_y_index</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">min_y_index</span> <span class="o">-=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">feature</span><span class="p">[</span><span class="s1">&#39;properties&#39;</span><span class="p">][</span><span class="s1">&#39;image_id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">-region-</span><span class="si">{</span><span class="n">min_x_index</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">max_x_index</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">min_y_index</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">max_y_index</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="FeatureTable.aggregate_features">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.feature_table.html#aws.osml.model_runner.database.feature_table.FeatureTable.aggregate_features">[docs]</a>
+    <span class="nd">@metric_scope</span>
+    <span class="k">def</span> <span class="nf">aggregate_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_request_item</span><span class="p">:</span> <span class="n">JobItem</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">MetricsLogger</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Feature</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For a given image processing job - aggregate all the features that were collected for it and</span>
+<span class="sd">        put them in the correct output sink locations.</span>
+
+<span class="sd">        :param image_request_item: JobItem = the image request</span>
+<span class="sd">        :param metrics: the current metrics scope</span>
+
+<span class="sd">        :return: List[geojson.Feature] = the list of features</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">MetricsLogger</span><span class="p">):</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">set_dimensions</span><span class="p">()</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">put_dimensions</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="n">MetricLabels</span><span class="o">.</span><span class="n">OPERATION_DIMENSION</span><span class="p">:</span> <span class="n">MetricLabels</span><span class="o">.</span><span class="n">FEATURE_AGG_OPERATION</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">Timer</span><span class="p">(</span>
+            <span class="n">task_str</span><span class="o">=</span><span class="s2">&quot;Aggregating Features&quot;</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="n">MetricLabels</span><span class="o">.</span><span class="n">DURATION</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span> <span class="n">metrics_logger</span><span class="o">=</span><span class="n">metrics</span>
+        <span class="p">):</span>
+            <span class="n">features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_features</span><span class="p">(</span><span class="n">image_request_item</span><span class="o">.</span><span class="n">image_id</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total features aggregated: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">features</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">features</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

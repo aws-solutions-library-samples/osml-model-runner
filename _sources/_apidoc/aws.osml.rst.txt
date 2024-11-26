@@ -1,0 +1,12 @@
+aws.osml namespace
+==================
+
+.. py:module:: aws.osml
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   aws.osml.model_runner

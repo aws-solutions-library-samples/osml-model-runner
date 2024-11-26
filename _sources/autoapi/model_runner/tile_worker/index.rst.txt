@@ -1,0 +1,435 @@
+model_runner.tile_worker
+========================
+
+.. py:module:: model_runner.tile_worker
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/model_runner/tile_worker/exceptions/index
+   /autoapi/model_runner/tile_worker/tile_worker/index
+   /autoapi/model_runner/tile_worker/tile_worker_utils/index
+   /autoapi/model_runner/tile_worker/tiling_strategy/index
+   /autoapi/model_runner/tile_worker/variable_overlap_tiling_strategy/index
+   /autoapi/model_runner/tile_worker/variable_tile_tiling_strategy/index
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.tile_worker.TileWorker
+   model_runner.tile_worker.TilingStrategy
+   model_runner.tile_worker.VariableOverlapTilingStrategy
+   model_runner.tile_worker.VariableTileTilingStrategy
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   model_runner.tile_worker.process_tiles
+   model_runner.tile_worker.select_features
+   model_runner.tile_worker.setup_tile_workers
+
+
+Package Contents
+----------------
+
+.. py:class:: TileWorker(in_queue: queue.Queue, feature_detector: aws.osml.model_runner.inference.Detector, geolocator: Optional[aws.osml.features.Geolocator], feature_table: aws.osml.model_runner.database.FeatureTable, region_request_table: aws.osml.model_runner.database.RegionRequestTable)
+
+   Bases: :py:obj:`threading.Thread`
+
+
+   A class that represents a thread of control.
+
+   This class can be safely subclassed in a limited fashion. There are two ways
+   to specify the activity: by passing a callable object to the constructor, or
+   by overriding the run() method in a subclass.
+
+
+
+   .. py:attribute:: in_queue
+
+
+   .. py:attribute:: feature_detector
+
+
+   .. py:attribute:: geolocator
+
+
+   .. py:attribute:: feature_table
+
+
+   .. py:attribute:: region_request_table
+
+
+   .. py:attribute:: property_accessor
+
+
+   .. py:attribute:: failed_tile_count
+      :type:  int
+      :value: 0
+
+
+
+   .. py:method:: run() -> None
+
+      Method representing the thread's activity.
+
+      You may override this method in a subclass. The standard run() method
+      invokes the callable object passed to the object's constructor as the
+      target argument, if any, with sequential and keyword arguments taken
+      from the args and kwargs arguments, respectively.
+
+
+
+
+   .. py:method:: process_tile(image_info: Dict, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None) -> None
+
+      This method handles the processing of a single tile by invoking the ML model, geolocating the detections to
+      create features and finally storing the features in the database.
+
+      :param image_info: description of the tile to be processed
+      :param metrics: the current metric scope
+
+
+
+   .. py:method:: _refine_features(feature_collection, image_info: Dict, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None) -> List[geojson.Feature]
+
+      This method converts the detections returned by the model into geolocated features. It first updates the
+      image coordinates of each detection to be in relation to the full image then it geolocates the image feature.
+
+      :param feature_collection: the features from the ML model
+      :param image_info: a description of the image tile containing the features
+      :param metrics: the current metric scope
+      :return: a list of GeoJSON features
+
+
+
+   .. py:method:: convert_deprecated_feature_properties(feature: geojson.Feature) -> None
+      :staticmethod:
+
+
+      This function converts the legacy properties produced by CV models into the feature properties used
+      by OversightML.
+
+      :param feature: the feature that needs its "properties" updated.
+
+      :return: None
+
+
+
+.. py:function:: process_tiles(tiling_strategy: model_runner.tile_worker.tiling_strategy.TilingStrategy, region_request_item: aws.osml.model_runner.database.RegionRequestItem, tile_queue: queue.Queue, tile_workers: List[model_runner.tile_worker.tile_worker.TileWorker], raster_dataset: osgeo.gdal.Dataset, sensor_model: Optional[aws.osml.photogrammetry.SensorModel] = None) -> Tuple[int, int]
+
+   Loads a GDAL dataset into memory and processes it with a pool of tile workers.
+
+   :param tiling_strategy: the approach used to decompose the region into tiles for the ML model
+   :param region_request_item: RegionRequestItem = the region request to update.
+   :param tile_queue: Queue = keeps the image in the queue for processing
+   :param tile_workers: List[TileWorker] = the list of tile workers
+   :param raster_dataset: gdal.Dataset = the raster dataset containing the region
+   :param sensor_model: Optional[SensorModel] = the sensor model for this raster dataset
+
+   :return: Tuple[int, int, List[ImageRegion]] = number of tiles processed, number of tiles with an error
+
+
+.. py:function:: select_features(feature_distillation_option: str, features: List[geojson.Feature], processing_bounds: aws.osml.model_runner.common.ImageRegion, region_size: str, tile_size: str, tile_overlap: str, tiling_strategy: model_runner.tile_worker.tiling_strategy.TilingStrategy) -> List[geojson.Feature]
+
+   Selects the desired features using the options in the JobItem (NMS, SOFT_NMS, etc.).
+   This code applies a feature selector only to the features that came from regions of the image
+   that were processed multiple times. First features are grouped based on the region they were
+   processed in. Any features found in the overlap area between regions are run through the
+   FeatureSelector. If they were not part of an overlap area between regions, they will be grouped
+   based on tile boundaries. Any features that fall into the overlap of adjacent tiles are filtered
+   by the FeatureSelector. All other features should not be duplicates; they are added to the result
+   without additional filtering.
+
+   Computationally, this implements two critical factors that lower the overall processing time for the
+   O(N^2) selection algorithms. First, it will filter out the majority of features that couldn't possibly
+   have duplicates generated by our tiled image processing; Second, it runs the selection algorithms
+   incrementally on much smaller groups of features.
+
+   :param region_size:
+   :param feature_distillation_option: str = the options used in selecting features (e.g., NMS/SOFT_NMS, thresholds)
+   :param features: List[Feature] = the list of geojson features to process
+   :param processing_bounds: the requested area of the image
+   :param region_size: str = region size to use for feature dedup
+   :param tile_size: str = size of the tiles used during processing
+   :param tile_overlap: str = overlap between tiles during processing
+   :param tiling_strategy: the tiling strategy to use for feature dedup
+   :return: List[Feature] = the list of geojson features after processing
+
+
+.. py:function:: setup_tile_workers(region_request: aws.osml.model_runner.api.RegionRequest, sensor_model: Optional[aws.osml.photogrammetry.SensorModel] = None, elevation_model: Optional[aws.osml.photogrammetry.ElevationModel] = None) -> Tuple[queue.Queue, List[model_runner.tile_worker.tile_worker.TileWorker]]
+
+   Sets up a pool of tile-workers to process image tiles from a region request
+
+   :param region_request: RegionRequest = the region request to update.
+   :param sensor_model: Optional[SensorModel] = the sensor model for this raster dataset
+   :param elevation_model: Optional[ElevationModel] = an elevation model used to fix the elevation of the image coordinate
+
+   :return: Tuple[Queue, List[TileWorker] = a list of tile workers and the queue that manages them
+
+
+.. py:class:: TilingStrategy
+
+   Bases: :py:obj:`abc.ABC`
+
+
+   TilingStrategy defines an abstract interface for the code that determines how a large image is broken down into
+   regions and tiles.
+
+
+   .. py:method:: compute_regions(processing_bounds: model_runner.common.ImageRegion, region_size: model_runner.common.ImageDimensions, tile_size: model_runner.common.ImageDimensions, overlap: model_runner.common.ImageDimensions) -> List[model_runner.common.ImageRegion]
+      :abstractmethod:
+
+
+      Identify the regions that should be created from this image.
+
+      :param processing_bounds: the bounds of the full image or area of interest in pixels ((r, c), (w, h))
+      :param region_size: the size of the regions in pixels (w, h)
+      :param tile_size: the size of the tiles in pixels (w, y)
+      :param overlap: the amount of overlap (w, h)
+
+      :return: a collection of region boundaries
+
+
+
+   .. py:method:: compute_tiles(region: model_runner.common.ImageRegion, tile_size: model_runner.common.ImageDimensions, overlap: model_runner.common.ImageDimensions) -> List[model_runner.common.ImageRegion]
+      :abstractmethod:
+
+
+      Identify the tiles that should be created from this region.
+
+      :param region: the bounds of the region in pixels ((r, c), (w, h))
+      :param tile_size: the size of the tiles in pixels (w, h)
+      :param overlap: the amount of overlap (w, h)
+
+      :return: a collection of tile boundaries
+
+
+
+   .. py:method:: cleanup_duplicate_features(processing_bounds: model_runner.common.ImageRegion, region_size: model_runner.common.ImageDimensions, tile_size: model_runner.common.ImageDimensions, overlap: model_runner.common.ImageDimensions, features: List[geojson.Feature], feature_selector: model_runner.inference.FeatureSelector) -> List[geojson.Feature]
+      :abstractmethod:
+
+
+      This method handles cleaning up duplicates caused by tiling by applying the feature selector to any features
+      that come from overlap regions.
+
+      :param processing_bounds: the bounds of the full image or area of interest in pixels ((r, c), (w, h))
+      :param region_size: the size of the regions in pixels (w, h)
+      :param tile_size: the size of the tiles in pixels (w, y)
+      :param overlap: the amount of overlap (w, h)
+      :param features: the collection of features to deduplicate
+      :param feature_selector: the algorithm that will be used to resolve duplicates
+
+      :return: the collection of features with duplicates removed
+
+
+
+.. py:class:: VariableOverlapTilingStrategy
+
+   Bases: :py:obj:`model_runner.tile_worker.tiling_strategy.TilingStrategy`
+
+
+   TilingStrategy defines an abstract interface for the code that determines how a large image is broken down into
+   regions and tiles.
+
+
+   .. py:method:: compute_regions(processing_bounds: model_runner.common.ImageRegion, region_size: model_runner.common.ImageDimensions, tile_size: model_runner.common.ImageDimensions, overlap: model_runner.common.ImageDimensions) -> List[model_runner.common.ImageRegion]
+
+      Identify the regions that should be created from this image.
+
+      :param processing_bounds: the bounds of the full image or area of interest in pixels ((r, c), (w, h))
+      :param region_size: the size of the regions in pixels (w, h)
+      :param tile_size: the size of the tiles in pixels (w, y)
+      :param overlap: the amount of overlap (w, h)
+
+      :return: a collection of region boundaries
+
+
+
+   .. py:method:: compute_tiles(region: model_runner.common.ImageRegion, tile_size: model_runner.common.ImageDimensions, overlap: model_runner.common.ImageDimensions) -> List[model_runner.common.ImageRegion]
+
+      Identify the tiles that should be created from this region.
+
+      :param region: the bounds of the region in pixels ((r, c), (w, h))
+      :param tile_size: the size of the tiles in pixels (w, h)
+      :param overlap: the amount of overlap (w, h)
+
+      :return: a collection of tile boundaries
+
+
+
+   .. py:method:: cleanup_duplicate_features(processing_bounds: model_runner.common.ImageRegion, region_size: model_runner.common.ImageDimensions, tile_size: model_runner.common.ImageDimensions, overlap: model_runner.common.ImageDimensions, features: List[geojson.Feature], feature_selector: model_runner.inference.FeatureSelector) -> List[geojson.Feature]
+
+      This method handles cleaning up duplicates caused by tiling by applying the feature selector to any features
+      that come from overlap regions.
+
+      :param processing_bounds: the bounds of the full image or area of interest in pixels ((r, c), (w, h))
+      :param region_size: the size of the regions in pixels (w, h)
+      :param tile_size: the size of the tiles in pixels (w, y)
+      :param overlap: the amount of overlap (w, h)
+      :param features: the collection of features to deduplicate
+      :param feature_selector: the algorithm that will be used to resolve duplicates
+
+      :return: the collection of features with duplicates removed
+
+
+
+   .. py:method:: _identify_overlap(feature: geojson.Feature, shape: Tuple[int, int], overlap: Tuple[int, int], origin: Tuple[int, int] = (0, 0)) -> Tuple[int, int, int, int]
+      :staticmethod:
+
+
+      Generate a tuple that contains the min and max indexes of adjacent tiles or regions for a given feature. If
+      the min and max values for both x and y are the same then this feature does not touch an overlap region.
+
+      :param feature: the geojson Feature that must contain properties to identify its location in an image
+      :param shape: the width, height of the area in pixels
+      :param overlap: the x, y overlap between areas in pixels
+      :param origin: the x, y coordinate of the area in relation to the full image
+
+      :return: a tuple: minx, maxx, miny, maxy that identifies any overlap.
+
+
+
+   .. py:method:: _group_features_by_overlap(features: List[geojson.Feature], shape: Tuple[int, int], overlap: Tuple[int, int], origin: Tuple[int, int] = (0, 0)) -> Dict[Tuple[int, int, int, int], List[geojson.Feature]]
+      :staticmethod:
+
+
+      Group all the feature items by tile id
+
+      :param features: List[FeatureItem] = the list of feature items
+      :param shape: the width, height of the area in pixels
+      :param overlap: the x, y overlap between areas in pixels
+      :param origin: the x, y coordinate of the area in relation to the full image
+
+      :return: a mapping of overlap id to a list of features that intersect that overlap region
+
+
+
+   .. py:method:: _calculate_overlap_for_full_tiles(full_image_size: model_runner.common.ImageDimensions, fixed_tile_size: model_runner.common.ImageDimensions, minimum_overlap: model_runner.common.ImageDimensions) -> model_runner.common.ImageDimensions
+      :staticmethod:
+
+
+      Calculate the adjusted overlap for generating full tiles.
+
+      This method adjusts the minimum overlap to ensure that tiles generated from the
+      full image will align properly, minimizing any remaining space at the edges.
+
+      :param full_image_size: The dimensions of the full image (width, height) in pixels.
+      :param fixed_tile_size: The fixed dimensions of the tiles (width, height) in pixels.
+      :param minimum_overlap: The minimum overlap (width, height) between tiles in pixels.
+
+      :return: The adjusted overlap (width, height) that should be applied to the tiles.
+
+
+
+   .. py:method:: _calculate_region_size_for_full_tiles(nominal_region_size: model_runner.common.ImageDimensions, fixed_tile_size: model_runner.common.ImageDimensions, minimum_overlap: model_runner.common.ImageDimensions) -> model_runner.common.ImageDimensions
+      :staticmethod:
+
+
+      Calculate the adjusted region size to accommodate full tiles.
+
+      This method adjusts the region size to ensure that tiles can be generated without
+      leaving any partial tiles. It considers the fixed tile size and the minimum overlap
+      between tiles.
+
+      :param nominal_region_size: The nominal region size (width, height) in pixels.
+      :param fixed_tile_size: The fixed dimensions of the tiles (width, height) in pixels.
+      :param minimum_overlap: The minimum overlap (width, height) between tiles in pixels.
+
+      :raises ValueError: If the requested overlap is greater than or equal to the tile size.
+
+      :return: The adjusted region size (width, height) that accommodates full tiles.
+
+
+
+.. py:class:: VariableTileTilingStrategy
+
+   Bases: :py:obj:`model_runner.tile_worker.tiling_strategy.TilingStrategy`
+
+
+   TilingStrategy defines an abstract interface for the code that determines how a large image is broken down into
+   regions and tiles.
+
+
+   .. py:method:: compute_regions(processing_bounds: model_runner.common.ImageRegion, region_size: model_runner.common.ImageDimensions, tile_size: model_runner.common.ImageDimensions, overlap: model_runner.common.ImageDimensions) -> List[model_runner.common.ImageRegion]
+
+      Identify the regions that should be created from this image.
+
+      :param processing_bounds: the bounds of the full image or area of interest in pixels ((r, c), (w, h))
+      :param region_size: the size of the regions in pixels (w, h)
+      :param tile_size: the size of the tiles in pixels (w, y)
+      :param overlap: the amount of overlap (w, h)
+
+      :return: a collection of region boundaries
+
+
+
+   .. py:method:: compute_tiles(region: model_runner.common.ImageRegion, tile_size: model_runner.common.ImageDimensions, overlap: model_runner.common.ImageDimensions) -> List[model_runner.common.ImageRegion]
+
+      Identify the tiles that should be created from this region.
+
+      :param region: the bounds of the region in pixels ((r, c), (w, h))
+      :param tile_size: the size of the tiles in pixels (w, h)
+      :param overlap: the amount of overlap (w, h)
+
+      :return: a collection of tile boundaries
+
+
+
+   .. py:method:: cleanup_duplicate_features(processing_bounds: model_runner.common.ImageRegion, region_size: model_runner.common.ImageDimensions, tile_size: model_runner.common.ImageDimensions, overlap: model_runner.common.ImageDimensions, features: List[geojson.Feature], feature_selector: model_runner.inference.FeatureSelector) -> List[geojson.Feature]
+
+      This method handles cleaning up duplicates caused by tiling by applying the feature selector to any features
+      that come from overlap regions.
+
+      :param processing_bounds: the bounds of the full image or area of interest in pixels ((r, c), (w, h))
+      :param region_size: the size of the regions in pixels (w, h)
+      :param tile_size: the size of the tiles in pixels (w, y)
+      :param overlap: the amount of overlap (w, h)
+      :param features: the collection of features to deduplicate
+      :param feature_selector: the algorithm that will be used to resolve duplicates
+
+      :return: the collection of features with duplicates removed
+
+
+
+   .. py:method:: _identify_overlap(feature: geojson.Feature, shape: Tuple[int, int], overlap: Tuple[int, int], origin: Tuple[int, int] = (0, 0)) -> Tuple[int, int, int, int]
+      :staticmethod:
+
+
+      Generate a tuple that contains the min and max indexes of adjacent tiles or regions for a given feature. If
+      the min and max values for both x and y are the same then this feature does not touch an overlap region.
+
+      :param feature: the geojson Feature that must contain properties to identify its location in an image
+      :param shape: the width, height of the area in pixels
+      :param overlap: the x, y overlap between areas in pixels
+      :param origin: the x, y coordinate of the area in relation to the full image
+
+      :return: a tuple: minx, maxx, miny, maxy that identifies any overlap.
+
+
+
+   .. py:method:: _group_features_by_overlap(features: List[geojson.Feature], shape: Tuple[int, int], overlap: Tuple[int, int], origin: Tuple[int, int] = (0, 0)) -> Dict[Tuple[int, int, int, int], List[geojson.Feature]]
+      :staticmethod:
+
+
+      Group all the feature items by tile id
+
+      :param features: List[FeatureItem] = the list of feature items
+      :param shape: the width, height of the area in pixels
+      :param overlap: the x, y overlap between areas in pixels
+      :param origin: the x, y coordinate of the area in relation to the full image
+
+      :return: a mapping of overlap id to a list of features that intersect that overlap region
+
+
+

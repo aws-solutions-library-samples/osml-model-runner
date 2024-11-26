@@ -1,0 +1,91 @@
+model_runner.sink.kinesis_sink
+==============================
+
+.. py:module:: model_runner.sink.kinesis_sink
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.sink.kinesis_sink.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.sink.kinesis_sink.KinesisSink
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:class:: KinesisSink(stream: str, batch_size: int = None, assumed_role: Optional[str] = None)
+
+   Bases: :py:obj:`model_runner.sink.sink.Sink`
+
+
+   The mechanism by which detected features are sent to their destination.
+
+
+   .. py:attribute:: stream
+
+
+   .. py:attribute:: batch_size
+
+
+   .. py:method:: _flush_stream(records: List[dict]) -> None
+
+      Flushes a batch of records to the Kinesis stream.
+
+      :param records: A list of records to be sent to the Kinesis stream.
+      :returns: None
+
+
+
+   .. py:property:: mode
+      :type: aws.osml.model_runner.api.SinkMode
+
+
+      The write mode of the sink. Either Streaming (per tile results)
+      or Aggregate (per image results).
+
+      :return: SinkMode = the type of write mode of the sink
+
+
+
+   .. py:method:: write(job_id: str, features: List[geojson.Feature]) -> bool
+
+      Writes a list of features to the Kinesis stream. Each feature is serialized and sent
+      as a record. If the batch of records exceeds the 5 MB limit, the current batch is flushed.
+
+      :param job_id: The ID of the job associated with the features.
+      :param features: A list of features to be written to the stream.
+
+      :returns: True if the features were successfully written, False otherwise.
+
+
+
+   .. py:method:: validate_kinesis_stream() -> bool
+
+      Ensure output Kinesis stream exists/can be written to
+
+      :return: True if kinesis stream exist and can be read/written to it
+
+
+
+   .. py:method:: name() -> str
+      :staticmethod:
+
+
+      Ensure output Kinesis stream exists/can be written to
+
+      :return: The name of the instantiated Sink.
+
+
+

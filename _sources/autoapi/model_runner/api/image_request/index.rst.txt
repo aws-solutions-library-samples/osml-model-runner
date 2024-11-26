@@ -1,0 +1,242 @@
+model_runner.api.image_request
+==============================
+
+.. py:module:: model_runner.api.image_request
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.api.image_request.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.api.image_request.ImageRequest
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:class:: ImageRequest
+
+   Request for the Model Runner to process an image.
+
+   This class contains the attributes that make up an image processing request, along with
+   constructors and factory methods used to create these requests from common constructs.
+
+   Attributes:
+       job_id: The unique identifier for the image processing job.
+       image_id: A combined identifier for the image, usually composed of the job ID and image URL.
+       image_url: The URL location of the image to be processed.
+       image_read_role: The IAM role used to read the image from the provided URL.
+       outputs: A list of output configurations where results should be stored.
+       model_name: The name of the model to use for image processing.
+       model_invoke_mode: The mode in which the model is invoked, such as synchronous or asynchronous.
+       tile_size: Dimensions of the tiles into which the image is split for processing.
+       tile_overlap: Overlap between tiles, defined in dimensions.
+       tile_format: The format of the tiles (e.g., NITF, GeoTIFF).
+       tile_compression: Compression type to use for the tiles (e.g., None, JPEG).
+       model_invocation_role: IAM role assumed for invoking the model.
+       feature_properties: Additional properties to include in the feature processing.
+       roi: Region of interest within the image, defined as a geometric shape.
+       post_processing: List of post-processing steps to apply to the features detected.
+
+
+   .. py:attribute:: job_id
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: image_id
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: image_url
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: image_read_role
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: outputs
+      :type:  List[Dict[str, Any]]
+
+
+   .. py:attribute:: model_name
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: model_invoke_mode
+      :type:  model_runner.api.inference.ModelInvokeMode
+
+
+   .. py:attribute:: tile_size
+      :type:  aws.osml.model_runner.common.ImageDimensions
+      :value: (1024, 1024)
+
+
+
+   .. py:attribute:: tile_overlap
+      :type:  aws.osml.model_runner.common.ImageDimensions
+      :value: (50, 50)
+
+
+
+   .. py:attribute:: tile_format
+      :type:  str
+
+
+   .. py:attribute:: tile_compression
+      :type:  str
+
+
+   .. py:attribute:: model_invocation_role
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: feature_properties
+      :type:  List[Dict[str, Any]]
+
+
+   .. py:attribute:: roi
+      :type:  Optional[shapely.geometry.base.BaseGeometry]
+      :value: None
+
+
+
+   .. py:attribute:: post_processing
+      :type:  List[aws.osml.model_runner.common.MRPostProcessing]
+
+
+   .. py:method:: from_external_message(image_request: Dict[str, Any]) -> ImageRequest
+      :staticmethod:
+
+
+      Constructs an ImageRequest from a dictionary that represents an external message.
+
+      :param image_request: Dictionary of values from the decoded JSON request.
+      :return: ImageRequest instance.
+
+
+
+   .. py:method:: _parse_tile_dimension(value: Optional[str]) -> aws.osml.model_runner.common.ImageDimensions
+      :staticmethod:
+
+
+      Converts a string value to a tuple of integers representing tile dimensions.
+
+      :param value: String value representing tile dimension.
+      :return: Tuple of integers as tile dimensions.
+
+
+
+   .. py:method:: _parse_roi(roi: Optional[str]) -> Optional[shapely.geometry.base.BaseGeometry]
+      :staticmethod:
+
+
+      Parses the region of interest from a WKT string.
+
+      :param roi: WKT string representing the region of interest.
+      :return: Parsed BaseGeometry object or None.
+
+
+
+   .. py:method:: _parse_tile_format(tile_format: Optional[str]) -> Optional[aws.osml.model_runner.common.ImageFormats]
+      :staticmethod:
+
+
+      Parses the region desired tile format to use for processing.
+
+      :param tile_format: String representing the tile format to use.
+      :return: Parsed ImageFormats object or ImageFormats.NITF.
+
+
+
+   .. py:method:: _parse_tile_compression(tile_compression: Optional[str]) -> Optional[aws.osml.model_runner.common.ImageCompression]
+      :staticmethod:
+
+
+      Parses the region desired tile compression format to use for processing.
+
+      :param tile_compression: String representing the tile compression format to use.
+      :return: Parsed ImageFormats object or ImageCompression.NONE.
+
+
+
+   .. py:method:: _parse_model_invoke_mode(model_invoke_mode: Optional[str]) -> Optional[model_runner.api.inference.ModelInvokeMode]
+      :staticmethod:
+
+
+      Parses the region desired tile compression format to use for processing.
+
+      :param model_invoke_mode: String representing the tile compression format to use.
+      :return: Parsed ModelInvokeMode object or ModelInvokeMode.SM_ENDPOINT.
+
+
+
+   .. py:method:: _parse_outputs(image_request: Dict[str, Any]) -> List[Dict[str, Any]]
+      :staticmethod:
+
+
+      Parses the output configuration from the image request, including support for legacy inputs.
+
+      :param image_request: Dictionary of image request attributes.
+      :return: List of output configurations.
+
+
+
+   .. py:method:: _parse_post_processing(post_processing: Optional[Dict[str, Any]]) -> List[aws.osml.model_runner.common.MRPostProcessing]
+      :staticmethod:
+
+
+      Deserializes and cleans up post-processing data.
+
+      :param post_processing: Dictionary of post-processing configurations.
+      :return: List of MRPostProcessing instances.
+
+
+
+   .. py:method:: is_valid() -> bool
+
+      Validates whether the ImageRequest instance has all required attributes.
+
+      :return: True if valid, False otherwise.
+
+
+
+   .. py:method:: get_shared_values() -> Dict[str, Any]
+
+      Retrieves a dictionary of shared values related to the image.
+
+      :return: Dictionary of shared image properties.
+
+
+
+   .. py:method:: get_feature_distillation_option() -> List[aws.osml.model_runner.common.FeatureDistillationAlgorithm]
+
+      Extracts the feature distillation options from the post-processing configuration.
+
+      :return: List of FeatureDistillationAlgorithm instances.
+
+
+

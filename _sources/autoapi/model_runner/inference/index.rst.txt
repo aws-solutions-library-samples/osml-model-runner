@@ -1,0 +1,299 @@
+model_runner.inference
+======================
+
+.. py:module:: model_runner.inference
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/model_runner/inference/detector/index
+   /autoapi/model_runner/inference/endpoint_builder/index
+   /autoapi/model_runner/inference/endpoint_factory/index
+   /autoapi/model_runner/inference/exceptions/index
+   /autoapi/model_runner/inference/feature_selection/index
+   /autoapi/model_runner/inference/feature_utils/index
+   /autoapi/model_runner/inference/http_detector/index
+   /autoapi/model_runner/inference/sm_detector/index
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.inference.Detector
+   model_runner.inference.FeatureDetectorFactory
+   model_runner.inference.FeatureSelector
+   model_runner.inference.HTTPDetector
+   model_runner.inference.SMDetector
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   model_runner.inference.calculate_processing_bounds
+   model_runner.inference.get_extents
+   model_runner.inference.get_source_property
+
+
+Package Contents
+----------------
+
+.. py:class:: Detector(endpoint: str)
+
+   Bases: :py:obj:`abc.ABC`
+
+
+   The mechanism by which detected features are sent to their destination.
+
+
+   .. py:attribute:: endpoint
+
+
+   .. py:attribute:: request_count
+      :value: 0
+
+
+
+   .. py:property:: mode
+      :type: aws.osml.model_runner.api.ModelInvokeMode
+
+      :abstractmethod:
+
+
+      The mode of the detector.
+
+
+
+   .. py:method:: find_features(payload: io.BufferedReader, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger) -> geojson.FeatureCollection
+      :abstractmethod:
+
+
+      Query the established endpoint mode to find features based on a payload
+
+      :param payload: BufferedReader = the BufferedReader object that holds the
+                                  data that will be  sent to the feature generator
+      :param metrics: MetricsLogger = the metrics logger object to capture the log data on the system
+
+      :return: FeatureCollection = a feature collection containing the center point of a tile
+
+
+
+.. py:class:: FeatureDetectorFactory(endpoint: str, endpoint_mode: aws.osml.model_runner.api.ModelInvokeMode, assumed_credentials: Optional[Dict[str, str]] = None)
+
+   .. py:attribute:: endpoint
+
+
+   .. py:attribute:: endpoint_mode
+
+
+   .. py:attribute:: assumed_credentials
+
+
+   .. py:method:: build() -> Optional[model_runner.inference.detector.Detector]
+
+      :return: a feature detector based on the parameters defined during initialization
+
+
+
+.. py:class:: FeatureSelector(options: aws.osml.model_runner.common.FeatureDistillationAlgorithm = None)
+
+   The FeatureSelector class is used to select a subset of geojson features from a larger set
+   using an algorith such as NMS or Soft NMS.  Parameters such as thresholds and the algorithm
+   to use can be set by passing a FeatureSelectionOptions object in when the FeatureSelector
+   is instantiated.
+
+
+   .. py:attribute:: options
+
+
+   .. py:method:: select_features(feature_list: List[geojson.Feature]) -> List[geojson.Feature]
+
+      Selects a subset of features from a larger set of features using an algorithm such as NMS or Soft NMS.
+
+      :param feature_list: a list of geojson features with a property of bounds_imcoords
+      :return: the filtered list of features
+
+
+
+   .. py:method:: _get_lists_from_features(feature_list: List[geojson.Feature]) -> Tuple[List, List, List]
+
+      This function converts the GeoJSON features into lists of normalized bounding boxes, scores, and label IDs
+      needed by the selection algorithm implementations. As a side effect of this function various class attributes
+      are set to support the inverse mapping of algorithm primitives to the full features. See
+      _get_features_from_lists for the inverse function.
+
+      :param feature_list: the input set of GeoJSON features to preprocess
+      :return: tuple of lists - bounding boxes, confidence scores, category labels
+
+
+
+   .. py:method:: _normalize_boxes(boxes: List[List[int]]) -> List[List[float]]
+
+      This function normalizes the bounding boxes by subtracting the minimum x and y coordinates from each
+      coordinate and dividing by the range of x and y coordinates. That means that all bounding boxes coordinates
+      will be in the range of [0.0, 1.0] where 0.0 is the minimum of the extent and 1.0 is the maximum. See
+      _denormalize_boxes() to convert back to bboxes in pixel coordinates.
+
+      :param boxes: the list of bounding boxes to normalize
+      :return: the normalized list of bounding boxes
+
+
+
+   .. py:method:: _get_category_and_score_from_feature(feature: geojson.Feature) -> Tuple[str, float]
+      :staticmethod:
+
+
+      Get the feature class with the highest score from the featureClasses property.
+
+      :return: tuple of feature class and highest score
+
+
+
+   .. py:method:: _get_features_from_lists(boxes: List, scores: List, labels: List) -> List[geojson.Feature]
+
+      This function consolidates the lists of bounding boxes, scores, and labels into the GeoJSON features.
+      This happens by finding the feature with a matching bounding box and category in the original feature list
+      and updating the score if necessary. Any features that were in the original feature list that were not
+      in the input lists end up filtered out of the result.
+
+      :param boxes: the normalized bounding boxes for the features
+      :param scores: the updated scores for each bounding box
+      :param labels: the labels for each bounding box
+      :return: the refined list of GeoJSON features
+
+
+
+   .. py:method:: _denormalize_boxes(boxes: List[List[float]]) -> List[List[int]]
+
+      This function denormalizes the bounding boxes by multiplying each coordinate by the width or height
+      of the extent and then adding in the extent minimums. That puts all bounding boxes back into the
+      image coordinate space. This is the inverse of _normalize_boxes().
+
+      :param boxes: the list of bounding boxes to denormalize
+      :return: the denormalized list of bounding boxes
+
+
+
+.. py:function:: calculate_processing_bounds(ds: osgeo.gdal.Dataset, roi: Optional[shapely.geometry.base.BaseGeometry], sensor_model: Optional[aws.osml.photogrammetry.SensorModel]) -> Optional[Tuple[aws.osml.model_runner.common.ImageDimensions, aws.osml.model_runner.common.ImageDimensions]]
+
+   An area of interest converter
+
+   :param ds: gdal.Dataset = GDAL dataset
+   :param roi: Optional[BaseGeometry] = ROI shape
+   :param sensor_model: Optional[SensorModel] = Sensor model to use for transformations
+
+   :return: Optional[Tuple[ImageDimensions, ImageDimensions]] = Image dimensions associated with the ROI request
+
+
+.. py:function:: get_extents(ds: osgeo.gdal.Dataset, sm: aws.osml.photogrammetry.SensorModel) -> Dict[str, Any]
+
+   Returns the geographic extents of the given GDAL dataset.
+
+   :param ds: GDAL dataset.
+   :param sm: OSML Sensor Model imputed for dataset
+   :return: Dictionary with keys 'north', 'south', 'east', 'west' representing the extents.
+
+
+.. py:function:: get_source_property(image_location: str, image_extension: str, dataset: osgeo.gdal.Dataset) -> Optional[Dict]
+
+   Get the source property from NITF image
+
+   :param image_location: the location of the source image
+   :param image_extension: the file extension type of the source image
+   :param dataset: the GDAL dataset to probe for source data
+
+   :return: the source dictionary property to attach to features
+
+
+.. py:class:: HTTPDetector(endpoint: str, name: Optional[str] = None, retry: Optional[urllib3.Retry] = None)
+
+   Bases: :py:obj:`model_runner.inference.detector.Detector`
+
+
+   HTTPDetector is responsible for invoking HTTP-based model endpoints to run model inference.
+
+   This class interacts with a model endpoint over HTTP to send a payload for feature detection and retrieves
+   geojson-formatted feature detection results. It supports retry logic with exponential backoff for network-related
+   issues.
+
+
+   .. py:attribute:: http_pool
+
+
+   .. py:attribute:: name
+
+
+   .. py:property:: mode
+      :type: aws.osml.model_runner.api.ModelInvokeMode
+
+
+      Defines the invocation mode for the detector as HTTP endpoint.
+
+      :return: ModelInvokeMode.HTTP_ENDPOINT
+
+
+
+   .. py:method:: find_features(payload: io.BufferedReader, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger) -> geojson.FeatureCollection
+
+      Invokes the HTTP model endpoint to detect features from the given payload.
+
+      This method sends a payload to the HTTP model endpoint and retrieves feature detection results
+      in the form of a geojson FeatureCollection. If configured, it logs metrics about the invocation process.
+
+      :param payload: BufferedReader = The data to be sent to the HTTP model for feature detection.
+      :param metrics: MetricsLogger = The metrics logger to capture system performance and log metrics.
+
+      :return: FeatureCollection = A geojson FeatureCollection containing the detected features.
+
+      :raises RetryError: Raised if the request fails after retries.
+      :raises MaxRetryError: Raised if the maximum retry attempts are reached.
+      :raises JSONDecodeError: Raised if there is an error decoding the model's response.
+
+
+
+.. py:class:: SMDetector(endpoint: str, assumed_credentials: Dict[str, str] = None)
+
+   Bases: :py:obj:`model_runner.inference.detector.Detector`
+
+
+   SMDetector is responsible for invoking SageMaker endpoints to run model inference for feature detection.
+
+   This class interacts with SageMaker runtime to send a payload for model inference and receive geojson-formatted
+   feature detection results. It supports both managed AWS endpoints and cross-account invocation using
+   provided IAM credentials.
+
+
+   .. py:property:: mode
+      :type: aws.osml.model_runner.api.ModelInvokeMode
+
+
+      Defines the invocation mode for the detector as SageMaker endpoint.
+
+      :return: ModelInvokeMode.SM_ENDPOINT
+
+
+
+   .. py:method:: find_features(payload: io.BufferedReader, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger) -> geojson.FeatureCollection
+
+      Invokes the SageMaker model endpoint to detect features from the given payload.
+
+      This method sends a payload to the SageMaker model endpoint and retrieves feature detection results
+      in the form of a geojson FeatureCollection. If configured, it logs metrics about the invocation process.
+
+      :param payload: BufferedReader = The data to be sent to the SageMaker model for feature detection.
+      :param metrics: MetricsLogger = The metrics logger to capture system performance and log metrics.
+
+      :return: FeatureCollection = A geojson FeatureCollection containing the detected features.
+
+      :raises ClientError: Raised if there is an error while invoking the SageMaker endpoint.
+      :raises JSONDecodeError: Raised if there is an error decoding the model's response.
+
+
+

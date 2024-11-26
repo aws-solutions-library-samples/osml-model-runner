@@ -1,0 +1,79 @@
+model_runner.common.timer
+=========================
+
+.. py:module:: model_runner.common.timer
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.common.timer.Timer
+
+
+Module Contents
+---------------
+
+.. py:class:: Timer(task_str: str, metric_name: str, logger: logging.Logger, metrics_logger: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None)
+
+   Bases: :py:obj:`object`
+
+
+   .. py:attribute:: str
+
+
+   .. py:attribute:: metric_name
+
+
+   .. py:attribute:: logger
+
+
+   .. py:attribute:: metrics_logger
+      :type:  aws_embedded_metrics.logger.metrics_logger.MetricsLogger
+
+
+   .. py:attribute:: normalizing_factor
+      :type:  Optional[float]
+      :value: None
+
+
+
+   .. py:attribute:: normalizing_unit
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: use_milliseconds
+      :value: False
+
+
+
+   .. py:method:: set_use_milliseconds(use_milliseconds: bool = True) -> None
+
+      Use milliseconds format
+
+      :param use_milliseconds: bool = should the timer be in milliseconds or not
+
+      :return: None
+
+
+
+   .. py:method:: set_normalizing_factor(normalizing_factor: float, normalizing_unit: str) -> None
+
+      Set normalizing factor
+
+      :param normalizing_factor: float = formatted factor (in time)
+      :param normalizing_unit: str = formatted unit
+
+      :return: None
+
+
+
+   .. py:method:: __enter__()
+
+
+   .. py:method:: __exit__(exc_type: str, exc_val: str, exec_traceback: str) -> None
+
+

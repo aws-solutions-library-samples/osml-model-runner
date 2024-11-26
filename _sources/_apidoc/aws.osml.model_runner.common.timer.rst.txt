@@ -1,0 +1,7 @@
+aws.osml.model\_runner.common.timer module
+==========================================
+
+.. automodule:: aws.osml.model_runner.common.timer
+   :members:
+   :undoc-members:
+   :show-inheritance:

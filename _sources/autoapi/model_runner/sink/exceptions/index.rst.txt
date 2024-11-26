@@ -1,0 +1,34 @@
+model_runner.sink.exceptions
+============================
+
+.. py:module:: model_runner.sink.exceptions
+
+
+Exceptions
+----------
+
+.. autoapisummary::
+
+   model_runner.sink.exceptions.InvalidS3BucketException
+   model_runner.sink.exceptions.InvalidKinesisStreamException
+
+
+Module Contents
+---------------
+
+.. py:exception:: InvalidS3BucketException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: InvalidKinesisStreamException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+

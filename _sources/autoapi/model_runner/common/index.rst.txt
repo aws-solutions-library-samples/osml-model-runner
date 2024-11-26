@@ -1,0 +1,535 @@
+model_runner.common
+===================
+
+.. py:module:: model_runner.common
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/model_runner/common/auto_string_enum/index
+   /autoapi/model_runner/common/credentials_utils/index
+   /autoapi/model_runner/common/endpoint_utils/index
+   /autoapi/model_runner/common/exceptions/index
+   /autoapi/model_runner/common/feature_utils/index
+   /autoapi/model_runner/common/log_context/index
+   /autoapi/model_runner/common/mr_post_processing/index
+   /autoapi/model_runner/common/timer/index
+   /autoapi/model_runner/common/typing/index
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.common.VALID_IMAGE_COMPRESSION
+   model_runner.common.VALID_IMAGE_FORMATS
+   model_runner.common.ImageCoord
+   model_runner.common.ImageDimensions
+   model_runner.common.ImageRegion
+
+
+Exceptions
+----------
+
+.. autoapisummary::
+
+   model_runner.common.InvalidAssumedRoleException
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.common.AutoStringEnum
+   model_runner.common.EndpointUtils
+   model_runner.common.ThreadingLocalContextFilter
+   model_runner.common.FeatureDistillationAlgorithm
+   model_runner.common.FeatureDistillationAlgorithmType
+   model_runner.common.FeatureDistillationDeserializer
+   model_runner.common.FeatureDistillationNMS
+   model_runner.common.FeatureDistillationSoftNMS
+   model_runner.common.MRPostProcessing
+   model_runner.common.MRPostProcessingAlgorithm
+   model_runner.common.MRPostProcessingAlgorithmType
+   model_runner.common.MRPostProcessingDeserializer
+   model_runner.common.MRPostprocessingStep
+   model_runner.common.Timer
+   model_runner.common.GeojsonDetectionField
+   model_runner.common.ImageCompression
+   model_runner.common.ImageFormats
+   model_runner.common.RequestStatus
+   model_runner.common.TileState
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   model_runner.common.get_credentials_for_assumed_role
+   model_runner.common.get_feature_image_bounds
+   model_runner.common.deserialize_post_processing_list
+   model_runner.common.mr_post_processing_options_factory
+
+
+Package Contents
+----------------
+
+.. py:class:: AutoStringEnum
+
+   Bases: :py:obj:`enum.Enum`
+
+
+   Generic enumeration.
+
+   Derive from this class to define new enumerations.
+
+
+   .. py:method:: _generate_next_value_(name, start, count, last_values) -> str
+      :staticmethod:
+
+
+      Generate the next value when not given.
+
+      name: the name of the member
+      start: the initial start value or None
+      count: the number of existing members
+      last_value: the last value assigned or None
+
+
+
+.. py:function:: get_credentials_for_assumed_role(assumed_role: str) -> Dict[str, str]
+
+   Get the credential access based on the assumed role
+
+   :param assumed_role: str = containing a formatted arn role
+
+   :return: Dict[str, str] = a dict that contains access key id and various of credential info
+
+
+.. py:class:: EndpointUtils
+
+   .. py:attribute:: max_region_cache
+      :type:  cachetools.TTLCache
+
+
+   .. py:attribute:: ec2_client
+
+
+   .. py:method:: calculate_max_regions(endpoint_name: str, model_invocation_role: Optional[str] = None) -> int
+
+      Calculates the max number of in-process regions for a given model endpoint. In
+      order to calculate the max regions we get the count of instances currently
+      running for the endpoint as well as the instance type. We then get the number
+      of vcpus for the instance type and calculate the max regions as:
+
+          math.floor(10 * VCPUs * Number of Instances) / Workers Per CPU
+
+      :param endpoint_name: str = the name of the endpoint
+      :param model_invocation_role: Optional[str] = the modal of an invocation role
+
+      :returns: int = max endpoint count for the endpoint
+
+
+
+.. py:exception:: InvalidAssumedRoleException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:function:: get_feature_image_bounds(feature: geojson.Feature) -> Optional[Tuple[float, float, float, float]]
+
+   This is a utility function that creates a [minx, miny, maxx, maxy] tuple for the boundary of the
+   image geometry of a feature. If no image geometry property can be found None is returned.
+
+   :param feature: the feature to calculate bounds for
+   :return: the bounds or None
+
+
+.. py:class:: ThreadingLocalContextFilter(attribute_names: List[str])
+
+   Bases: :py:obj:`logging.Filter`
+
+
+   This is a filter that injects contextual information into the log message. The contextual information is
+   set using the static methods of this class.
+
+
+   .. py:attribute:: attribute_names
+
+
+   .. py:method:: filter(record: logging.LogRecord) -> bool
+
+      This method is called for each log record. It injects the contextual information into the log record.
+
+      :param record: the log record to filter
+      :return: True, this filter does not exclude information from the log
+
+
+
+   .. py:method:: set_context(context: Optional[dict])
+      :staticmethod:
+
+
+      Set the context for the current thread. If None all context information is cleared.
+
+      :param context: dict = the context to set
+
+
+
+.. py:class:: FeatureDistillationAlgorithm
+
+   Bases: :py:obj:`MRPostProcessingAlgorithm`
+
+
+   Generic FeatureDistillationAlgorithm class that is designed to be extended for each specific algorithm.
+   :property algorithm_type: FeatureSelectionAlgorithmType = algorithm to use to combine object detections
+   :property iou_threshold: float = intersection over union threshold
+                                   - if greater than this value boxes are considered the same
+
+
+   .. py:attribute:: algorithm_type
+      :type:  FeatureDistillationAlgorithmType
+
+
+   .. py:attribute:: iou_threshold
+      :type:  float
+
+
+.. py:class:: FeatureDistillationAlgorithmType
+
+   Bases: :py:obj:`str`, :py:obj:`MRPostProcessingAlgorithmType`
+
+
+   Enum for defining different feature distillation algorithms used in post-processing.
+   Each member represents a specific algorithm for entity selection or fusion.
+   NMS: Non-maximum Suppression
+   SOFT_NMS: Variant of NMS (https://arxiv.org/abs/1704.04503). This implementation is gaussian Soft-NMS,
+               as opposed to linear.
+   NMW: Non-maximum weighted
+   WBF: Weighted boxes fusion
+
+
+   .. py:attribute:: NMS
+
+
+   .. py:attribute:: SOFT_NMS
+
+
+.. py:class:: FeatureDistillationDeserializer
+
+   Bases: :py:obj:`PostProcessingDeserializer`
+
+
+   Provides static methods for deserializing feature distillation algorithms from a dictionary.
+
+
+   .. py:method:: deserialize(post_processing_algorithm: dict) -> FeatureDistillationAlgorithm
+      :staticmethod:
+
+
+
+.. py:class:: FeatureDistillationNMS
+
+   Bases: :py:obj:`FeatureDistillationAlgorithm`
+
+
+   :property algorithm_type: FeatureSelectionAlgorithmType = algorithm to use to combine object detections
+   :property iou_threshold: float = intersection over union threshold
+                                   - if greater than this value boxes are considered the same
+
+
+   .. py:attribute:: algorithm_type
+      :type:  FeatureDistillationAlgorithmType
+
+
+   .. py:attribute:: iou_threshold
+      :type:  float
+
+
+.. py:class:: FeatureDistillationSoftNMS
+
+   Bases: :py:obj:`FeatureDistillationAlgorithm`
+
+
+   :property algorithm_type: FeatureSelectionAlgorithmType = algorithm to use to combine object detections
+   :property iou_threshold: float = intersection over union threshold
+                                   - if greater than this value boxes are considered the same
+   :property skip_box_threshold: float = boxes with a confidence below this threshold value are skipped
+   :property sigma: float = value - only applies to Soft NMS
+
+
+   .. py:attribute:: algorithm_type
+      :type:  FeatureDistillationAlgorithmType
+
+
+   .. py:attribute:: iou_threshold
+      :type:  float
+
+
+   .. py:attribute:: skip_box_threshold
+      :type:  float
+
+
+   .. py:attribute:: sigma
+      :type:  float
+
+
+.. py:class:: MRPostProcessing
+
+   Represents an operation for MR post-processing.
+   :param step: The post-processing step (MRPostprocessingStep).
+   :param algorithm: The algorithm used in this step (MRPostProcessingAlgorithm).
+
+
+   .. py:attribute:: step
+      :type:  MRPostprocessingStep
+
+
+   .. py:attribute:: algorithm
+      :type:  MRPostProcessingAlgorithm
+
+
+.. py:class:: MRPostProcessingAlgorithm
+
+   Bases: :py:obj:`abc.ABC`
+
+
+   Abstract base class representing a generic MR post-processing algorithm.
+   :param algorithm_type: The type of the algorithm, represented by a specific enum.
+
+
+   .. py:attribute:: algorithm_type
+      :type:  MRPostProcessingAlgorithmType
+
+
+.. py:class:: MRPostProcessingAlgorithmType
+
+   Bases: :py:obj:`model_runner.common.auto_string_enum.AutoStringEnum`
+
+
+.. py:class:: MRPostProcessingDeserializer
+
+   Provides static method for obtaining the appropriate deserializer based on the post-processing step.
+
+
+   .. py:method:: get_deserializer(step: MRPostprocessingStep) -> PostProcessingDeserializer
+      :staticmethod:
+
+
+
+.. py:class:: MRPostprocessingStep
+
+   Bases: :py:obj:`str`, :py:obj:`model_runner.common.auto_string_enum.AutoStringEnum`
+
+
+   Enum defining available steps for MR post-processing.
+
+
+   .. py:attribute:: FEATURE_DISTILLATION
+
+
+.. py:function:: deserialize_post_processing_list(mr_processing_list: List) -> List[MRPostProcessing]
+
+   Deserializes a list of MR post-processing steps and algorithms from a list of dictionaries.
+   :param mr_processing_list: A list of dictionaries representing MR post-processing objects.
+   :return: A list of MRPostProcessing objects.
+
+
+.. py:function:: mr_post_processing_options_factory(properties_list: List) -> Dict
+
+   Factory function for converting dataclass instances to dictionaries.
+   Specifically used with MR post-processing related dataclasses.
+   :param properties_list: A list of properties (key-value pairs) of a dataclass.
+   :return: A dictionary representation of the dataclass.
+
+
+.. py:class:: Timer(task_str: str, metric_name: str, logger: logging.Logger, metrics_logger: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None)
+
+   Bases: :py:obj:`object`
+
+
+   .. py:attribute:: str
+
+
+   .. py:attribute:: metric_name
+
+
+   .. py:attribute:: logger
+
+
+   .. py:attribute:: metrics_logger
+      :type:  aws_embedded_metrics.logger.metrics_logger.MetricsLogger
+
+
+   .. py:attribute:: normalizing_factor
+      :type:  Optional[float]
+      :value: None
+
+
+
+   .. py:attribute:: normalizing_unit
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: use_milliseconds
+      :value: False
+
+
+
+   .. py:method:: set_use_milliseconds(use_milliseconds: bool = True) -> None
+
+      Use milliseconds format
+
+      :param use_milliseconds: bool = should the timer be in milliseconds or not
+
+      :return: None
+
+
+
+   .. py:method:: set_normalizing_factor(normalizing_factor: float, normalizing_unit: str) -> None
+
+      Set normalizing factor
+
+      :param normalizing_factor: float = formatted factor (in time)
+      :param normalizing_unit: str = formatted unit
+
+      :return: None
+
+
+
+   .. py:method:: __enter__()
+
+
+   .. py:method:: __exit__(exc_type: str, exc_val: str, exec_traceback: str) -> None
+
+
+.. py:data:: VALID_IMAGE_COMPRESSION
+
+.. py:data:: VALID_IMAGE_FORMATS
+
+.. py:class:: GeojsonDetectionField
+
+   Bases: :py:obj:`str`, :py:obj:`enum.Enum`
+
+
+   Enumeration defining the model geojson field to index depending on the shape
+
+
+   .. py:attribute:: BOUNDS
+      :value: 'bounds_imcoords'
+
+
+
+   .. py:attribute:: GEOM
+      :value: 'geom_imcoords'
+
+
+
+.. py:class:: ImageCompression
+
+   Bases: :py:obj:`str`, :py:obj:`aws.osml.model_runner.common.AutoStringEnum`
+
+
+   Enumeration defining compression algorithms for image.
+
+
+   .. py:attribute:: NONE
+
+
+   .. py:attribute:: JPEG
+
+
+   .. py:attribute:: J2K
+
+
+   .. py:attribute:: LZW
+
+
+.. py:data:: ImageCoord
+
+.. py:data:: ImageDimensions
+
+.. py:class:: ImageFormats
+
+   Bases: :py:obj:`str`, :py:obj:`aws.osml.model_runner.common.AutoStringEnum`
+
+
+   Enumeration defining image encodings.
+
+
+   .. py:attribute:: NITF
+
+
+   .. py:attribute:: JPEG
+
+
+   .. py:attribute:: PNG
+
+
+   .. py:attribute:: GTIFF
+
+
+.. py:data:: ImageRegion
+
+.. py:class:: RequestStatus
+
+   Bases: :py:obj:`str`, :py:obj:`aws.osml.model_runner.common.AutoStringEnum`
+
+
+   Enumeration defining the image request status
+
+
+   .. py:attribute:: STARTED
+
+
+   .. py:attribute:: IN_PROGRESS
+
+
+   .. py:attribute:: PARTIAL
+
+
+   .. py:attribute:: SUCCESS
+
+
+   .. py:attribute:: FAILED
+
+
+.. py:class:: TileState
+
+   Bases: :py:obj:`str`, :py:obj:`enum.Enum`
+
+
+   str(object='') -> str
+   str(bytes_or_buffer[, encoding[, errors]]) -> str
+
+   Create a new string object from the given object. If encoding or
+   errors is specified, then the object must expose a data buffer
+   that will be decoded using the given encoding and error handler.
+   Otherwise, returns the result of object.__str__() (if defined)
+   or repr(object).
+   encoding defaults to sys.getdefaultencoding().
+   errors defaults to 'strict'.
+
+
+   .. py:attribute:: SUCCEEDED
+      :value: 'succeeded'
+
+
+
+   .. py:attribute:: FAILED
+      :value: 'failed'
+
+
+

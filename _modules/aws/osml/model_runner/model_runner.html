@@ -1,0 +1,361 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.model_runner &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.model_runner</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.model_runner.model_runner</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">gdal</span>
+
+<span class="kn">from</span> <span class="nn">aws.osml.gdal</span> <span class="kn">import</span> <span class="n">load_gdal_dataset</span><span class="p">,</span> <span class="n">set_gdal_default_configuration</span>
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.api</span> <span class="kn">import</span> <span class="n">get_image_path</span>
+
+<span class="kn">from</span> <span class="nn">.api</span> <span class="kn">import</span> <span class="n">ImageRequest</span><span class="p">,</span> <span class="n">InvalidImageRequestException</span><span class="p">,</span> <span class="n">RegionRequest</span>
+<span class="kn">from</span> <span class="nn">.app_config</span> <span class="kn">import</span> <span class="n">ServiceConfig</span>
+<span class="kn">from</span> <span class="nn">.common</span> <span class="kn">import</span> <span class="n">EndpointUtils</span><span class="p">,</span> <span class="n">ThreadingLocalContextFilter</span>
+<span class="kn">from</span> <span class="nn">.database</span> <span class="kn">import</span> <span class="n">EndpointStatisticsTable</span><span class="p">,</span> <span class="n">JobItem</span><span class="p">,</span> <span class="n">JobTable</span><span class="p">,</span> <span class="n">RegionRequestItem</span><span class="p">,</span> <span class="n">RegionRequestTable</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">RetryableJobException</span><span class="p">,</span> <span class="n">SelfThrottledRegionException</span>
+<span class="kn">from</span> <span class="nn">.image_request_handler</span> <span class="kn">import</span> <span class="n">ImageRequestHandler</span>
+<span class="kn">from</span> <span class="nn">.queue</span> <span class="kn">import</span> <span class="n">RequestQueue</span>
+<span class="kn">from</span> <span class="nn">.region_request_handler</span> <span class="kn">import</span> <span class="n">RegionRequestHandler</span>
+<span class="kn">from</span> <span class="nn">.status</span> <span class="kn">import</span> <span class="n">ImageStatusMonitor</span><span class="p">,</span> <span class="n">RegionStatusMonitor</span>
+<span class="kn">from</span> <span class="nn">.tile_worker</span> <span class="kn">import</span> <span class="n">TilingStrategy</span><span class="p">,</span> <span class="n">VariableOverlapTilingStrategy</span>
+
+<span class="c1"># Set up logging configuration</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">gdal</span><span class="o">.</span><span class="n">UseExceptions</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="ModelRunner">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.model_runner.html#aws.osml.model_runner.model_runner.ModelRunner">[docs]</a>
+<span class="k">class</span> <span class="nc">ModelRunner</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Main class for operating the ModelRunner application. It monitors input queues for processing requests,</span>
+<span class="sd">    decomposes the image into smaller regions and tiles, invokes an ML model on each tile, and aggregates</span>
+<span class="sd">    the results into a single output, which can be sent to the configured output sinks.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tiling_strategy</span><span class="p">:</span> <span class="n">TilingStrategy</span> <span class="o">=</span> <span class="n">VariableOverlapTilingStrategy</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a model runner with the injectable behaviors.</span>
+
+<span class="sd">        :param tiling_strategy: Defines how a larger image will be broken into chunks for processing</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">ServiceConfig</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tiling_strategy</span> <span class="o">=</span> <span class="n">tiling_strategy</span>
+
+        <span class="c1"># Set up queues and monitors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_request_queue</span> <span class="o">=</span> <span class="n">RequestQueue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_queue</span><span class="p">,</span> <span class="n">wait_seconds</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_requests_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_request_queue</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">region_request_queue</span> <span class="o">=</span> <span class="n">RequestQueue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">region_queue</span><span class="p">,</span> <span class="n">wait_seconds</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">region_requests_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">region_request_queue</span><span class="p">)</span>
+
+        <span class="c1"># Set up tables and status monitors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">job_table</span> <span class="o">=</span> <span class="n">JobTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">job_table</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">region_request_table</span> <span class="o">=</span> <span class="n">RegionRequestTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">region_request_table</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">endpoint_statistics_table</span> <span class="o">=</span> <span class="n">EndpointStatisticsTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">endpoint_statistics_table</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_status_monitor</span> <span class="o">=</span> <span class="n">ImageStatusMonitor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_status_topic</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">region_status_monitor</span> <span class="o">=</span> <span class="n">RegionStatusMonitor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">region_status_topic</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">endpoint_utils</span> <span class="o">=</span> <span class="n">EndpointUtils</span><span class="p">()</span>
+
+        <span class="c1"># Handlers for image and region processing</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">region_request_handler</span> <span class="o">=</span> <span class="n">RegionRequestHandler</span><span class="p">(</span>
+            <span class="n">region_request_table</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">region_request_table</span><span class="p">,</span>
+            <span class="n">job_table</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">job_table</span><span class="p">,</span>
+            <span class="n">region_status_monitor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">region_status_monitor</span><span class="p">,</span>
+            <span class="n">endpoint_statistics_table</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endpoint_statistics_table</span><span class="p">,</span>
+            <span class="n">tiling_strategy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tiling_strategy</span><span class="p">,</span>
+            <span class="n">endpoint_utils</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endpoint_utils</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_request_handler</span> <span class="o">=</span> <span class="n">ImageRequestHandler</span><span class="p">(</span>
+            <span class="n">job_table</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">job_table</span><span class="p">,</span>
+            <span class="n">image_status_monitor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image_status_monitor</span><span class="p">,</span>
+            <span class="n">endpoint_statistics_table</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endpoint_statistics_table</span><span class="p">,</span>
+            <span class="n">tiling_strategy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tiling_strategy</span><span class="p">,</span>
+            <span class="n">region_request_queue</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">region_request_queue</span><span class="p">,</span>
+            <span class="n">region_request_table</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">region_request_table</span><span class="p">,</span>
+            <span class="n">endpoint_utils</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">endpoint_utils</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+            <span class="n">region_request_handler</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">region_request_handler</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="ModelRunner.run">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.model_runner.html#aws.osml.model_runner.model_runner.ModelRunner.run">[docs]</a>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Start the ModelRunner to continuously monitor and process work queues.</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting ModelRunner&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">monitor_work_queues</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.stop">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.model_runner.html#aws.osml.model_runner.model_runner.ModelRunner.stop">[docs]</a>
+    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stop the ModelRunner.</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Stopping ModelRunner&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="ModelRunner.monitor_work_queues">
+<a class="viewcode-back" href="../../../../_apidoc/aws.osml.model_runner.model_runner.html#aws.osml.model_runner.model_runner.ModelRunner.monitor_work_queues">[docs]</a>
+    <span class="k">def</span> <span class="nf">monitor_work_queues</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Continuously monitors the SQS queues for RegionRequest and ImageRequest.</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">set_gdal_default_configuration</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Beginning monitoring request queues&quot;</span><span class="p">)</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">running</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># If there are regions to process</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_region_requests</span><span class="p">():</span>
+                    <span class="c1"># Move along to the next image request if present</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_process_image_requests</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unexpected error in monitor_work_queues: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Stopped monitoring request queues&quot;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_process_region_requests</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process messages from the region request queue.</span>
+
+<span class="sd">        :return: True if a region request was processed, False if not.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Checking work queue for regions to process...&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">receipt_handle</span><span class="p">,</span> <span class="n">region_request_attributes</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">region_requests_iter</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+            <span class="c1"># No region requests available in the queue</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;No region requests available to process.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">region_request_attributes</span><span class="p">:</span>
+            <span class="n">ThreadingLocalContextFilter</span><span class="o">.</span><span class="n">set_context</span><span class="p">(</span><span class="n">region_request_attributes</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">region_request</span> <span class="o">=</span> <span class="n">RegionRequest</span><span class="p">(</span><span class="n">region_request_attributes</span><span class="p">)</span>
+                <span class="n">image_path</span> <span class="o">=</span> <span class="n">get_image_path</span><span class="p">(</span><span class="n">region_request</span><span class="o">.</span><span class="n">image_url</span><span class="p">,</span> <span class="n">region_request</span><span class="o">.</span><span class="n">image_read_role</span><span class="p">)</span>
+                <span class="n">raster_dataset</span><span class="p">,</span> <span class="n">sensor_model</span> <span class="o">=</span> <span class="n">load_gdal_dataset</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
+                <span class="n">region_request_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_or_create_region_request_item</span><span class="p">(</span><span class="n">region_request</span><span class="p">)</span>
+                <span class="n">image_request_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">region_request_handler</span><span class="o">.</span><span class="n">process_region_request</span><span class="p">(</span>
+                    <span class="n">region_request</span><span class="p">,</span> <span class="n">region_request_item</span><span class="p">,</span> <span class="n">raster_dataset</span><span class="p">,</span> <span class="n">sensor_model</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_table</span><span class="o">.</span><span class="n">is_image_request_complete</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">image_request_handler</span><span class="o">.</span><span class="n">complete_image_request</span><span class="p">(</span>
+                        <span class="n">region_request</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">raster_dataset</span><span class="o">.</span><span class="n">GetDriver</span><span class="p">()</span><span class="o">.</span><span class="n">ShortName</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="n">raster_dataset</span><span class="p">,</span> <span class="n">sensor_model</span>
+                    <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">region_request_queue</span><span class="o">.</span><span class="n">finish_request</span><span class="p">(</span><span class="n">receipt_handle</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">RetryableJobException</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Retrying region request due to: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">region_request_queue</span><span class="o">.</span><span class="n">reset_request</span><span class="p">(</span><span class="n">receipt_handle</span><span class="p">,</span> <span class="n">visibility_timeout</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">SelfThrottledRegionException</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Retrying region request due to: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">region_request_queue</span><span class="o">.</span><span class="n">reset_request</span><span class="p">(</span>
+                    <span class="n">receipt_handle</span><span class="p">,</span> <span class="n">visibility_timeout</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">throttling_retry_timeout</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error processing region request: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">region_request_queue</span><span class="o">.</span><span class="n">finish_request</span><span class="p">(</span><span class="n">receipt_handle</span><span class="p">)</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">_process_image_requests</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Processes messages from the image request queue.</span>
+
+<span class="sd">        This method retrieves and processes image requests from the SQS queue. It validates</span>
+<span class="sd">        the image request, and if valid, passes it to the `ImageRequestHandler` for further</span>
+<span class="sd">        processing. In case of a retryable exception, the request is reset in the queue with</span>
+<span class="sd">        a visibility timeout. If the image request fails due to an error, it is marked as</span>
+<span class="sd">        failed and the appropriate actions are taken.</span>
+
+<span class="sd">        :raises InvalidImageRequestException: If the image request is found to be invalid.</span>
+<span class="sd">        :raises Exception: If an unexpected error occurs during processing.</span>
+
+<span class="sd">        :return: True if a image request was processed, False if not.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Checking work queue for images to process...&quot;</span><span class="p">)</span>
+        <span class="n">receipt_handle</span><span class="p">,</span> <span class="n">image_request_message</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_requests_iter</span><span class="p">)</span>
+        <span class="n">image_request</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">image_request_message</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">image_request</span> <span class="o">=</span> <span class="n">ImageRequest</span><span class="o">.</span><span class="n">from_external_message</span><span class="p">(</span><span class="n">image_request_message</span><span class="p">)</span>
+                <span class="n">ThreadingLocalContextFilter</span><span class="o">.</span><span class="n">set_context</span><span class="p">(</span><span class="n">image_request</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">image_request</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+                    <span class="k">raise</span> <span class="n">InvalidImageRequestException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid image request: </span><span class="si">{</span><span class="n">image_request_message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">image_request_handler</span><span class="o">.</span><span class="n">process_image_request</span><span class="p">(</span><span class="n">image_request</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">image_request_queue</span><span class="o">.</span><span class="n">finish_request</span><span class="p">(</span><span class="n">receipt_handle</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">RetryableJobException</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">image_request_queue</span><span class="o">.</span><span class="n">reset_request</span><span class="p">(</span><span class="n">receipt_handle</span><span class="p">,</span> <span class="n">visibility_timeout</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error processing image request: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">image_request</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_fail_image_request</span><span class="p">(</span><span class="n">image_request</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">image_request_queue</span><span class="o">.</span><span class="n">finish_request</span><span class="p">(</span><span class="n">receipt_handle</span><span class="p">)</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">_fail_image_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_request</span><span class="p">:</span> <span class="n">ImageRequest</span><span class="p">,</span> <span class="n">error</span><span class="p">:</span> <span class="ne">Exception</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handles failing an image request by updating its status and logging the failure.</span>
+
+<span class="sd">        This method is called when an image request cannot be processed due to an error.</span>
+<span class="sd">        It marks the image request as failed and updates the job status using the</span>
+<span class="sd">        `ImageRequestHandler`.</span>
+
+<span class="sd">        :param image_request: The image request that failed to process.</span>
+<span class="sd">        :param error: The exception that caused the failure.</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">min_image_id</span> <span class="o">=</span> <span class="n">image_request</span><span class="o">.</span><span class="n">image_id</span> <span class="k">if</span> <span class="n">image_request</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">min_job_id</span> <span class="o">=</span> <span class="n">image_request</span><span class="o">.</span><span class="n">job_id</span> <span class="k">if</span> <span class="n">image_request</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">minimal_job_item</span> <span class="o">=</span> <span class="n">JobItem</span><span class="p">(</span><span class="n">image_id</span><span class="o">=</span><span class="n">min_image_id</span><span class="p">,</span> <span class="n">job_id</span><span class="o">=</span><span class="n">min_job_id</span><span class="p">,</span> <span class="n">processing_duration</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_request_handler</span><span class="o">.</span><span class="n">fail_image_request</span><span class="p">(</span><span class="n">minimal_job_item</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_or_create_region_request_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region_request</span><span class="p">:</span> <span class="n">RegionRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RegionRequestItem</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves or creates a `RegionRequestItem` in the region request table.</span>
+
+<span class="sd">        This method checks if a region request already exists in the `RegionRequestTable`.</span>
+<span class="sd">        If it does, it retrieves the existing request; otherwise, it creates a new</span>
+<span class="sd">        `RegionRequestItem` from the provided `RegionRequest` and starts the region</span>
+<span class="sd">        processing.</span>
+
+<span class="sd">        :param region_request: The region request to process.</span>
+
+<span class="sd">        :return: The retrieved or newly created `RegionRequestItem`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">region_request_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">region_request_table</span><span class="o">.</span><span class="n">get_region_request</span><span class="p">(</span><span class="n">region_request</span><span class="o">.</span><span class="n">region_id</span><span class="p">,</span> <span class="n">region_request</span><span class="o">.</span><span class="n">image_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">region_request_item</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">region_request_item</span> <span class="o">=</span> <span class="n">RegionRequestItem</span><span class="o">.</span><span class="n">from_region_request</span><span class="p">(</span><span class="n">region_request</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">region_request_table</span><span class="o">.</span><span class="n">start_region_request</span><span class="p">(</span><span class="n">region_request_item</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Added region request: image id </span><span class="si">{</span><span class="n">region_request_item</span><span class="o">.</span><span class="n">image_id</span><span class="si">}</span><span class="s2">, region id </span><span class="si">{</span><span class="n">region_request_item</span><span class="o">.</span><span class="n">region_id</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">region_request_item</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

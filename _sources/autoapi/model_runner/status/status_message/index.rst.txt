@@ -1,0 +1,63 @@
+model_runner.status.status_message
+==================================
+
+.. py:module:: model_runner.status.status_message
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.status.status_message.StatusMessage
+
+
+Module Contents
+---------------
+
+.. py:class:: StatusMessage
+
+   .. py:attribute:: status
+      :type:  aws.osml.model_runner.common.RequestStatus
+
+
+   .. py:attribute:: job_id
+      :type:  str
+
+
+   .. py:attribute:: image_status
+      :type:  Optional[aws.osml.model_runner.common.RequestStatus]
+      :value: None
+
+
+
+   .. py:attribute:: image_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: region_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: processing_duration
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: failed_tiles
+      :type:  Optional[List[List[List[int]]]]
+      :value: None
+
+
+
+   .. py:method:: asdict_str_values() -> Dict[str, str]
+
+
+   .. py:method:: asdict() -> dict
+
+

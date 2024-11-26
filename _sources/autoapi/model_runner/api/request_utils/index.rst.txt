@@ -1,0 +1,64 @@
+model_runner.api.request_utils
+==============================
+
+.. py:module:: model_runner.api.request_utils
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.api.request_utils.logger
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   model_runner.api.request_utils.shared_properties_are_valid
+   model_runner.api.request_utils.get_image_path
+   model_runner.api.request_utils.validate_image_path
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:function:: shared_properties_are_valid(request) -> bool
+
+   Validates that the request contains all mandatory attributes with acceptable values.
+
+   This function checks attributes shared between ImageRequests and RegionRequests, ensuring
+   they contain all required metadata for processing.
+
+   :param request: An object of either ImageRequests or RegionRequests.
+   :return: True if the request is valid; False otherwise. Logs warnings for each failed validation.
+
+
+.. py:function:: get_image_path(image_url: str, assumed_role: str) -> str
+
+   Returns the formatted image path for GDAL to read the image, either from S3 or a local file.
+
+   If the image URL points to an S3 path, this method validates the image's existence in S3
+   and reformats the path to use GDAL's /vsis3/ driver. Otherwise, it returns the local or
+   network image path.
+
+   :param image_url: str = formatted image path to S3 bucket
+   :param assumed_role: str = containing a formatted arn role
+
+   :return: The formatted image path.
+
+
+.. py:function:: validate_image_path(image_url: str, assumed_role: str = None) -> bool
+
+   Validate if an image exists in S3 bucket
+
+   :param image_url: str = formatted image path to S3 bucket
+   :param assumed_role: str = containing a formatted arn role
+
+   :return: bool
+
+

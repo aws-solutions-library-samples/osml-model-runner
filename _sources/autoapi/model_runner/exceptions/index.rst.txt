@@ -1,0 +1,97 @@
+model_runner.exceptions
+=======================
+
+.. py:module:: model_runner.exceptions
+
+
+Exceptions
+----------
+
+.. autoapisummary::
+
+   model_runner.exceptions.RetryableJobException
+   model_runner.exceptions.AggregateFeaturesException
+   model_runner.exceptions.ProcessRegionException
+   model_runner.exceptions.LoadImageException
+   model_runner.exceptions.ProcessImageException
+   model_runner.exceptions.UnsupportedModelException
+   model_runner.exceptions.InvalidImageURLException
+   model_runner.exceptions.SelfThrottledRegionException
+   model_runner.exceptions.AggregateOutputFeaturesException
+
+
+Module Contents
+---------------
+
+.. py:exception:: RetryableJobException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: AggregateFeaturesException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: ProcessRegionException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: LoadImageException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: ProcessImageException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: UnsupportedModelException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: InvalidImageURLException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: SelfThrottledRegionException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: AggregateOutputFeaturesException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+

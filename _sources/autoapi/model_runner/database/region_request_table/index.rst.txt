@@ -1,0 +1,271 @@
+model_runner.database.region_request_table
+==========================================
+
+.. py:module:: model_runner.database.region_request_table
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.database.region_request_table.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.database.region_request_table.RegionRequestItem
+   model_runner.database.region_request_table.RegionRequestTable
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:class:: RegionRequestItem
+
+   Bases: :py:obj:`model_runner.database.ddb_helper.DDBItem`
+
+
+   RegionRequestItem is a dataclass meant to represent a single item in the Region table.
+
+   The data schema is defined as follows:
+   region_id: str = primary key - formatted as region (pixel bounds) + "-" + unique_identifier
+   image_id: str = secondary key - image_id for the job
+   job_id: Optional[str] = job identifier for tracking
+   start_time: Optional[int] = time in epoch seconds when the job started
+   last_updated_time: Optional[int] = time in epoch seconds when the job is processing (periodically updated)
+   end_time: Optional[int] = time in epoch seconds when the job ended
+   expire_time: Optional[int] = time in epoch seconds when the item will expire from the table
+   image_read_role: Optional[str] = IAM role to read the image for processing
+   processing_duration: Optional[int] = time in seconds to complete region processing
+   message: Optional[str] = additional information about the region job
+   region_status: Optional[str] = region job status - PROCESSING, COMPLETED, FAILED
+   total_tiles: Optional[int] = total number of tiles to be processed for the region
+   failed_tiles: Optional[List] = list of tiles that failed processing
+   failed_tile_count: Optional[int] = count of failed tiles that failed to process
+   succeeded_tiles: Optional[List] = list of tiles that succeeded processing
+   succeeded_tile_count: Optional[int] = count of successfully processed tiles
+   region_bounds: Optional[List[List[int]]] = list of pixel bounds that define the region
+   region_retry_count: Optional[int] = number of times the region processing has been retried
+   tile_compression: Optional[str] = compression type of tiles for the region (e.g., 'LZW', 'JPEG')
+   tile_format: Optional[str] = file format of the tiles (e.g., 'tif', 'ntf')
+   tile_overlap: Optional[List[int]] = overlap dimensions for the tiles in the region
+   tile_size: Optional[List[int]] = size dimensions of the tiles in the region
+
+
+   .. py:attribute:: region_id
+      :type:  str
+
+
+   .. py:attribute:: image_id
+      :type:  str
+
+
+   .. py:attribute:: job_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: start_time
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: last_updated_time
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: end_time
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: expire_time
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: image_read_role
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: processing_duration
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: message
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: region_status
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: total_tiles
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: failed_tiles
+      :type:  Optional[List]
+      :value: None
+
+
+
+   .. py:attribute:: failed_tile_count
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: succeeded_tiles
+      :type:  Optional[List]
+      :value: None
+
+
+
+   .. py:attribute:: succeeded_tile_count
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: region_bounds
+      :type:  Optional[List[List[int]]]
+      :value: None
+
+
+
+   .. py:attribute:: region_retry_count
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: tile_compression
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: tile_format
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: tile_overlap
+      :type:  Optional[List[int]]
+      :value: None
+
+
+
+   .. py:attribute:: tile_size
+      :type:  Optional[List[int]]
+      :value: None
+
+
+
+   .. py:method:: __post_init__()
+
+
+   .. py:method:: from_region_request(region_request: aws.osml.model_runner.api.RegionRequest) -> RegionRequestItem
+      :classmethod:
+
+
+      Helper method to create a RegionRequestItem from a RegionRequest object.
+
+      :param region_request: A RegionRequest object.
+      :return: A RegionRequestItem instance with the relevant fields populated.
+
+
+
+.. py:class:: RegionRequestTable(table_name: str)
+
+   Bases: :py:obj:`model_runner.database.ddb_helper.DDBHelper`
+
+
+   RegionRequestTable is a class meant to help OSML with accessing and interacting with the region processing jobs we
+   track as part of the region table. It extends the DDBHelper class and provides its own item data class for use when
+   working with items from the table. It also sets the key for which we index on this table in the constructor.
+
+   :param table_name: str = the name of the table to interact with
+
+   :return: None
+
+
+   .. py:method:: start_region_request(region_request_item: RegionRequestItem) -> RegionRequestItem
+
+      Start a region processing request for given region pixel bounds, this should be the first record
+      for this region in the table.
+
+      :param region_request_item: RegionRequestItem = the unique identifier for the region we want to add to ddb
+
+      :return: RegionRequestItem = Updated region request item
+
+
+
+   .. py:method:: complete_region_request(region_request_item: RegionRequestItem, region_status: aws.osml.model_runner.common.RequestStatus)
+
+      Update the region job to reflect that a region has succeeded or failed.
+
+      :param region_request_item: RegionRequestItem = the unique identifier for the region we want to update
+      :param region_status: RegionRequestStatus = Status of region at completion (FAILURE, PARTIAL, SUCCESS, etc.)
+
+      :return: RegionRequestItem = Updated region request item
+
+
+
+   .. py:method:: update_region_request(region_request_item: RegionRequestItem) -> RegionRequestItem
+
+      Update the region info in the ddb
+
+      :param region_request_item: RegionRequestItem = the unique identifier for the region we want to update
+
+      :return: RegionRequestItem = Updated region request item
+
+
+
+   .. py:method:: get_region_request(region_id: str, image_id: str) -> Optional[RegionRequestItem]
+
+      Get a RegionRequestItem object from the table based on the region_id and image_id provided
+
+      :param region_id: str = the unique identifier for the region we want to start processing
+      :param image_id: str = the unique identifier for the image (range key)
+
+      :return: Optional[RegionRequestItem] = region request item
+
+
+
+   .. py:method:: add_tile(image_id: str, region_id: str, tile: aws.osml.model_runner.common.ImageRegion, state: aws.osml.model_runner.common.TileState) -> RegionRequestItem
+
+      Append tile to the with the associated state to associated RegionRequestItem in the table.
+
+      :param image_id: str = the id of the image request we want to update
+      :param region_id: str = the id of the region request we want to update
+      :param tile: ImageRegion = list of values to append to the 'succeeded_tiles' property
+      :param state: str = state of the tile to add, i.e. succeeded or failed
+      :return: The new updated DDB item.
+
+
+

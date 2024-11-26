@@ -1,0 +1,157 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.region_request_handler module &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.region_request_handler module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_apidoc/aws.osml.model_runner.region_request_handler.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-aws.osml.model_runner.region_request_handler">
+<span id="aws-osml-model-runner-region-request-handler-module"></span><h1>aws.osml.model_runner.region_request_handler module<a class="headerlink" href="#module-aws.osml.model_runner.region_request_handler" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.region_request_handler.RegionRequestHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.region_request_handler.</span></span><span class="sig-name descname"><span class="pre">RegionRequestHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">region_request_table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="aws.osml.model_runner.database.region_request_table.html#aws.osml.model_runner.database.region_request_table.RegionRequestTable" title="aws.osml.model_runner.database.region_request_table.RegionRequestTable"><span class="pre">RegionRequestTable</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="aws.osml.model_runner.database.job_table.html#aws.osml.model_runner.database.job_table.JobTable" title="aws.osml.model_runner.database.job_table.JobTable"><span class="pre">JobTable</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">region_status_monitor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="aws.osml.model_runner.status.region_status_monitor.html#aws.osml.model_runner.status.region_status_monitor.RegionStatusMonitor" title="aws.osml.model_runner.status.region_status_monitor.RegionStatusMonitor"><span class="pre">RegionStatusMonitor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">endpoint_statistics_table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="aws.osml.model_runner.database.endpoint_statistics_table.html#aws.osml.model_runner.database.endpoint_statistics_table.EndpointStatisticsTable" title="aws.osml.model_runner.database.endpoint_statistics_table.EndpointStatisticsTable"><span class="pre">EndpointStatisticsTable</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">tiling_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="aws.osml.model_runner.tile_worker.tiling_strategy.html#aws.osml.model_runner.tile_worker.tiling_strategy.TilingStrategy" title="aws.osml.model_runner.tile_worker.tiling_strategy.TilingStrategy"><span class="pre">TilingStrategy</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">endpoint_utils</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="aws.osml.model_runner.common.endpoint_utils.html#aws.osml.model_runner.common.endpoint_utils.EndpointUtils" title="aws.osml.model_runner.common.endpoint_utils.EndpointUtils"><span class="pre">EndpointUtils</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="aws.osml.model_runner.app_config.html#aws.osml.model_runner.app_config.ServiceConfig" title="aws.osml.model_runner.app_config.ServiceConfig"><span class="pre">ServiceConfig</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/aws/osml/model_runner/region_request_handler.html#RegionRequestHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.region_request_handler.RegionRequestHandler" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class responsible for handling RegionRequest processing.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.region_request_handler.RegionRequestHandler.process_region_request">
+<span class="sig-name descname"><span class="pre">process_region_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">region_request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="aws.osml.model_runner.api.region_request.html#aws.osml.model_runner.api.region_request.RegionRequest" title="aws.osml.model_runner.api.region_request.RegionRequest"><span class="pre">RegionRequest</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">region_request_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="aws.osml.model_runner.database.region_request_table.html#aws.osml.model_runner.database.region_request_table.RegionRequestItem" title="aws.osml.model_runner.database.region_request_table.RegionRequestItem"><span class="pre">RegionRequestItem</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">raster_dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SensorModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MetricsLogger</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="aws.osml.model_runner.database.job_table.html#aws.osml.model_runner.database.job_table.JobItem" title="aws.osml.model_runner.database.job_table.JobItem"><span class="pre">JobItem</span></a></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/region_request_handler.html#RegionRequestHandler.process_region_request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.region_request_handler.RegionRequestHandler.process_region_request" title="Link to this definition"></a></dt>
+<dd><p>Processes RegionRequest objects that are delegated for processing. Loads the specified region of an image into
+memory to be processed by tile-workers. If a raster_dataset is not provided directly it will poll the image
+from the region request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>region_request</strong> – RegionRequest = the region request</p></li>
+<li><p><strong>region_request_item</strong> – RegionRequestItem = the region request to update</p></li>
+<li><p><strong>raster_dataset</strong> – gdal.Dataset = the raster dataset containing the region</p></li>
+<li><p><strong>sensor_model</strong> – Optional[SensorModel] = the sensor model for this raster dataset</p></li>
+<li><p><strong>metrics</strong> – MetricsLogger = the metrics logger to use to report metrics.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>JobItem</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.region_request_handler.RegionRequestHandler.fail_region_request">
+<span class="sig-name descname"><span class="pre">fail_region_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">region_request_item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="aws.osml.model_runner.database.region_request_table.html#aws.osml.model_runner.database.region_request_table.RegionRequestItem" title="aws.osml.model_runner.database.region_request_table.RegionRequestItem"><span class="pre">RegionRequestItem</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MetricsLogger</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="aws.osml.model_runner.database.job_table.html#aws.osml.model_runner.database.job_table.JobItem" title="aws.osml.model_runner.database.job_table.JobItem"><span class="pre">JobItem</span></a></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/region_request_handler.html#RegionRequestHandler.fail_region_request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.region_request_handler.RegionRequestHandler.fail_region_request" title="Link to this definition"></a></dt>
+<dd><p>Fails a region if it failed to process successfully and updates the table accordingly before
+raising an exception</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>region_request_item</strong> – RegionRequestItem = the region request to update</p></li>
+<li><p><strong>metrics</strong> – MetricsLogger = the metrics logger to use to report metrics.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

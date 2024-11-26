@@ -1,0 +1,275 @@
+model_runner.app_config
+=======================
+
+.. py:module:: model_runner.app_config
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.app_config.ServiceConfig
+   model_runner.app_config.BotoConfig
+   model_runner.app_config.MetricLabels
+
+
+Module Contents
+---------------
+
+.. py:class:: ServiceConfig
+
+   ServiceConfig is a dataclass meant to house the high-level configuration settings required for Model Runner to
+   operate that are provided through ENV variables. Note that required env parameters are enforced by the implied
+   schema validation as os.environ[] is used to fetch the values. Optional parameters are fetched using, os.getenv(),
+   which returns None.
+
+
+   .. py:attribute:: aws_region
+      :type:  str
+
+
+   .. py:attribute:: job_table
+      :type:  str
+
+
+   .. py:attribute:: region_request_table
+      :type:  str
+
+
+   .. py:attribute:: endpoint_statistics_table
+
+
+   .. py:attribute:: feature_table
+      :type:  str
+
+
+   .. py:attribute:: image_queue
+      :type:  str
+
+
+   .. py:attribute:: region_queue
+      :type:  str
+
+
+   .. py:attribute:: workers_per_cpu
+      :type:  str
+
+
+   .. py:attribute:: workers
+      :type:  str
+
+
+   .. py:attribute:: elevation_data_location
+      :type:  Optional[str]
+
+
+   .. py:attribute:: elevation_data_extension
+      :type:  str
+
+
+   .. py:attribute:: elevation_data_version
+      :type:  str
+
+
+   .. py:attribute:: elevation_model
+      :type:  Optional[aws.osml.photogrammetry.ElevationModel]
+
+
+   .. py:attribute:: image_status_topic
+      :type:  Optional[str]
+
+
+   .. py:attribute:: region_status_topic
+      :type:  Optional[str]
+
+
+   .. py:attribute:: cp_api_endpoint
+      :type:  Optional[str]
+
+
+   .. py:attribute:: self_throttling
+      :type:  bool
+
+
+   .. py:attribute:: region_size
+      :type:  str
+
+
+   .. py:attribute:: throttling_vcpu_scale_factor
+      :type:  str
+
+
+   .. py:attribute:: throttling_retry_timeout
+      :type:  str
+
+
+   .. py:attribute:: kinesis_max_record_per_batch
+      :type:  str
+      :value: '500'
+
+
+
+   .. py:attribute:: kinesis_max_record_size_batch
+      :type:  str
+      :value: '5242880'
+
+
+
+   .. py:attribute:: kinesis_max_record_size
+      :type:  str
+      :value: '1048576'
+
+
+
+   .. py:attribute:: ddb_max_item_size
+      :type:  str
+      :value: '200000'
+
+
+
+   .. py:attribute:: metrics_config
+      :type:  aws_embedded_metrics.config.Configuration
+
+
+   .. py:method:: __post_init__()
+
+      Post-initialization method to set up the elevation model.
+
+
+
+   .. py:method:: create_elevation_model() -> Optional[aws.osml.photogrammetry.ElevationModel]
+
+      Create an elevation model if the relevant options are set in the service configuration.
+
+      :return: Optional[ElevationModel] = the elevation model or None if not configured
+
+
+
+   .. py:method:: configure_metrics()
+      :staticmethod:
+
+
+      Embedded metrics configuration
+
+
+
+.. py:class:: BotoConfig
+
+   BotoConfig is a dataclass meant to vend our application the set of boto client configurations required for OSML
+
+   The data schema is defined as follows:
+   default:  (Config) the standard boto client configuration
+   sagemaker: (Config) the sagemaker specific boto client configuration
+
+
+   .. py:attribute:: default
+      :type:  botocore.config.Config
+
+
+   .. py:attribute:: sagemaker
+      :type:  botocore.config.Config
+
+
+   .. py:attribute:: ddb
+      :type:  botocore.config.Config
+
+
+.. py:class:: MetricLabels
+
+   Bases: :py:obj:`str`, :py:obj:`enum.Enum`
+
+
+   Enumeration defining the metric labels used by OSML
+
+
+   .. py:attribute:: DURATION
+      :value: 'Duration'
+
+
+
+   .. py:attribute:: INVOCATIONS
+      :value: 'Invocations'
+
+
+
+   .. py:attribute:: ERRORS
+      :value: 'Errors'
+
+
+
+   .. py:attribute:: THROTTLES
+      :value: 'Throttles'
+
+
+
+   .. py:attribute:: RETRIES
+      :value: 'Retries'
+
+
+
+   .. py:attribute:: OPERATION_DIMENSION
+      :value: 'Operation'
+
+
+
+   .. py:attribute:: MODEL_NAME_DIMENSION
+      :value: 'ModelName'
+
+
+
+   .. py:attribute:: INPUT_FORMAT_DIMENSION
+      :value: 'InputFormat'
+
+
+
+   .. py:attribute:: IMAGE_PROCESSING_OPERATION
+      :value: 'ImageProcessing'
+
+
+
+   .. py:attribute:: REGION_PROCESSING_OPERATION
+      :value: 'RegionProcessing'
+
+
+
+   .. py:attribute:: TILE_GENERATION_OPERATION
+      :value: 'TileGeneration'
+
+
+
+   .. py:attribute:: TILE_PROCESSING_OPERATION
+      :value: 'TileProcessing'
+
+
+
+   .. py:attribute:: MODEL_INVOCATION_OPERATION
+      :value: 'ModelInvocation'
+
+
+
+   .. py:attribute:: FEATURE_REFINEMENT_OPERATION
+      :value: 'FeatureRefinement'
+
+
+
+   .. py:attribute:: FEATURE_STORAGE_OPERATION
+      :value: 'FeatureStorage'
+
+
+
+   .. py:attribute:: FEATURE_AGG_OPERATION
+      :value: 'FeatureAggregation'
+
+
+
+   .. py:attribute:: FEATURE_SELECTION_OPERATION
+      :value: 'FeatureSelection'
+
+
+
+   .. py:attribute:: FEATURE_DISSEMINATE_OPERATION
+      :value: 'FeatureDissemination'
+
+
+

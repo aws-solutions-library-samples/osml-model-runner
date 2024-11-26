@@ -1,0 +1,246 @@
+model_runner.sink
+=================
+
+.. py:module:: model_runner.sink
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/model_runner/sink/exceptions/index
+   /autoapi/model_runner/sink/kinesis_sink/index
+   /autoapi/model_runner/sink/s3_sink/index
+   /autoapi/model_runner/sink/sink/index
+   /autoapi/model_runner/sink/sink_factory/index
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.sink.KinesisSink
+   model_runner.sink.S3Sink
+   model_runner.sink.Sink
+   model_runner.sink.SinkFactory
+
+
+Package Contents
+----------------
+
+.. py:class:: KinesisSink(stream: str, batch_size: int = None, assumed_role: Optional[str] = None)
+
+   Bases: :py:obj:`model_runner.sink.sink.Sink`
+
+
+   The mechanism by which detected features are sent to their destination.
+
+
+   .. py:attribute:: stream
+
+
+   .. py:attribute:: batch_size
+
+
+   .. py:method:: _flush_stream(records: List[dict]) -> None
+
+      Flushes a batch of records to the Kinesis stream.
+
+      :param records: A list of records to be sent to the Kinesis stream.
+      :returns: None
+
+
+
+   .. py:property:: mode
+      :type: aws.osml.model_runner.api.SinkMode
+
+
+      The write mode of the sink. Either Streaming (per tile results)
+      or Aggregate (per image results).
+
+      :return: SinkMode = the type of write mode of the sink
+
+
+
+   .. py:method:: write(job_id: str, features: List[geojson.Feature]) -> bool
+
+      Writes a list of features to the Kinesis stream. Each feature is serialized and sent
+      as a record. If the batch of records exceeds the 5 MB limit, the current batch is flushed.
+
+      :param job_id: The ID of the job associated with the features.
+      :param features: A list of features to be written to the stream.
+
+      :returns: True if the features were successfully written, False otherwise.
+
+
+
+   .. py:method:: validate_kinesis_stream() -> bool
+
+      Ensure output Kinesis stream exists/can be written to
+
+      :return: True if kinesis stream exist and can be read/written to it
+
+
+
+   .. py:method:: name() -> str
+      :staticmethod:
+
+
+      Ensure output Kinesis stream exists/can be written to
+
+      :return: The name of the instantiated Sink.
+
+
+
+.. py:class:: S3Sink(bucket: str, prefix: str, assumed_role: Optional[str] = None)
+
+   Bases: :py:obj:`model_runner.sink.sink.Sink`
+
+
+   A sink for writing aggregated GeoJSON feature collections to an S3 bucket.
+
+   This class handles uploading GeoJSON data to a specified S3 bucket, optionally using an
+   assumed IAM role for accessing the bucket. It validates the bucket's accessibility and writes
+   the aggregated features to S3.
+
+   :param bucket: The name of the S3 bucket.
+   :param prefix: The prefix within the bucket where the files will be stored.
+   :param assumed_role: Optional IAM role ARN to assume for accessing the bucket.
+
+
+   .. py:attribute:: bucket
+
+
+   .. py:attribute:: prefix
+
+
+   .. py:property:: mode
+      :type: aws.osml.model_runner.api.SinkMode
+
+
+      The mode of the sink, which is aggregate.
+
+      :return: The `SinkMode` enumeration value representing the aggregate mode.
+
+
+
+   .. py:method:: write(image_id: str, features: List[geojson.Feature]) -> bool
+
+      Write aggregated GeoJSON feature collection to the S3 bucket.
+
+      Validates if the S3 bucket is accessible and uploads a temporary file containing
+      the aggregated features. The object key is derived from the `image_id`.
+
+      :param image_id: The identifier for the image, used to generate the S3 object key.
+      :param features: A list of GeoJSON features to be aggregated and written to S3.
+      :return: `True` if the upload was successful, `False` otherwise.
+
+      :raises ClientError: If there are errors while uploading the file to S3.
+
+
+
+   .. py:method:: validate_s3_bucket() -> bool
+
+      Check if the output S3 bucket exists and can be read/written to.
+
+      :return: `True` if the bucket exists and can be accessed, `False` otherwise.
+
+      :raises ClientError: If there are issues accessing the S3 bucket.
+
+
+
+   .. py:method:: name() -> str
+      :staticmethod:
+
+
+      Retrieve the name of the sink type.
+
+      :return: The string representation of the sink type.
+
+
+
+.. py:class:: Sink
+
+   Bases: :py:obj:`abc.ABC`
+
+
+   The mechanism by which detected features are sent to their destination.
+
+
+   .. py:method:: __str__() -> str
+
+
+   .. py:method:: name() -> str
+      :staticmethod:
+
+      :abstractmethod:
+
+
+      The name of the sink.
+
+      :return: str = the output name
+
+
+
+   .. py:property:: mode
+      :type: aws.osml.model_runner.api.SinkMode
+
+      :abstractmethod:
+
+
+      The write mode of the sink. Either Streaming (per tile results)
+      or Aggregate (per image results).
+
+      :return: SinkMode = the type of write mode of the sink
+
+
+
+   .. py:method:: write(image_id: str, features: List[geojson.Feature]) -> bool
+      :abstractmethod:
+
+
+      Write feature list for given image id to the sink.
+
+      :param image_id: str = the unique identifier for the image
+      :param features: List[Feature] = the list of features
+
+      :return: bool = if it has been written/output successfully
+
+
+
+.. py:class:: SinkFactory
+
+   placeholder class as sink options grow to auto select and generator sinks
+
+
+   .. py:method:: outputs_to_sinks(destinations: List[Dict[str, Any]]) -> List[aws.osml.model_runner.sink.Sink]
+      :staticmethod:
+
+
+      Generated a list of sink objects based on the data structure injected into
+      from an Image Request item.
+
+      :param destinations: List[Dict[str, Any]] = destination section of an Image Request as defined
+                              in the data plane api.
+
+      :return: List[Sink] = List of Sinks objects that can be iterated on based on an image object
+
+
+
+   .. py:method:: sink_features(job_id: str, outputs: str, features: List[geojson.Feature]) -> bool
+      :staticmethod:
+
+
+      Writing the features output to S3 and/or Kinesis Stream
+
+      :param job_id: str = unique identifier for the job
+      :param outputs: str = details about the job output syncs
+      :param features: List[Features] = the list of features to update
+
+      :return: bool = if it has successfully written to an output sink
+
+
+

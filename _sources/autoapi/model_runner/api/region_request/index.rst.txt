@@ -1,0 +1,154 @@
+model_runner.api.region_request
+===============================
+
+.. py:module:: model_runner.api.region_request
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.api.region_request.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.api.region_request.RegionRequest
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:class:: RegionRequest(*initial_data: Dict[str, Any], **kwargs: Any)
+
+   Request for the Model Runner to process a region of an image.
+
+   This class contains the attributes that make up a region processing request, along with
+   constructors used to create these requests from common constructs.
+
+   Attributes:
+       region_id: The unique identifier for the region being processed.
+       image_id: The identifier for the source image from which the region is derived.
+       image_extension: The file extension of the image (e.g., .tif, .ntf).
+       job_id: The unique identifier for the image processing job.
+       image_url: The URL location of the image to be processed.
+       image_read_role: The IAM role used to read the image from the provided URL.
+       model_name: The name of the model to use for region processing.
+       model_invoke_mode: The mode in which the model is invoked, such as synchronous or asynchronous.
+       model_invocation_role: IAM role assumed for invoking the model.
+       tile_size: Dimensions of the tiles into which the region is split for processing.
+       tile_overlap: Overlap between tiles, defined in dimensions.
+       tile_format: The format of the tiles (e.g., NITF, GeoTIFF).
+       tile_compression: Compression type to use for the tiles (e.g., None, JPEG).
+       region_bounds: Bounds of the region within the image, defined as upper-left corner coordinates and dimensions.
+
+
+   .. py:attribute:: region_id
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: image_id
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: image_extension
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: job_id
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: image_url
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: image_read_role
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: model_name
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: model_invoke_mode
+      :type:  model_runner.api.inference.ModelInvokeMode
+
+
+   .. py:attribute:: model_invocation_role
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: tile_size
+      :type:  aws.osml.model_runner.common.ImageDimensions
+      :value: (1024, 1024)
+
+
+
+   .. py:attribute:: tile_overlap
+      :type:  aws.osml.model_runner.common.ImageDimensions
+      :value: (50, 50)
+
+
+
+   .. py:attribute:: tile_format
+      :type:  aws.osml.model_runner.common.ImageFormats
+
+
+   .. py:attribute:: tile_compression
+      :type:  aws.osml.model_runner.common.ImageCompression
+
+
+   .. py:attribute:: region_bounds
+      :type:  aws.osml.model_runner.common.ImageRegion
+      :value: ((0, 0), (0, 0))
+
+
+
+   .. py:method:: _set_attributes_from_data(*initial_data: Dict[str, Any], **kwargs: Any)
+
+      Sets attributes on the instance from initial data dictionaries and keyword arguments.
+
+      :param initial_data: dictionaries of attribute values.
+      :param kwargs: keyword arguments to set attributes.
+
+
+
+   .. py:method:: _set_attributes_from_dict(data: Dict[str, Any])
+
+      Helper method to set instance attributes based on a dictionary.
+
+      :param data: dictionary containing attribute-value pairs to set.
+
+
+
+   .. py:method:: is_valid() -> bool
+
+      Check to see if this request contains required attributes and meaningful values.
+
+      :return: True if the request contains all the mandatory attributes with acceptable values, False otherwise.
+
+
+

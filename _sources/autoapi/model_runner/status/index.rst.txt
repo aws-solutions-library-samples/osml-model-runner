@@ -1,0 +1,216 @@
+model_runner.status
+===================
+
+.. py:module:: model_runner.status
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/model_runner/status/base_status_monitor/index
+   /autoapi/model_runner/status/exceptions/index
+   /autoapi/model_runner/status/image_status_monitor/index
+   /autoapi/model_runner/status/region_status_monitor/index
+   /autoapi/model_runner/status/sns_helper/index
+   /autoapi/model_runner/status/status_message/index
+
+
+Exceptions
+----------
+
+.. autoapisummary::
+
+   model_runner.status.SNSPublishException
+   model_runner.status.StatusMonitorException
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.status.ImageStatusMonitor
+   model_runner.status.RegionStatusMonitor
+   model_runner.status.SNSHelper
+   model_runner.status.StatusMessage
+
+
+Package Contents
+----------------
+
+.. py:exception:: SNSPublishException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:exception:: StatusMonitorException
+
+   Bases: :py:obj:`Exception`
+
+
+   Common base class for all non-exit exceptions.
+
+
+.. py:class:: ImageStatusMonitor(image_status_topic: str)
+
+   Bases: :py:obj:`model_runner.status.base_status_monitor.BaseStatusMonitor`
+
+
+   ImageStatusMonitor is responsible for monitoring and publishing the status of image processing requests.
+
+   This class uses Amazon SNS to publish updates on image request status, including success, partial success,
+   failure, and progress. It interacts with JobItem data to determine the current status of the request and logs
+   important status changes.
+
+
+   .. py:method:: process_event(image_request_item: aws.osml.model_runner.database.job_table.JobItem, status: aws.osml.model_runner.common.RequestStatus, message: str) -> None
+
+      Publishes the status message via SNS for image requests.
+
+      This method publishes status updates for a specific image request by creating an SNS message and logging
+      the event. If the required fields (job_id, image_id, processing_duration) are present in the request item,
+      it sends a message using the StatusMessage class.
+
+      :param image_request_item: JobItem = The image request for which the status is being updated.
+      :param status: RequestStatus = The current status of the image request.
+      :param message: str = A message describing the reason for the status update.
+
+      :return: None
+
+      :raises StatusMonitorException: Raised if the request item is missing required fields or if SNS publication fails.
+
+
+
+   .. py:method:: get_status(request_item: aws.osml.model_runner.database.job_table.JobItem) -> aws.osml.model_runner.common.RequestStatus
+
+      Determines the current status of an image request.
+
+      This method evaluates the success and error counts for regions in the image request and returns the
+      appropriate status: SUCCESS, PARTIAL, FAILED, or IN_PROGRESS.
+
+      :param request_item: JobItem = The image request item containing region processing information.
+
+      :return: RequestStatus = The status of the image request based on the region counts.
+
+
+
+.. py:class:: RegionStatusMonitor(region_status_topic: str)
+
+   Bases: :py:obj:`model_runner.status.base_status_monitor.BaseStatusMonitor`
+
+
+   RegionStatusMonitor is responsible for monitoring and publishing the status of region processing requests.
+
+   This class uses Amazon SNS to publish updates on the status of region requests, including success, partial success,
+   and failure. It interacts with RegionRequestItem data to determine the current status of the request and logs
+   important status changes.
+
+
+   .. py:method:: process_event(region_request_item: aws.osml.model_runner.database.region_request_table.RegionRequestItem, status: aws.osml.model_runner.common.RequestStatus, message: str) -> None
+
+      Publishes the status message via SNS for region requests.
+
+      This method publishes status updates for a specific region request by creating an SNS message and logging
+      the event. If the required fields (job_id, image_id, region_id, processing_duration) are present in the request item,
+      it sends a message using the StatusMessage class.
+
+      :param region_request_item: RegionRequestItem = The region request for which the status is being updated.
+      :param status: RequestStatus = The current status of the region request.
+      :param message: str = A message describing the reason for the status update.
+
+      :return: None
+
+      :raises StatusMonitorException: Raised if the request item is missing required fields or if SNS publication fails.
+
+
+
+   .. py:method:: get_status(request_item: aws.osml.model_runner.database.region_request_table.RegionRequestItem) -> aws.osml.model_runner.common.RequestStatus
+
+      Determines the current status of a region request.
+
+      This method evaluates the total tiles and failed tile counts for regions in the request and returns the
+      appropriate status: SUCCESS, PARTIAL, or FAILED.
+
+      :param request_item: RegionRequestItem = The region request item containing tile processing information.
+
+      :return: RequestStatus = The status of the region request based on the tile counts.
+
+
+
+.. py:class:: SNSHelper(topic_arn: Optional[str])
+
+   Encapsulates Amazon SNS topic functions.
+
+
+   .. py:attribute:: sns_client
+
+
+   .. py:attribute:: topic_arn
+
+
+   .. py:method:: publish_message(message: str, attributes: Dict[str, Any]) -> Optional[str]
+
+      Publishes a message, with attributes, to a topic. Subscriptions can be filtered
+      based on message attributes so that a subscription receives messages only
+      when specified attributes are present.
+
+      :param message: str = the message to publish.
+      :param attributes: Dict[str, Any] = the key-value attributes to attach to the message. Values
+                         must be either `str` or `bytes`.
+
+      :return: Optional[str] The ID of the message.
+
+
+
+.. py:class:: StatusMessage
+
+   .. py:attribute:: status
+      :type:  aws.osml.model_runner.common.RequestStatus
+
+
+   .. py:attribute:: job_id
+      :type:  str
+
+
+   .. py:attribute:: image_status
+      :type:  Optional[aws.osml.model_runner.common.RequestStatus]
+      :value: None
+
+
+
+   .. py:attribute:: image_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: region_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: processing_duration
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: failed_tiles
+      :type:  Optional[List[List[List[int]]]]
+      :value: None
+
+
+
+   .. py:method:: asdict_str_values() -> Dict[str, str]
+
+
+   .. py:method:: asdict() -> dict
+
+

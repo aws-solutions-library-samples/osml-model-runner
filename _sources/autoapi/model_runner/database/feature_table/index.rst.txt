@@ -1,0 +1,160 @@
+model_runner.database.feature_table
+===================================
+
+.. py:module:: model_runner.database.feature_table
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.database.feature_table.logger
+   model_runner.database.feature_table.parser
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.database.feature_table.FeatureItem
+   model_runner.database.feature_table.FeatureTable
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   model_runner.database.feature_table.handle_json_body
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:data:: parser
+
+.. py:function:: handle_json_body(self, raw_body, shape) -> Dict[str, any]
+
+   :param self: Boto core class object.
+   :param raw_body: Raw JSON body content to be type checked.
+   :param shape: The type enforced shape to check against (none).
+   :return: The parsed body as a JSON object.
+
+
+.. py:class:: FeatureItem
+
+   Bases: :py:obj:`model_runner.database.ddb_helper.DDBItem`
+
+
+   FeatureItem is a dataclass meant to represent a single item in the FeatureTable
+   The data schema is defined as follows:
+       hash_key: str
+       range_key: str
+       tile_id: str
+       features: [str]
+       expire_time: Optional[int] = None
+
+
+   .. py:attribute:: hash_key
+      :type:  str
+
+
+   .. py:attribute:: range_key
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: tile_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: features
+      :type:  Optional[List[str]]
+      :value: None
+
+
+
+   .. py:attribute:: expire_time
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:method:: __post_init__()
+
+
+.. py:class:: FeatureTable(table_name: str, tile_size: aws.osml.model_runner.common.ImageDimensions, overlap: aws.osml.model_runner.common.ImageDimensions)
+
+   Bases: :py:obj:`model_runner.database.ddb_helper.DDBHelper`
+
+
+   .. py:attribute:: tile_size
+
+
+   .. py:attribute:: overlap
+
+
+   .. py:attribute:: hash_salt
+      :value: 50
+
+
+
+   .. py:method:: add_features(features: List[geojson.Feature], metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None)
+
+      Group all the features together and add/update an item in the DDB
+
+      :param features: The list of features to add to the DDB table.
+      :param metrics: Metrics logger to use to report metrics.
+      :return: None
+
+
+
+   .. py:method:: get_features(image_id: str, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None) -> List[geojson.Feature]
+
+      Parallelized version to query the database for all items with a given image_id,
+      then convert them into feature items.
+
+      :param image_id: The image_id to aggregate features from DDB for.
+      :param metrics: MetricsLogger = the metrics logger to use to report metrics.
+      :return: List of features aggregated from the DDB table.
+
+
+
+   .. py:method:: group_features_by_key(features: List[geojson.Feature]) -> Dict[str, List[geojson.Feature]]
+
+      Group all the feature items by key
+
+      :param features: The list of features
+
+      :return: Map of keys containing a list of features
+
+
+
+   .. py:method:: generate_tile_key(feature: geojson.Feature) -> str
+
+      Generate the tile key based on the given feature.
+
+      :param feature: Properties of a feature
+      :return: The tile key associated with this list of features.
+
+
+
+   .. py:method:: aggregate_features(image_request_item: model_runner.database.job_table.JobItem, metrics: aws_embedded_metrics.logger.metrics_logger.MetricsLogger = None) -> List[geojson.Feature]
+
+      For a given image processing job - aggregate all the features that were collected for it and
+      put them in the correct output sink locations.
+
+      :param image_request_item: JobItem = the image request
+      :param metrics: the current metrics scope
+
+      :return: List[geojson.Feature] = the list of features
+
+
+

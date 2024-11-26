@@ -1,0 +1,36 @@
+model_runner.inference.endpoint_builder
+=======================================
+
+.. py:module:: model_runner.inference.endpoint_builder
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.inference.endpoint_builder.FeatureEndpointBuilder
+
+
+Module Contents
+---------------
+
+.. py:class:: FeatureEndpointBuilder
+
+   Bases: :py:obj:`abc.ABC`
+
+
+   This is an abstract base for all classes to construct Detectors for various types of endpoints.
+
+
+   .. py:method:: build() -> Optional[model_runner.inference.detector.Detector]
+      :abstractmethod:
+
+
+      Constructs the sensor model from the available information. Note that in cases where not enough information is
+      available to provide any solution, this method will return None.
+
+      :return: Optional[Detector] = the detector to generate features based on the provided build data
+
+
+

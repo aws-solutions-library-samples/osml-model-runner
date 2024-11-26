@@ -1,0 +1,7 @@
+aws.osml.model\_runner.sink.s3\_sink module
+===========================================
+
+.. automodule:: aws.osml.model_runner.sink.s3_sink
+   :members:
+   :undoc-members:
+   :show-inheritance:

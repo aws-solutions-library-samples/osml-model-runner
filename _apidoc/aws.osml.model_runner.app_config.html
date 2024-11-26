@@ -1,0 +1,384 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.app_config module &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.app_config module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_apidoc/aws.osml.model_runner.app_config.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-aws.osml.model_runner.app_config">
+<span id="aws-osml-model-runner-app-config-module"></span><h1>aws.osml.model_runner.app_config module<a class="headerlink" href="#module-aws.osml.model_runner.app_config" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.app_config.</span></span><span class="sig-name descname"><span class="pre">ServiceConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aws_region</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'us-west-2'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'TEST-JOB-TABLE'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region_request_table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'TEST-REGION-REQUEST-TABLE'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'TEST-FEATURE-TABLE'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_queue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'TEST-IMAGE-QUEUE'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region_queue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'TEST-REGION-QUEUE'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workers_per_cpu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'4'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elevation_data_location</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elevation_data_extension</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.tif'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elevation_data_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'1arc_v3'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_status_topic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'TEST-IMAGE-STATUS-TOPIC'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region_status_topic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'TEST-REGION-STATUS-TOPIC'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cp_api_endpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">self_throttling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'(10240,</span> <span class="pre">10240)'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">throttling_vcpu_scale_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'10'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">throttling_retry_timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'10'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kinesis_max_record_per_batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'500'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kinesis_max_record_size_batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'5242880'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kinesis_max_record_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'1048576'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ddb_max_item_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'200000'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/aws/osml/model_runner/app_config.html#ServiceConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>ServiceConfig is a dataclass meant to house the high-level configuration settings required for Model Runner to
+operate that are provided through ENV variables. Note that required env parameters are enforced by the implied
+schema validation as os.environ[] is used to fetch the values. Optional parameters are fetched using, os.getenv(),
+which returns None.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.aws_region">
+<span class="sig-name descname"><span class="pre">aws_region</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'us-west-2'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.aws_region" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.job_table">
+<span class="sig-name descname"><span class="pre">job_table</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TEST-JOB-TABLE'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.job_table" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.region_request_table">
+<span class="sig-name descname"><span class="pre">region_request_table</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TEST-REGION-REQUEST-TABLE'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.region_request_table" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.endpoint_statistics_table">
+<span class="sig-name descname"><span class="pre">endpoint_statistics_table</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TEST-ENDPOINT-STATS-TABLE'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.endpoint_statistics_table" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.feature_table">
+<span class="sig-name descname"><span class="pre">feature_table</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TEST-FEATURE-TABLE'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.feature_table" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.image_queue">
+<span class="sig-name descname"><span class="pre">image_queue</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TEST-IMAGE-QUEUE'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.image_queue" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.region_queue">
+<span class="sig-name descname"><span class="pre">region_queue</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TEST-REGION-QUEUE'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.region_queue" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.workers_per_cpu">
+<span class="sig-name descname"><span class="pre">workers_per_cpu</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'1'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.workers_per_cpu" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.workers">
+<span class="sig-name descname"><span class="pre">workers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'4'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.workers" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.elevation_data_location">
+<span class="sig-name descname"><span class="pre">elevation_data_location</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.elevation_data_location" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.elevation_data_extension">
+<span class="sig-name descname"><span class="pre">elevation_data_extension</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'.tif'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.elevation_data_extension" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.elevation_data_version">
+<span class="sig-name descname"><span class="pre">elevation_data_version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'1arc_v3'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.elevation_data_version" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.elevation_model">
+<span class="sig-name descname"><span class="pre">elevation_model</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ElevationModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.elevation_model" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.image_status_topic">
+<span class="sig-name descname"><span class="pre">image_status_topic</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TEST-IMAGE-STATUS-TOPIC'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.image_status_topic" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.region_status_topic">
+<span class="sig-name descname"><span class="pre">region_status_topic</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TEST-REGION-STATUS-TOPIC'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.region_status_topic" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.cp_api_endpoint">
+<span class="sig-name descname"><span class="pre">cp_api_endpoint</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.cp_api_endpoint" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.self_throttling">
+<span class="sig-name descname"><span class="pre">self_throttling</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.self_throttling" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.region_size">
+<span class="sig-name descname"><span class="pre">region_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'(10240,</span> <span class="pre">10240)'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.region_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.throttling_vcpu_scale_factor">
+<span class="sig-name descname"><span class="pre">throttling_vcpu_scale_factor</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'10'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.throttling_vcpu_scale_factor" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.throttling_retry_timeout">
+<span class="sig-name descname"><span class="pre">throttling_retry_timeout</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'10'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.throttling_retry_timeout" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.kinesis_max_record_per_batch">
+<span class="sig-name descname"><span class="pre">kinesis_max_record_per_batch</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'500'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.kinesis_max_record_per_batch" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.kinesis_max_record_size_batch">
+<span class="sig-name descname"><span class="pre">kinesis_max_record_size_batch</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'5242880'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.kinesis_max_record_size_batch" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.kinesis_max_record_size">
+<span class="sig-name descname"><span class="pre">kinesis_max_record_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'1048576'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.kinesis_max_record_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.ddb_max_item_size">
+<span class="sig-name descname"><span class="pre">ddb_max_item_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'200000'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.ddb_max_item_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.metrics_config">
+<span class="sig-name descname"><span class="pre">metrics_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Configuration</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.metrics_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.create_elevation_model">
+<span class="sig-name descname"><span class="pre">create_elevation_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ElevationModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/app_config.html#ServiceConfig.create_elevation_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.create_elevation_model" title="Link to this definition"></a></dt>
+<dd><p>Create an elevation model if the relevant options are set in the service configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[ElevationModel] = the elevation model or None if not configured</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.ServiceConfig.configure_metrics">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">configure_metrics</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/aws/osml/model_runner/app_config.html#ServiceConfig.configure_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.app_config.ServiceConfig.configure_metrics" title="Link to this definition"></a></dt>
+<dd><p>Embedded metrics configuration</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.BotoConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.app_config.</span></span><span class="sig-name descname"><span class="pre">BotoConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default:</span> <span class="pre">~botocore.config.Config</span> <span class="pre">=</span> <span class="pre">&lt;botocore.config.Config</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sagemaker:</span> <span class="pre">~botocore.config.Config</span> <span class="pre">=</span> <span class="pre">&lt;botocore.config.Config</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ddb:</span> <span class="pre">~botocore.config.Config</span> <span class="pre">=</span> <span class="pre">&lt;botocore.config.Config</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/aws/osml/model_runner/app_config.html#BotoConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.app_config.BotoConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>BotoConfig is a dataclass meant to vend our application the set of boto client configurations required for OSML</p>
+<p>The data schema is defined as follows:
+default:  (Config) the standard boto client configuration
+sagemaker: (Config) the sagemaker specific boto client configuration</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.BotoConfig.default">
+<span class="sig-name descname"><span class="pre">default</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Config</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;botocore.config.Config</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.BotoConfig.default" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.BotoConfig.sagemaker">
+<span class="sig-name descname"><span class="pre">sagemaker</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Config</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;botocore.config.Config</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.BotoConfig.sagemaker" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.BotoConfig.ddb">
+<span class="sig-name descname"><span class="pre">ddb</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Config</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;botocore.config.Config</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.BotoConfig.ddb" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.MetricLabels">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.app_config.</span></span><span class="sig-name descname"><span class="pre">MetricLabels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/aws/osml/model_runner/app_config.html#MetricLabels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.app_config.MetricLabels" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a></p>
+<p>Enumeration defining the metric labels used by OSML</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.MetricLabels.DURATION">
+<span class="sig-name descname"><span class="pre">DURATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Duration'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.MetricLabels.DURATION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.MetricLabels.INVOCATIONS">
+<span class="sig-name descname"><span class="pre">INVOCATIONS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Invocations'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.MetricLabels.INVOCATIONS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.MetricLabels.ERRORS">
+<span class="sig-name descname"><span class="pre">ERRORS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Errors'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.MetricLabels.ERRORS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.MetricLabels.THROTTLES">
+<span class="sig-name descname"><span class="pre">THROTTLES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Throttles'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.MetricLabels.THROTTLES" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.MetricLabels.RETRIES">
+<span class="sig-name descname"><span class="pre">RETRIES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Retries'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.MetricLabels.RETRIES" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.MetricLabels.OPERATION_DIMENSION">
+<span class="sig-name descname"><span class="pre">OPERATION_DIMENSION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Operation'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.MetricLabels.OPERATION_DIMENSION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.MetricLabels.MODEL_NAME_DIMENSION">
+<span class="sig-name descname"><span class="pre">MODEL_NAME_DIMENSION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ModelName'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.MetricLabels.MODEL_NAME_DIMENSION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.MetricLabels.INPUT_FORMAT_DIMENSION">
+<span class="sig-name descname"><span class="pre">INPUT_FORMAT_DIMENSION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'InputFormat'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.MetricLabels.INPUT_FORMAT_DIMENSION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.MetricLabels.IMAGE_PROCESSING_OPERATION">
+<span class="sig-name descname"><span class="pre">IMAGE_PROCESSING_OPERATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ImageProcessing'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.MetricLabels.IMAGE_PROCESSING_OPERATION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.MetricLabels.REGION_PROCESSING_OPERATION">
+<span class="sig-name descname"><span class="pre">REGION_PROCESSING_OPERATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'RegionProcessing'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.MetricLabels.REGION_PROCESSING_OPERATION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.MetricLabels.TILE_GENERATION_OPERATION">
+<span class="sig-name descname"><span class="pre">TILE_GENERATION_OPERATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TileGeneration'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.MetricLabels.TILE_GENERATION_OPERATION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.MetricLabels.TILE_PROCESSING_OPERATION">
+<span class="sig-name descname"><span class="pre">TILE_PROCESSING_OPERATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TileProcessing'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.MetricLabels.TILE_PROCESSING_OPERATION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.MetricLabels.MODEL_INVOCATION_OPERATION">
+<span class="sig-name descname"><span class="pre">MODEL_INVOCATION_OPERATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ModelInvocation'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.MetricLabels.MODEL_INVOCATION_OPERATION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.MetricLabels.FEATURE_REFINEMENT_OPERATION">
+<span class="sig-name descname"><span class="pre">FEATURE_REFINEMENT_OPERATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'FeatureRefinement'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.MetricLabels.FEATURE_REFINEMENT_OPERATION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.MetricLabels.FEATURE_STORAGE_OPERATION">
+<span class="sig-name descname"><span class="pre">FEATURE_STORAGE_OPERATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'FeatureStorage'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.MetricLabels.FEATURE_STORAGE_OPERATION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.MetricLabels.FEATURE_AGG_OPERATION">
+<span class="sig-name descname"><span class="pre">FEATURE_AGG_OPERATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'FeatureAggregation'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.MetricLabels.FEATURE_AGG_OPERATION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.MetricLabels.FEATURE_SELECTION_OPERATION">
+<span class="sig-name descname"><span class="pre">FEATURE_SELECTION_OPERATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'FeatureSelection'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.MetricLabels.FEATURE_SELECTION_OPERATION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.app_config.MetricLabels.FEATURE_DISSEMINATE_OPERATION">
+<span class="sig-name descname"><span class="pre">FEATURE_DISSEMINATE_OPERATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'FeatureDissemination'</span></em><a class="headerlink" href="#aws.osml.model_runner.app_config.MetricLabels.FEATURE_DISSEMINATE_OPERATION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

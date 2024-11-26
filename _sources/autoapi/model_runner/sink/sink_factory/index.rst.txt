@@ -1,0 +1,60 @@
+model_runner.sink.sink_factory
+==============================
+
+.. py:module:: model_runner.sink.sink_factory
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.sink.sink_factory.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.sink.sink_factory.SinkFactory
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:class:: SinkFactory
+
+   placeholder class as sink options grow to auto select and generator sinks
+
+
+   .. py:method:: outputs_to_sinks(destinations: List[Dict[str, Any]]) -> List[aws.osml.model_runner.sink.Sink]
+      :staticmethod:
+
+
+      Generated a list of sink objects based on the data structure injected into
+      from an Image Request item.
+
+      :param destinations: List[Dict[str, Any]] = destination section of an Image Request as defined
+                              in the data plane api.
+
+      :return: List[Sink] = List of Sinks objects that can be iterated on based on an image object
+
+
+
+   .. py:method:: sink_features(job_id: str, outputs: str, features: List[geojson.Feature]) -> bool
+      :staticmethod:
+
+
+      Writing the features output to S3 and/or Kinesis Stream
+
+      :param job_id: str = unique identifier for the job
+      :param outputs: str = details about the job output syncs
+      :param features: List[Features] = the list of features to update
+
+      :return: bool = if it has successfully written to an output sink
+
+
+

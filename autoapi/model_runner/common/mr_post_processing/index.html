@@ -1,0 +1,449 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>model_runner.common.mr_post_processing &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="model_runner.common.timer" href="../timer/index.html" />
+    <link rel="prev" title="model_runner.common.log_context" href="../log_context/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">model_runner</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../index.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../api/index.html">model_runner.api</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../app_config/index.html">model_runner.app_config</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../index.html">model_runner.common</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../database/index.html">model_runner.database</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../exceptions/index.html">model_runner.exceptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../image_request_handler/index.html">model_runner.image_request_handler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../inference/index.html">model_runner.inference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../model_runner/index.html">model_runner.model_runner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../queue/index.html">model_runner.queue</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../region_request_handler/index.html">model_runner.region_request_handler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../sink/index.html">model_runner.sink</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../status/index.html">model_runner.status</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../tile_worker/index.html">model_runner.tile_worker</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../index.html#classes">Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../index.html#package-contents">Package Contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">model_runner</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">model_runner.common</a></li>
+      <li class="breadcrumb-item active">model_runner.common.mr_post_processing</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/autoapi/model_runner/common/mr_post_processing/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-model_runner.common.mr_post_processing">
+<span id="model-runner-common-mr-post-processing"></span><h1>model_runner.common.mr_post_processing<a class="headerlink" href="#module-model_runner.common.mr_post_processing" title="Link to this heading"></a></h1>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.common.mr_post_processing.ABCEnumMeta" title="model_runner.common.mr_post_processing.ABCEnumMeta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ABCEnumMeta</span></code></a></p></td>
+<td><p>A metaclass combining ABCMeta and EnumMeta, used as a base for creating</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#model_runner.common.mr_post_processing.MRPostProcessingAlgorithmType" title="model_runner.common.mr_post_processing.MRPostProcessingAlgorithmType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MRPostProcessingAlgorithmType</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType" title="model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureDistillationAlgorithmType</span></code></a></p></td>
+<td><p>Enum for defining different feature distillation algorithms used in post-processing.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#model_runner.common.mr_post_processing.MRPostprocessingStep" title="model_runner.common.mr_post_processing.MRPostprocessingStep"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MRPostprocessingStep</span></code></a></p></td>
+<td><p>Enum defining available steps for MR post-processing.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.common.mr_post_processing.MRPostProcessingAlgorithm" title="model_runner.common.mr_post_processing.MRPostProcessingAlgorithm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MRPostProcessingAlgorithm</span></code></a></p></td>
+<td><p>Abstract base class representing a generic MR post-processing algorithm.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#model_runner.common.mr_post_processing.FeatureDistillationAlgorithm" title="model_runner.common.mr_post_processing.FeatureDistillationAlgorithm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureDistillationAlgorithm</span></code></a></p></td>
+<td><p>Generic FeatureDistillationAlgorithm class that is designed to be extended for each specific algorithm.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.common.mr_post_processing.FeatureDistillationNMS" title="model_runner.common.mr_post_processing.FeatureDistillationNMS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureDistillationNMS</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#model_runner.common.mr_post_processing.FeatureDistillationSoftNMS" title="model_runner.common.mr_post_processing.FeatureDistillationSoftNMS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureDistillationSoftNMS</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.common.mr_post_processing.MRPostProcessing" title="model_runner.common.mr_post_processing.MRPostProcessing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MRPostProcessing</span></code></a></p></td>
+<td><p>Represents an operation for MR post-processing.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#model_runner.common.mr_post_processing.PostProcessingDeserializer" title="model_runner.common.mr_post_processing.PostProcessingDeserializer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PostProcessingDeserializer</span></code></a></p></td>
+<td><p>Abstract post-processing deserializer that defines a deserialize method.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.common.mr_post_processing.FeatureDistillationDeserializer" title="model_runner.common.mr_post_processing.FeatureDistillationDeserializer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureDistillationDeserializer</span></code></a></p></td>
+<td><p>Provides static methods for deserializing feature distillation algorithms from a dictionary.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#model_runner.common.mr_post_processing.MRPostProcessingDeserializer" title="model_runner.common.mr_post_processing.MRPostProcessingDeserializer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MRPostProcessingDeserializer</span></code></a></p></td>
+<td><p>Provides static method for obtaining the appropriate deserializer based on the post-processing step.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.common.mr_post_processing.deserialize_post_processing_list" title="model_runner.common.mr_post_processing.deserialize_post_processing_list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">deserialize_post_processing_list</span></code></a>(→ List[MRPostProcessing])</p></td>
+<td><p>Deserializes a list of MR post-processing steps and algorithms from a list of dictionaries.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#model_runner.common.mr_post_processing.mr_post_processing_options_factory" title="model_runner.common.mr_post_processing.mr_post_processing_options_factory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mr_post_processing_options_factory</span></code></a>(→ Dict)</p></td>
+<td><p>Factory function for converting dataclass instances to dictionaries.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.ABCEnumMeta">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">ABCEnumMeta</span></span><a class="headerlink" href="#model_runner.common.mr_post_processing.ABCEnumMeta" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABCMeta" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">abc.ABCMeta</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">enum.EnumMeta</span></code></p>
+<p>A metaclass combining ABCMeta and EnumMeta, used as a base for creating
+enums for MRPostProcessing algorithm types. It ensures that the derived enums
+are both Enums and ABCs, enabling type checks and abstract method enforcement.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.ABCEnumMeta.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#model_runner.common.mr_post_processing.ABCEnumMeta.__call__" title="Link to this definition"></a></dt>
+<dd><p>Either returns an existing member, or creates a new enum class.</p>
+<p>This method is used both when an enum class is given a value to match
+to an enumeration member (i.e. Color(3)) and for the functional API
+(i.e. Color = Enum(‘Color’, names=’RED GREEN BLUE’)).</p>
+<p>When used for the functional API:</p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">value</span></code> will be the name of the new class.</p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">names</span></code> should be either a string of white-space/comma delimited names
+(values will start at <code class="xref py py-obj docutils literal notranslate"><span class="pre">start</span></code>), or an iterator/mapping of name, value pairs.</p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">module</span></code> should be set to the module this class is being created in;
+if it is not set, an attempt to find that module will be made, but if
+it fails the class will not be picklable.</p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">qualname</span></code> should be set to the actual location this class can be found
+at in its module; by default it is set to the global scope.  If this is
+not correct, unpickling will fail in some circumstances.</p>
+<p><a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code></a>, if set, will be mixed in as the first base class.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.MRPostProcessingAlgorithmType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">MRPostProcessingAlgorithmType</span></span><a class="headerlink" href="#model_runner.common.mr_post_processing.MRPostProcessingAlgorithmType" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="../auto_string_enum/index.html#model_runner.common.auto_string_enum.AutoStringEnum" title="model_runner.common.auto_string_enum.AutoStringEnum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_runner.common.auto_string_enum.AutoStringEnum</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">FeatureDistillationAlgorithmType</span></span><a class="headerlink" href="#model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference internal" href="#model_runner.common.mr_post_processing.MRPostProcessingAlgorithmType" title="model_runner.common.mr_post_processing.MRPostProcessingAlgorithmType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MRPostProcessingAlgorithmType</span></code></a></p>
+<p>Enum for defining different feature distillation algorithms used in post-processing.
+Each member represents a specific algorithm for entity selection or fusion.
+NMS: Non-maximum Suppression
+SOFT_NMS: Variant of NMS (<a class="reference external" href="https://arxiv.org/abs/1704.04503">https://arxiv.org/abs/1704.04503</a>). This implementation is gaussian Soft-NMS,</p>
+<blockquote>
+<div><p>as opposed to linear.</p>
+</div></blockquote>
+<p>NMW: Non-maximum weighted
+WBF: Weighted boxes fusion</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType.NMS">
+<span class="sig-name descname"><span class="pre">NMS</span></span><a class="headerlink" href="#model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType.NMS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType.SOFT_NMS">
+<span class="sig-name descname"><span class="pre">SOFT_NMS</span></span><a class="headerlink" href="#model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType.SOFT_NMS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.MRPostprocessingStep">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">MRPostprocessingStep</span></span><a class="headerlink" href="#model_runner.common.mr_post_processing.MRPostprocessingStep" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference internal" href="../auto_string_enum/index.html#model_runner.common.auto_string_enum.AutoStringEnum" title="model_runner.common.auto_string_enum.AutoStringEnum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_runner.common.auto_string_enum.AutoStringEnum</span></code></a></p>
+<p>Enum defining available steps for MR post-processing.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.MRPostprocessingStep.FEATURE_DISTILLATION">
+<span class="sig-name descname"><span class="pre">FEATURE_DISTILLATION</span></span><a class="headerlink" href="#model_runner.common.mr_post_processing.MRPostprocessingStep.FEATURE_DISTILLATION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.MRPostProcessingAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">MRPostProcessingAlgorithm</span></span><a class="headerlink" href="#model_runner.common.mr_post_processing.MRPostProcessingAlgorithm" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>Abstract base class representing a generic MR post-processing algorithm.
+:param algorithm_type: The type of the algorithm, represented by a specific enum.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.MRPostProcessingAlgorithm.algorithm_type">
+<span class="sig-name descname"><span class="pre">algorithm_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#model_runner.common.mr_post_processing.MRPostProcessingAlgorithmType" title="model_runner.common.mr_post_processing.MRPostProcessingAlgorithmType"><span class="pre">MRPostProcessingAlgorithmType</span></a></em><a class="headerlink" href="#model_runner.common.mr_post_processing.MRPostProcessingAlgorithm.algorithm_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.FeatureDistillationAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">FeatureDistillationAlgorithm</span></span><a class="headerlink" href="#model_runner.common.mr_post_processing.FeatureDistillationAlgorithm" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#model_runner.common.mr_post_processing.MRPostProcessingAlgorithm" title="model_runner.common.mr_post_processing.MRPostProcessingAlgorithm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MRPostProcessingAlgorithm</span></code></a></p>
+<p>Generic FeatureDistillationAlgorithm class that is designed to be extended for each specific algorithm.
+:property algorithm_type: FeatureSelectionAlgorithmType = algorithm to use to combine object detections
+:property iou_threshold: float = intersection over union threshold</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>if greater than this value boxes are considered the same</p></li>
+</ul>
+</div></blockquote>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.FeatureDistillationAlgorithm.algorithm_type">
+<span class="sig-name descname"><span class="pre">algorithm_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType" title="model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType"><span class="pre">FeatureDistillationAlgorithmType</span></a></em><a class="headerlink" href="#model_runner.common.mr_post_processing.FeatureDistillationAlgorithm.algorithm_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.FeatureDistillationAlgorithm.iou_threshold">
+<span class="sig-name descname"><span class="pre">iou_threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><a class="headerlink" href="#model_runner.common.mr_post_processing.FeatureDistillationAlgorithm.iou_threshold" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.FeatureDistillationNMS">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">FeatureDistillationNMS</span></span><a class="headerlink" href="#model_runner.common.mr_post_processing.FeatureDistillationNMS" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#model_runner.common.mr_post_processing.FeatureDistillationAlgorithm" title="model_runner.common.mr_post_processing.FeatureDistillationAlgorithm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureDistillationAlgorithm</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Property algorithm_type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>FeatureSelectionAlgorithmType = algorithm to use to combine object detections</p>
+</dd>
+<dt class="field-even">Property iou_threshold<span class="colon">:</span></dt>
+<dd class="field-even"><p>float = intersection over union threshold
+- if greater than this value boxes are considered the same</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.FeatureDistillationNMS.algorithm_type">
+<span class="sig-name descname"><span class="pre">algorithm_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType" title="model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType"><span class="pre">FeatureDistillationAlgorithmType</span></a></em><a class="headerlink" href="#model_runner.common.mr_post_processing.FeatureDistillationNMS.algorithm_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.FeatureDistillationNMS.iou_threshold">
+<span class="sig-name descname"><span class="pre">iou_threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><a class="headerlink" href="#model_runner.common.mr_post_processing.FeatureDistillationNMS.iou_threshold" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.FeatureDistillationSoftNMS">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">FeatureDistillationSoftNMS</span></span><a class="headerlink" href="#model_runner.common.mr_post_processing.FeatureDistillationSoftNMS" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#model_runner.common.mr_post_processing.FeatureDistillationAlgorithm" title="model_runner.common.mr_post_processing.FeatureDistillationAlgorithm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureDistillationAlgorithm</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Property algorithm_type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>FeatureSelectionAlgorithmType = algorithm to use to combine object detections</p>
+</dd>
+<dt class="field-even">Property iou_threshold<span class="colon">:</span></dt>
+<dd class="field-even"><p>float = intersection over union threshold
+- if greater than this value boxes are considered the same</p>
+</dd>
+<dt class="field-odd">Property skip_box_threshold<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float = boxes with a confidence below this threshold value are skipped</p>
+</dd>
+<dt class="field-even">Property sigma<span class="colon">:</span></dt>
+<dd class="field-even"><p>float = value - only applies to Soft NMS</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.FeatureDistillationSoftNMS.algorithm_type">
+<span class="sig-name descname"><span class="pre">algorithm_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType" title="model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType"><span class="pre">FeatureDistillationAlgorithmType</span></a></em><a class="headerlink" href="#model_runner.common.mr_post_processing.FeatureDistillationSoftNMS.algorithm_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.FeatureDistillationSoftNMS.iou_threshold">
+<span class="sig-name descname"><span class="pre">iou_threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><a class="headerlink" href="#model_runner.common.mr_post_processing.FeatureDistillationSoftNMS.iou_threshold" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.FeatureDistillationSoftNMS.skip_box_threshold">
+<span class="sig-name descname"><span class="pre">skip_box_threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><a class="headerlink" href="#model_runner.common.mr_post_processing.FeatureDistillationSoftNMS.skip_box_threshold" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.FeatureDistillationSoftNMS.sigma">
+<span class="sig-name descname"><span class="pre">sigma</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><a class="headerlink" href="#model_runner.common.mr_post_processing.FeatureDistillationSoftNMS.sigma" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.MRPostProcessing">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">MRPostProcessing</span></span><a class="headerlink" href="#model_runner.common.mr_post_processing.MRPostProcessing" title="Link to this definition"></a></dt>
+<dd><p>Represents an operation for MR post-processing.
+:param step: The post-processing step (MRPostprocessingStep).
+:param algorithm: The algorithm used in this step (MRPostProcessingAlgorithm).</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.MRPostProcessing.step">
+<span class="sig-name descname"><span class="pre">step</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#model_runner.common.mr_post_processing.MRPostprocessingStep" title="model_runner.common.mr_post_processing.MRPostprocessingStep"><span class="pre">MRPostprocessingStep</span></a></em><a class="headerlink" href="#model_runner.common.mr_post_processing.MRPostProcessing.step" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.MRPostProcessing.algorithm">
+<span class="sig-name descname"><span class="pre">algorithm</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#model_runner.common.mr_post_processing.MRPostProcessingAlgorithm" title="model_runner.common.mr_post_processing.MRPostProcessingAlgorithm"><span class="pre">MRPostProcessingAlgorithm</span></a></em><a class="headerlink" href="#model_runner.common.mr_post_processing.MRPostProcessing.algorithm" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.PostProcessingDeserializer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">PostProcessingDeserializer</span></span><a class="headerlink" href="#model_runner.common.mr_post_processing.PostProcessingDeserializer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>Abstract post-processing deserializer that defines a deserialize method.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.PostProcessingDeserializer.deserialize">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">deserialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">post_processing_algorithm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#model_runner.common.mr_post_processing.MRPostProcessingAlgorithm" title="model_runner.common.mr_post_processing.MRPostProcessingAlgorithm"><span class="pre">MRPostProcessingAlgorithm</span></a></span></span><a class="headerlink" href="#model_runner.common.mr_post_processing.PostProcessingDeserializer.deserialize" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Abstractmethod<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.FeatureDistillationDeserializer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">FeatureDistillationDeserializer</span></span><a class="headerlink" href="#model_runner.common.mr_post_processing.FeatureDistillationDeserializer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#model_runner.common.mr_post_processing.PostProcessingDeserializer" title="model_runner.common.mr_post_processing.PostProcessingDeserializer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PostProcessingDeserializer</span></code></a></p>
+<p>Provides static methods for deserializing feature distillation algorithms from a dictionary.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.FeatureDistillationDeserializer.deserialize">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">deserialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">post_processing_algorithm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#model_runner.common.mr_post_processing.FeatureDistillationAlgorithm" title="model_runner.common.mr_post_processing.FeatureDistillationAlgorithm"><span class="pre">FeatureDistillationAlgorithm</span></a></span></span><a class="headerlink" href="#model_runner.common.mr_post_processing.FeatureDistillationDeserializer.deserialize" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.MRPostProcessingDeserializer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">MRPostProcessingDeserializer</span></span><a class="headerlink" href="#model_runner.common.mr_post_processing.MRPostProcessingDeserializer" title="Link to this definition"></a></dt>
+<dd><p>Provides static method for obtaining the appropriate deserializer based on the post-processing step.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.MRPostProcessingDeserializer.get_deserializer">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_deserializer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#model_runner.common.mr_post_processing.MRPostprocessingStep" title="model_runner.common.mr_post_processing.MRPostprocessingStep"><span class="pre">MRPostprocessingStep</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#model_runner.common.mr_post_processing.PostProcessingDeserializer" title="model_runner.common.mr_post_processing.PostProcessingDeserializer"><span class="pre">PostProcessingDeserializer</span></a></span></span><a class="headerlink" href="#model_runner.common.mr_post_processing.MRPostProcessingDeserializer.get_deserializer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.deserialize_post_processing_list">
+<span class="sig-prename descclassname"><span class="pre">model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">deserialize_post_processing_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mr_processing_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#model_runner.common.mr_post_processing.MRPostProcessing" title="model_runner.common.mr_post_processing.MRPostProcessing"><span class="pre">MRPostProcessing</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#model_runner.common.mr_post_processing.deserialize_post_processing_list" title="Link to this definition"></a></dt>
+<dd><p>Deserializes a list of MR post-processing steps and algorithms from a list of dictionaries.
+:param mr_processing_list: A list of dictionaries representing MR post-processing objects.
+:return: A list of MRPostProcessing objects.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="model_runner.common.mr_post_processing.mr_post_processing_options_factory">
+<span class="sig-prename descclassname"><span class="pre">model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">mr_post_processing_options_factory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="headerlink" href="#model_runner.common.mr_post_processing.mr_post_processing_options_factory" title="Link to this definition"></a></dt>
+<dd><p>Factory function for converting dataclass instances to dictionaries.
+Specifically used with MR post-processing related dataclasses.
+:param properties_list: A list of properties (key-value pairs) of a dataclass.
+:return: A dictionary representation of the dataclass.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../log_context/index.html" class="btn btn-neutral float-left" title="model_runner.common.log_context" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../timer/index.html" class="btn btn-neutral float-right" title="model_runner.common.timer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

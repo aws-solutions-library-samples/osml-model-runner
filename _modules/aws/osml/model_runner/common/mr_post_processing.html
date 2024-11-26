@@ -1,0 +1,351 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.common.mr_post_processing &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.common.mr_post_processing</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.model_runner.common.mr_post_processing</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span><span class="p">,</span> <span class="n">EnumMeta</span><span class="p">,</span> <span class="n">auto</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
+
+<span class="kn">from</span> <span class="nn">.auto_string_enum</span> <span class="kn">import</span> <span class="n">AutoStringEnum</span>
+
+
+<div class="viewcode-block" id="ABCEnumMeta">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.ABCEnumMeta">[docs]</a>
+<span class="k">class</span> <span class="nc">ABCEnumMeta</span><span class="p">(</span><span class="n">ABCMeta</span><span class="p">,</span> <span class="n">EnumMeta</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A metaclass combining ABCMeta and EnumMeta, used as a base for creating</span>
+<span class="sd">    enums for MRPostProcessing algorithm types. It ensures that the derived enums</span>
+<span class="sd">    are both Enums and ABCs, enabling type checks and abstract method enforcement.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="n">mcls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="bp">cls</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">mcls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">Enum</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">&quot;__abstractmethods__&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">&quot;__abstractmethods__&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Can&#39;t instantiate abstract class </span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> &quot;</span> <span class="sa">f</span><span class="s2">&quot;with frozen methods </span><span class="si">{</span><span class="nb">set</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">__abstractmethods__</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="MRPostProcessingAlgorithmType">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithmType">[docs]</a>
+<span class="k">class</span> <span class="nc">MRPostProcessingAlgorithmType</span><span class="p">(</span><span class="n">AutoStringEnum</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCEnumMeta</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="FeatureDistillationAlgorithmType">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType">[docs]</a>
+<span class="k">class</span> <span class="nc">FeatureDistillationAlgorithmType</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">MRPostProcessingAlgorithmType</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Enum for defining different feature distillation algorithms used in post-processing.</span>
+<span class="sd">    Each member represents a specific algorithm for entity selection or fusion.</span>
+<span class="sd">    NMS: Non-maximum Suppression</span>
+<span class="sd">    SOFT_NMS: Variant of NMS (https://arxiv.org/abs/1704.04503). This implementation is gaussian Soft-NMS,</span>
+<span class="sd">                as opposed to linear.</span>
+<span class="sd">    NMW: Non-maximum weighted</span>
+<span class="sd">    WBF: Weighted boxes fusion</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">NMS</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">SOFT_NMS</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="MRPostprocessingStep">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.MRPostprocessingStep">[docs]</a>
+<span class="k">class</span> <span class="nc">MRPostprocessingStep</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">AutoStringEnum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Enum defining available steps for MR post-processing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">FEATURE_DISTILLATION</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="MRPostProcessingAlgorithm">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithm">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">MRPostProcessingAlgorithm</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract base class representing a generic MR post-processing algorithm.</span>
+<span class="sd">    :param algorithm_type: The type of the algorithm, represented by a specific enum.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">algorithm_type</span><span class="p">:</span> <span class="n">MRPostProcessingAlgorithmType</span></div>
+
+
+
+<div class="viewcode-block" id="FeatureDistillationAlgorithm">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithm">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">FeatureDistillationAlgorithm</span><span class="p">(</span><span class="n">MRPostProcessingAlgorithm</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generic FeatureDistillationAlgorithm class that is designed to be extended for each specific algorithm.</span>
+<span class="sd">    :property algorithm_type: FeatureSelectionAlgorithmType = algorithm to use to combine object detections</span>
+<span class="sd">    :property iou_threshold: float = intersection over union threshold</span>
+<span class="sd">                                    - if greater than this value boxes are considered the same</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">algorithm_type</span><span class="p">:</span> <span class="n">FeatureDistillationAlgorithmType</span>
+    <span class="n">iou_threshold</span><span class="p">:</span> <span class="nb">float</span></div>
+
+
+
+<div class="viewcode-block" id="FeatureDistillationNMS">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationNMS">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">FeatureDistillationNMS</span><span class="p">(</span><span class="n">FeatureDistillationAlgorithm</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :property algorithm_type: FeatureSelectionAlgorithmType = algorithm to use to combine object detections</span>
+<span class="sd">    :property iou_threshold: float = intersection over union threshold</span>
+<span class="sd">                                    - if greater than this value boxes are considered the same</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">algorithm_type</span><span class="p">:</span> <span class="n">FeatureDistillationAlgorithmType</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">FeatureDistillationAlgorithmType</span><span class="o">.</span><span class="n">NMS</span><span class="p">)</span>
+    <span class="n">iou_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="FeatureDistillationSoftNMS">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationSoftNMS">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">FeatureDistillationSoftNMS</span><span class="p">(</span><span class="n">FeatureDistillationAlgorithm</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :property algorithm_type: FeatureSelectionAlgorithmType = algorithm to use to combine object detections</span>
+<span class="sd">    :property iou_threshold: float = intersection over union threshold</span>
+<span class="sd">                                    - if greater than this value boxes are considered the same</span>
+<span class="sd">    :property skip_box_threshold: float = boxes with a confidence below this threshold value are skipped</span>
+<span class="sd">    :property sigma: float = value - only applies to Soft NMS</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">algorithm_type</span><span class="p">:</span> <span class="n">FeatureDistillationAlgorithmType</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">FeatureDistillationAlgorithmType</span><span class="o">.</span><span class="n">SOFT_NMS</span><span class="p">)</span>
+    <span class="n">iou_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+    <span class="n">skip_box_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">0.0001</span><span class="p">)</span>
+    <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="MRPostProcessing">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.MRPostProcessing">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">MRPostProcessing</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents an operation for MR post-processing.</span>
+<span class="sd">    :param step: The post-processing step (MRPostprocessingStep).</span>
+<span class="sd">    :param algorithm: The algorithm used in this step (MRPostProcessingAlgorithm).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">step</span><span class="p">:</span> <span class="n">MRPostprocessingStep</span>
+    <span class="n">algorithm</span><span class="p">:</span> <span class="n">MRPostProcessingAlgorithm</span></div>
+
+
+
+<div class="viewcode-block" id="PostProcessingDeserializer">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.PostProcessingDeserializer">[docs]</a>
+<span class="k">class</span> <span class="nc">PostProcessingDeserializer</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract post-processing deserializer that defines a deserialize method.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="PostProcessingDeserializer.deserialize">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.PostProcessingDeserializer.deserialize">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">deserialize</span><span class="p">(</span><span class="n">post_processing_algorithm</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MRPostProcessingAlgorithm</span><span class="p">:</span>
+        <span class="k">pass</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="FeatureDistillationDeserializer">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationDeserializer">[docs]</a>
+<span class="k">class</span> <span class="nc">FeatureDistillationDeserializer</span><span class="p">(</span><span class="n">PostProcessingDeserializer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Provides static methods for deserializing feature distillation algorithms from a dictionary.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FeatureDistillationDeserializer.deserialize">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationDeserializer.deserialize">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">deserialize</span><span class="p">(</span><span class="n">post_processing_algorithm</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FeatureDistillationAlgorithm</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">&quot;algorithm_type&quot;</span> <span class="ow">in</span> <span class="n">post_processing_algorithm</span><span class="p">:</span>
+            <span class="n">post_processing_algorithm</span><span class="p">[</span><span class="s2">&quot;algorithm_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">FeatureDistillationAlgorithmType</span><span class="p">(</span>
+                <span class="n">post_processing_algorithm</span><span class="p">[</span><span class="s2">&quot;algorithm_type&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">post_processing_algorithm</span><span class="p">[</span><span class="s2">&quot;algorithm_type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">FeatureDistillationAlgorithmType</span><span class="o">.</span><span class="n">NMS</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">FeatureDistillationNMS</span><span class="p">(</span><span class="o">**</span><span class="n">post_processing_algorithm</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">post_processing_algorithm</span><span class="p">[</span><span class="s2">&quot;algorithm_type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">FeatureDistillationAlgorithmType</span><span class="o">.</span><span class="n">SOFT_NMS</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">FeatureDistillationSoftNMS</span><span class="p">(</span><span class="o">**</span><span class="n">post_processing_algorithm</span><span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Failed to deserialize. </span><span class="si">{</span><span class="n">post_processing_algorithm</span><span class="si">}</span><span class="s2"> is not a valid feature distillation algorithm object.&quot;</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="MRPostProcessingDeserializer">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.MRPostProcessingDeserializer">[docs]</a>
+<span class="k">class</span> <span class="nc">MRPostProcessingDeserializer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Provides static method for obtaining the appropriate deserializer based on the post-processing step.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="MRPostProcessingDeserializer.get_deserializer">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.MRPostProcessingDeserializer.get_deserializer">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_deserializer</span><span class="p">(</span><span class="n">step</span><span class="p">:</span> <span class="n">MRPostprocessingStep</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PostProcessingDeserializer</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">step</span> <span class="o">==</span> <span class="n">MRPostprocessingStep</span><span class="o">.</span><span class="n">FEATURE_DISTILLATION</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">FeatureDistillationDeserializer</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Failed to get deserializer. MR post-processing step not valid.&quot;</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="deserialize_post_processing_list">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.deserialize_post_processing_list">[docs]</a>
+<span class="k">def</span> <span class="nf">deserialize_post_processing_list</span><span class="p">(</span><span class="n">mr_processing_list</span><span class="p">:</span> <span class="n">List</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">MRPostProcessing</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Deserializes a list of MR post-processing steps and algorithms from a list of dictionaries.</span>
+<span class="sd">    :param mr_processing_list: A list of dictionaries representing MR post-processing objects.</span>
+<span class="sd">    :return: A list of MRPostProcessing objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">post_processing_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">MRPostProcessing</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">mr_processing_dict</span> <span class="ow">in</span> <span class="n">mr_processing_list</span><span class="p">:</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="n">MRPostprocessingStep</span><span class="p">(</span><span class="n">mr_processing_dict</span><span class="p">[</span><span class="s2">&quot;step&quot;</span><span class="p">])</span>
+            <span class="n">algorithm_dict</span> <span class="o">=</span> <span class="n">mr_processing_dict</span><span class="p">[</span><span class="s2">&quot;algorithm&quot;</span><span class="p">]</span>
+            <span class="n">deserializer</span> <span class="o">=</span> <span class="n">MRPostProcessingDeserializer</span><span class="p">()</span><span class="o">.</span><span class="n">get_deserializer</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+            <span class="n">post_processing_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MRPostProcessing</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">,</span> <span class="n">algorithm</span><span class="o">=</span><span class="n">deserializer</span><span class="o">.</span><span class="n">deserialize</span><span class="p">(</span><span class="n">algorithm_dict</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">post_processing_list</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">err</span></div>
+
+
+
+<div class="viewcode-block" id="mr_post_processing_options_factory">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.common.mr_post_processing.html#aws.osml.model_runner.common.mr_post_processing.mr_post_processing_options_factory">[docs]</a>
+<span class="k">def</span> <span class="nf">mr_post_processing_options_factory</span><span class="p">(</span><span class="n">properties_list</span><span class="p">:</span> <span class="n">List</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Factory function for converting dataclass instances to dictionaries.</span>
+<span class="sd">    Specifically used with MR post-processing related dataclasses.</span>
+<span class="sd">    :param properties_list: A list of properties (key-value pairs) of a dataclass.</span>
+<span class="sd">    :return: A dictionary representation of the dataclass.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">MRPostProcessingAlgorithmType</span><span class="p">)</span> <span class="k">else</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">properties_list</span><span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

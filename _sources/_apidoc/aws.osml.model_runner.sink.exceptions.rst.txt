@@ -1,0 +1,7 @@
+aws.osml.model\_runner.sink.exceptions module
+=============================================
+
+.. automodule:: aws.osml.model_runner.sink.exceptions
+   :members:
+   :undoc-members:
+   :show-inheritance:

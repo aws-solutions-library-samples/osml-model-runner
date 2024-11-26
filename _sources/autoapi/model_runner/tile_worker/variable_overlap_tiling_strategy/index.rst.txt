@@ -1,0 +1,145 @@
+model_runner.tile_worker.variable_overlap_tiling_strategy
+=========================================================
+
+.. py:module:: model_runner.tile_worker.variable_overlap_tiling_strategy
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   model_runner.tile_worker.variable_overlap_tiling_strategy.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   model_runner.tile_worker.variable_overlap_tiling_strategy.VariableOverlapTilingStrategy
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:class:: VariableOverlapTilingStrategy
+
+   Bases: :py:obj:`model_runner.tile_worker.tiling_strategy.TilingStrategy`
+
+
+   TilingStrategy defines an abstract interface for the code that determines how a large image is broken down into
+   regions and tiles.
+
+
+   .. py:method:: compute_regions(processing_bounds: model_runner.common.ImageRegion, region_size: model_runner.common.ImageDimensions, tile_size: model_runner.common.ImageDimensions, overlap: model_runner.common.ImageDimensions) -> List[model_runner.common.ImageRegion]
+
+      Identify the regions that should be created from this image.
+
+      :param processing_bounds: the bounds of the full image or area of interest in pixels ((r, c), (w, h))
+      :param region_size: the size of the regions in pixels (w, h)
+      :param tile_size: the size of the tiles in pixels (w, y)
+      :param overlap: the amount of overlap (w, h)
+
+      :return: a collection of region boundaries
+
+
+
+   .. py:method:: compute_tiles(region: model_runner.common.ImageRegion, tile_size: model_runner.common.ImageDimensions, overlap: model_runner.common.ImageDimensions) -> List[model_runner.common.ImageRegion]
+
+      Identify the tiles that should be created from this region.
+
+      :param region: the bounds of the region in pixels ((r, c), (w, h))
+      :param tile_size: the size of the tiles in pixels (w, h)
+      :param overlap: the amount of overlap (w, h)
+
+      :return: a collection of tile boundaries
+
+
+
+   .. py:method:: cleanup_duplicate_features(processing_bounds: model_runner.common.ImageRegion, region_size: model_runner.common.ImageDimensions, tile_size: model_runner.common.ImageDimensions, overlap: model_runner.common.ImageDimensions, features: List[geojson.Feature], feature_selector: model_runner.inference.FeatureSelector) -> List[geojson.Feature]
+
+      This method handles cleaning up duplicates caused by tiling by applying the feature selector to any features
+      that come from overlap regions.
+
+      :param processing_bounds: the bounds of the full image or area of interest in pixels ((r, c), (w, h))
+      :param region_size: the size of the regions in pixels (w, h)
+      :param tile_size: the size of the tiles in pixels (w, y)
+      :param overlap: the amount of overlap (w, h)
+      :param features: the collection of features to deduplicate
+      :param feature_selector: the algorithm that will be used to resolve duplicates
+
+      :return: the collection of features with duplicates removed
+
+
+
+   .. py:method:: _identify_overlap(feature: geojson.Feature, shape: Tuple[int, int], overlap: Tuple[int, int], origin: Tuple[int, int] = (0, 0)) -> Tuple[int, int, int, int]
+      :staticmethod:
+
+
+      Generate a tuple that contains the min and max indexes of adjacent tiles or regions for a given feature. If
+      the min and max values for both x and y are the same then this feature does not touch an overlap region.
+
+      :param feature: the geojson Feature that must contain properties to identify its location in an image
+      :param shape: the width, height of the area in pixels
+      :param overlap: the x, y overlap between areas in pixels
+      :param origin: the x, y coordinate of the area in relation to the full image
+
+      :return: a tuple: minx, maxx, miny, maxy that identifies any overlap.
+
+
+
+   .. py:method:: _group_features_by_overlap(features: List[geojson.Feature], shape: Tuple[int, int], overlap: Tuple[int, int], origin: Tuple[int, int] = (0, 0)) -> Dict[Tuple[int, int, int, int], List[geojson.Feature]]
+      :staticmethod:
+
+
+      Group all the feature items by tile id
+
+      :param features: List[FeatureItem] = the list of feature items
+      :param shape: the width, height of the area in pixels
+      :param overlap: the x, y overlap between areas in pixels
+      :param origin: the x, y coordinate of the area in relation to the full image
+
+      :return: a mapping of overlap id to a list of features that intersect that overlap region
+
+
+
+   .. py:method:: _calculate_overlap_for_full_tiles(full_image_size: model_runner.common.ImageDimensions, fixed_tile_size: model_runner.common.ImageDimensions, minimum_overlap: model_runner.common.ImageDimensions) -> model_runner.common.ImageDimensions
+      :staticmethod:
+
+
+      Calculate the adjusted overlap for generating full tiles.
+
+      This method adjusts the minimum overlap to ensure that tiles generated from the
+      full image will align properly, minimizing any remaining space at the edges.
+
+      :param full_image_size: The dimensions of the full image (width, height) in pixels.
+      :param fixed_tile_size: The fixed dimensions of the tiles (width, height) in pixels.
+      :param minimum_overlap: The minimum overlap (width, height) between tiles in pixels.
+
+      :return: The adjusted overlap (width, height) that should be applied to the tiles.
+
+
+
+   .. py:method:: _calculate_region_size_for_full_tiles(nominal_region_size: model_runner.common.ImageDimensions, fixed_tile_size: model_runner.common.ImageDimensions, minimum_overlap: model_runner.common.ImageDimensions) -> model_runner.common.ImageDimensions
+      :staticmethod:
+
+
+      Calculate the adjusted region size to accommodate full tiles.
+
+      This method adjusts the region size to ensure that tiles can be generated without
+      leaving any partial tiles. It considers the fixed tile size and the minimum overlap
+      between tiles.
+
+      :param nominal_region_size: The nominal region size (width, height) in pixels.
+      :param fixed_tile_size: The fixed dimensions of the tiles (width, height) in pixels.
+      :param minimum_overlap: The minimum overlap (width, height) between tiles in pixels.
+
+      :raises ValueError: If the requested overlap is greater than or equal to the tile size.
+
+      :return: The adjusted region size (width, height) that accommodates full tiles.
+
+
+

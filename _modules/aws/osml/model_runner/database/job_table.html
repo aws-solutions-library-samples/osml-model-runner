@@ -1,0 +1,394 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.database.job_table &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.database.job_table</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aws.osml.model_runner.database.job_table</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.</span>
+
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">json</span> <span class="kn">import</span> <span class="n">dumps</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">dacite</span> <span class="kn">import</span> <span class="n">from_dict</span>
+
+<span class="kn">from</span> <span class="nn">aws.osml.model_runner.api</span> <span class="kn">import</span> <span class="n">ImageRequest</span>
+
+<span class="kn">from</span> <span class="nn">.ddb_helper</span> <span class="kn">import</span> <span class="n">DDBHelper</span><span class="p">,</span> <span class="n">DDBItem</span><span class="p">,</span> <span class="n">DDBKey</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CompleteRegionException</span><span class="p">,</span>
+    <span class="n">EndImageException</span><span class="p">,</span>
+    <span class="n">GetImageRequestItemException</span><span class="p">,</span>
+    <span class="n">IsImageCompleteException</span><span class="p">,</span>
+    <span class="n">StartImageException</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="JobItem">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.job_table.html#aws.osml.model_runner.database.job_table.JobItem">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">JobItem</span><span class="p">(</span><span class="n">DDBItem</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    JobItem is a dataclass meant to represent a single item in the JobStatus table.</span>
+
+<span class="sd">    The data schema is defined as follows:</span>
+<span class="sd">    image_id: str = unique identifier for the image associated with the job</span>
+<span class="sd">    job_id: Optional[str] = unique identifier for the job</span>
+<span class="sd">    image_url: Optional[str] = S3 URL or another source location for the image</span>
+<span class="sd">    image_read_role: Optional[str] = IAM role ARN for accessing the image from its source</span>
+<span class="sd">    model_invoke_mode: Optional[str] = mode in which the model is invoked (e.g., batch or streaming)</span>
+<span class="sd">    start_time: Optional[int] = time in epoch milliseconds when the job started</span>
+<span class="sd">    expire_time: Optional[int] = time in epoch seconds when the job will expire</span>
+<span class="sd">    end_time: Optional[int] = time in epoch milliseconds when the job ended</span>
+<span class="sd">    region_success: Optional[int] = current count of regions that have successfully processed for this image</span>
+<span class="sd">    region_error: Optional[int] = current count of regions that have errored during processing</span>
+<span class="sd">    region_count: Optional[int] = total count of regions expected for this image</span>
+<span class="sd">    width: Optional[int] = width of the image in pixels</span>
+<span class="sd">    height: Optional[int] = height of the image in pixels</span>
+<span class="sd">    extents: Optional[str] = string representation of the image extents</span>
+<span class="sd">    tile_size: Optional[str] = size of the tiles used during processing</span>
+<span class="sd">    tile_overlap: Optional[str] = overlap between tiles during processing</span>
+<span class="sd">    model_name: Optional[str] = name of the model used for processing</span>
+<span class="sd">    outputs: Optional[str] = details about the job output</span>
+<span class="sd">    processing_duration: Optional[int] = time in seconds taken to complete processing</span>
+<span class="sd">    feature_properties: Optional[str] = additional feature properties or metadata from the image processing</span>
+<span class="sd">    feature_distillation_option: Optional[str] = the options used in selecting features (e.g., NMS/SOFT_NMS, thresholds)</span>
+<span class="sd">    roi_wkt: Optional[str] = a Well-Known Text (WKT) representation of the requested processing bounds</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">image_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">job_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">image_url</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">image_read_role</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">model_invoke_mode</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">start_time</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">expire_time</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">end_time</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">region_success</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">region_error</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">region_count</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">width</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">height</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">extents</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">tile_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">tile_overlap</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">model_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">outputs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">processing_duration</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">feature_properties</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">feature_distillation_option</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">roi_wkt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ddb_key</span> <span class="o">=</span> <span class="n">DDBKey</span><span class="p">(</span><span class="n">hash_key</span><span class="o">=</span><span class="s2">&quot;image_id&quot;</span><span class="p">,</span> <span class="n">hash_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image_id</span><span class="p">)</span>
+
+<div class="viewcode-block" id="JobItem.from_image_request">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.job_table.html#aws.osml.model_runner.database.job_table.JobItem.from_image_request">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_image_request</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">image_request</span><span class="p">:</span> <span class="n">ImageRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;JobItem&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a JobItem from an ImageRequest instance.</span>
+
+<span class="sd">        :param image_request: ImageRequest = The image request from which to generate the JobItem.</span>
+
+<span class="sd">        :return: JobItem = A new JobItem instance with the relevant fields populated.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">image_id</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">image_id</span><span class="p">,</span>
+            <span class="n">job_id</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">job_id</span><span class="p">,</span>
+            <span class="n">tile_size</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">image_request</span><span class="o">.</span><span class="n">tile_size</span><span class="p">),</span>
+            <span class="n">tile_overlap</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">image_request</span><span class="o">.</span><span class="n">tile_overlap</span><span class="p">),</span>
+            <span class="n">model_name</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>
+            <span class="n">model_invoke_mode</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">model_invoke_mode</span><span class="p">,</span>
+            <span class="n">outputs</span><span class="o">=</span><span class="n">dumps</span><span class="p">(</span><span class="n">image_request</span><span class="o">.</span><span class="n">outputs</span><span class="p">),</span>
+            <span class="n">image_url</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">image_url</span><span class="p">,</span>
+            <span class="n">image_read_role</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">image_read_role</span><span class="p">,</span>
+            <span class="n">feature_properties</span><span class="o">=</span><span class="n">dumps</span><span class="p">(</span><span class="n">image_request</span><span class="o">.</span><span class="n">feature_properties</span><span class="p">),</span>
+            <span class="n">roi_wkt</span><span class="o">=</span><span class="n">image_request</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">wkt</span> <span class="k">if</span> <span class="n">image_request</span><span class="o">.</span><span class="n">roi</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="JobTable">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.job_table.html#aws.osml.model_runner.database.job_table.JobTable">[docs]</a>
+<span class="k">class</span> <span class="nc">JobTable</span><span class="p">(</span><span class="n">DDBHelper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    JobTable is a class meant to help OSML with accessing and interacting with the image processing jobs we track</span>
+<span class="sd">    as part of the job status table. It extends the DDBHelper class and provides its own item data class for use when</span>
+<span class="sd">    working with items from the table. It also  sets the key for which we index on this table in the constructor.</span>
+
+<span class="sd">    :param table_name: str = the name of the table to interact with</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="JobTable.start_image_request">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.job_table.html#aws.osml.model_runner.database.job_table.JobTable.start_image_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">start_image_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_request_item</span><span class="p">:</span> <span class="n">JobItem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JobItem</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Start an image processing request for given image_id, this should be the first record for this image in the</span>
+<span class="sd">        table.</span>
+
+<span class="sd">        :param image_request_item: the unique identifier for the image we want to add to ddb</span>
+
+<span class="sd">        :return: JobItem = response from ddb</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># These records are temporary and will expire 24 hours after creation. Jobs should take</span>
+            <span class="c1"># minutes to run so this time should be conservative enough to let a team debug an urgent</span>
+            <span class="c1"># issue without leaving a ton of state leftover in the system.</span>
+            <span class="n">start_time_millisec</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span>
+            <span class="n">expire_time_epoch_sec</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">start_time_millisec</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span><span class="p">))</span>
+
+            <span class="c1"># Update the job item to have the correct start parameters</span>
+            <span class="n">image_request_item</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">start_time_millisec</span>
+            <span class="n">image_request_item</span><span class="o">.</span><span class="n">processing_duration</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">image_request_item</span><span class="o">.</span><span class="n">expire_time</span> <span class="o">=</span> <span class="n">expire_time_epoch_sec</span>
+            <span class="n">image_request_item</span><span class="o">.</span><span class="n">region_success</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">image_request_item</span><span class="o">.</span><span class="n">region_error</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="c1"># Put the item into the table</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">put_ddb_item</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">)</span>
+
+            <span class="c1"># Return the updated image request</span>
+            <span class="k">return</span> <span class="n">image_request_item</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">StartImageException</span><span class="p">(</span><span class="s2">&quot;Failed to start image processing!&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span></div>
+
+
+<div class="viewcode-block" id="JobTable.complete_region_request">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.job_table.html#aws.osml.model_runner.database.job_table.JobTable.complete_region_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">complete_region_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">error</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JobItem</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the image job to reflect that a region has succeeded or failed.</span>
+
+<span class="sd">        :param image_id: str = the unique identifier for the image we want to update</span>
+<span class="sd">        :param error: bool = if there was an error processing the region, is true else false</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Determine if we increment the success or error counts</span>
+            <span class="k">if</span> <span class="n">error</span><span class="p">:</span>
+                <span class="c1"># Build custom update expression for updating region_error in DDB</span>
+                <span class="n">update_exp</span> <span class="o">=</span> <span class="s2">&quot;SET region_error = region_error + :error_count&quot;</span>
+                <span class="c1"># Build custom update attributes for updating region_error in DDB</span>
+                <span class="n">update_attr</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;:error_count&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="mi">1</span><span class="p">)}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Build custom update expression for updating region_error in DDB</span>
+                <span class="n">update_exp</span> <span class="o">=</span> <span class="s2">&quot;SET region_success = region_success + :success_count&quot;</span>
+                <span class="c1"># Build custom update attributes for updating region_error in DDB</span>
+                <span class="n">update_attr</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;:success_count&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="mi">1</span><span class="p">)}</span>
+
+            <span class="c1"># Update item in the table and translate to a JobItem</span>
+            <span class="k">return</span> <span class="n">from_dict</span><span class="p">(</span>
+                <span class="n">JobItem</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">update_ddb_item</span><span class="p">(</span>
+                    <span class="n">ddb_item</span><span class="o">=</span><span class="n">JobItem</span><span class="p">(</span><span class="n">image_id</span><span class="o">=</span><span class="n">image_id</span><span class="p">),</span>
+                    <span class="n">update_exp</span><span class="o">=</span><span class="n">update_exp</span><span class="p">,</span>
+                    <span class="n">update_attr</span><span class="o">=</span><span class="n">update_attr</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CompleteRegionException</span><span class="p">(</span><span class="s2">&quot;Failed to complete region!&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span></div>
+
+
+<div class="viewcode-block" id="JobTable.is_image_request_complete">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.job_table.html#aws.osml.model_runner.database.job_table.JobTable.is_image_request_complete">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">is_image_request_complete</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">:</span> <span class="n">JobItem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read the table for a ddb item and determine if the image_id associated with the job has completed processing all</span>
+<span class="sd">        regions associated with that image.</span>
+
+<span class="sd">        :param image_request_item: JobItem = the unique identifier for the image we want to check if the image is completed</span>
+
+<span class="sd">        :return: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check that the image request has valid properties</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">image_request_item</span><span class="o">.</span><span class="n">region_count</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="n">image_request_item</span><span class="o">.</span><span class="n">region_success</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="n">image_request_item</span><span class="o">.</span><span class="n">region_error</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="c1"># Determine if we have completed all regions</span>
+            <span class="n">completed_regions</span> <span class="o">=</span> <span class="n">image_request_item</span><span class="o">.</span><span class="n">region_success</span> <span class="o">+</span> <span class="n">image_request_item</span><span class="o">.</span><span class="n">region_error</span>
+            <span class="k">return</span> <span class="n">image_request_item</span><span class="o">.</span><span class="n">region_count</span> <span class="o">==</span> <span class="n">completed_regions</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">IsImageCompleteException</span><span class="p">(</span><span class="s2">&quot;Failed to check if image is complete!&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="JobTable.end_image_request">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.job_table.html#aws.osml.model_runner.database.job_table.JobTable.end_image_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">end_image_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JobItem</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stop an image processing job for given image_id and record the time the job ended, this should be the last</span>
+<span class="sd">        record for this image in the table.</span>
+
+<span class="sd">        :param image_id: str = the unique identifier for the image we want to stop processing</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Get the latest item</span>
+            <span class="n">image_request_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_image_request</span><span class="p">(</span><span class="n">image_id</span><span class="p">)</span>
+
+            <span class="c1"># Give it an end time</span>
+            <span class="n">image_request_item</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span>
+
+            <span class="c1"># Update the item in the table</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_image_request</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">EndImageException</span><span class="p">(</span><span class="s2">&quot;Failed to end image!&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
+
+
+<div class="viewcode-block" id="JobTable.get_image_request">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.job_table.html#aws.osml.model_runner.database.job_table.JobTable.get_image_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_image_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JobItem</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a JobItem object from the table based on the image_id provided</span>
+
+<span class="sd">        :param image_id: str = the unique identifier for the image we want to start processing</span>
+
+<span class="sd">        :return: JobItem = updated image request item from ddb</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Retrieve job item from our table and set to expected JobItem class</span>
+            <span class="k">return</span> <span class="n">from_dict</span><span class="p">(</span><span class="n">JobItem</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ddb_item</span><span class="p">(</span><span class="n">JobItem</span><span class="p">(</span><span class="n">image_id</span><span class="o">=</span><span class="n">image_id</span><span class="p">)))</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GetImageRequestItemException</span><span class="p">(</span><span class="s2">&quot;Failed to get ImageRequestItem!&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
+
+
+<div class="viewcode-block" id="JobTable.update_image_request">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.job_table.html#aws.osml.model_runner.database.job_table.JobTable.update_image_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_image_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_request_item</span><span class="p">:</span> <span class="n">JobItem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JobItem</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a JobItem object from the table based on the image_id provided</span>
+
+<span class="sd">        :param image_request_item: JobItem =</span>
+
+<span class="sd">        :return: ImageRequestItem = updated image request item from ddb</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Update the processing time on our message</span>
+        <span class="k">if</span> <span class="n">image_request_item</span><span class="o">.</span><span class="n">start_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">image_request_item</span><span class="o">.</span><span class="n">processing_duration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_processing_duration</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">image_request_item</span><span class="o">.</span><span class="n">start_time</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">from_dict</span><span class="p">(</span><span class="n">JobItem</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_ddb_item</span><span class="p">(</span><span class="n">image_request_item</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="JobTable.get_processing_duration">
+<a class="viewcode-back" href="../../../../../_apidoc/aws.osml.model_runner.database.job_table.html#aws.osml.model_runner.database.job_table.JobTable.get_processing_duration">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_processing_duration</span><span class="p">(</span><span class="n">start_time</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="p">(</span><span class="n">start_time</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">))</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

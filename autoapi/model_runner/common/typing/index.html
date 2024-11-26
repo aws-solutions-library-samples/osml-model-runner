@@ -1,0 +1,341 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>model_runner.common.typing &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="model_runner.database" href="../../database/index.html" />
+    <link rel="prev" title="model_runner.common.timer" href="../timer/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">model_runner</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../index.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../api/index.html">model_runner.api</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../app_config/index.html">model_runner.app_config</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../index.html">model_runner.common</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../database/index.html">model_runner.database</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../exceptions/index.html">model_runner.exceptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../image_request_handler/index.html">model_runner.image_request_handler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../inference/index.html">model_runner.inference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../model_runner/index.html">model_runner.model_runner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../queue/index.html">model_runner.queue</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../region_request_handler/index.html">model_runner.region_request_handler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../sink/index.html">model_runner.sink</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../status/index.html">model_runner.status</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../tile_worker/index.html">model_runner.tile_worker</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../index.html#classes">Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../index.html#package-contents">Package Contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">model_runner</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">model_runner.common</a></li>
+      <li class="breadcrumb-item active">model_runner.common.typing</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/autoapi/model_runner/common/typing/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-model_runner.common.typing">
+<span id="model-runner-common-typing"></span><h1>model_runner.common.typing<a class="headerlink" href="#module-model_runner.common.typing" title="Link to this heading"></a></h1>
+<section id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.common.typing.ImageCoord" title="model_runner.common.typing.ImageCoord"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ImageCoord</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#model_runner.common.typing.ImageDimensions" title="model_runner.common.typing.ImageDimensions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ImageDimensions</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.common.typing.ImageRegion" title="model_runner.common.typing.ImageRegion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ImageRegion</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#model_runner.common.typing.VALID_IMAGE_COMPRESSION" title="model_runner.common.typing.VALID_IMAGE_COMPRESSION"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VALID_IMAGE_COMPRESSION</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.common.typing.VALID_IMAGE_FORMATS" title="model_runner.common.typing.VALID_IMAGE_FORMATS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VALID_IMAGE_FORMATS</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.common.typing.ImageCompression" title="model_runner.common.typing.ImageCompression"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ImageCompression</span></code></a></p></td>
+<td><p>Enumeration defining compression algorithms for image.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#model_runner.common.typing.ImageFormats" title="model_runner.common.typing.ImageFormats"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ImageFormats</span></code></a></p></td>
+<td><p>Enumeration defining image encodings.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.common.typing.RequestStatus" title="model_runner.common.typing.RequestStatus"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RequestStatus</span></code></a></p></td>
+<td><p>Enumeration defining the image request status</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#model_runner.common.typing.GeojsonDetectionField" title="model_runner.common.typing.GeojsonDetectionField"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GeojsonDetectionField</span></code></a></p></td>
+<td><p>Enumeration defining the model geojson field to index depending on the shape</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#model_runner.common.typing.TileState" title="model_runner.common.typing.TileState"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TileState</span></code></a></p></td>
+<td><p>str(object='') -&gt; str</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="model_runner.common.typing.ImageCoord">
+<span class="sig-prename descclassname"><span class="pre">model_runner.common.typing.</span></span><span class="sig-name descname"><span class="pre">ImageCoord</span></span><a class="headerlink" href="#model_runner.common.typing.ImageCoord" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="model_runner.common.typing.ImageDimensions">
+<span class="sig-prename descclassname"><span class="pre">model_runner.common.typing.</span></span><span class="sig-name descname"><span class="pre">ImageDimensions</span></span><a class="headerlink" href="#model_runner.common.typing.ImageDimensions" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="model_runner.common.typing.ImageRegion">
+<span class="sig-prename descclassname"><span class="pre">model_runner.common.typing.</span></span><span class="sig-name descname"><span class="pre">ImageRegion</span></span><a class="headerlink" href="#model_runner.common.typing.ImageRegion" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.common.typing.ImageCompression">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.common.typing.</span></span><span class="sig-name descname"><span class="pre">ImageCompression</span></span><a class="headerlink" href="#model_runner.common.typing.ImageCompression" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">aws.osml.model_runner.common.AutoStringEnum</span></code></p>
+<p>Enumeration defining compression algorithms for image.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.typing.ImageCompression.NONE">
+<span class="sig-name descname"><span class="pre">NONE</span></span><a class="headerlink" href="#model_runner.common.typing.ImageCompression.NONE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.typing.ImageCompression.JPEG">
+<span class="sig-name descname"><span class="pre">JPEG</span></span><a class="headerlink" href="#model_runner.common.typing.ImageCompression.JPEG" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.typing.ImageCompression.J2K">
+<span class="sig-name descname"><span class="pre">J2K</span></span><a class="headerlink" href="#model_runner.common.typing.ImageCompression.J2K" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.typing.ImageCompression.LZW">
+<span class="sig-name descname"><span class="pre">LZW</span></span><a class="headerlink" href="#model_runner.common.typing.ImageCompression.LZW" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.common.typing.ImageFormats">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.common.typing.</span></span><span class="sig-name descname"><span class="pre">ImageFormats</span></span><a class="headerlink" href="#model_runner.common.typing.ImageFormats" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">aws.osml.model_runner.common.AutoStringEnum</span></code></p>
+<p>Enumeration defining image encodings.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.typing.ImageFormats.NITF">
+<span class="sig-name descname"><span class="pre">NITF</span></span><a class="headerlink" href="#model_runner.common.typing.ImageFormats.NITF" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.typing.ImageFormats.JPEG">
+<span class="sig-name descname"><span class="pre">JPEG</span></span><a class="headerlink" href="#model_runner.common.typing.ImageFormats.JPEG" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.typing.ImageFormats.PNG">
+<span class="sig-name descname"><span class="pre">PNG</span></span><a class="headerlink" href="#model_runner.common.typing.ImageFormats.PNG" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.typing.ImageFormats.GTIFF">
+<span class="sig-name descname"><span class="pre">GTIFF</span></span><a class="headerlink" href="#model_runner.common.typing.ImageFormats.GTIFF" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.common.typing.RequestStatus">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.common.typing.</span></span><span class="sig-name descname"><span class="pre">RequestStatus</span></span><a class="headerlink" href="#model_runner.common.typing.RequestStatus" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">aws.osml.model_runner.common.AutoStringEnum</span></code></p>
+<p>Enumeration defining the image request status</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.typing.RequestStatus.STARTED">
+<span class="sig-name descname"><span class="pre">STARTED</span></span><a class="headerlink" href="#model_runner.common.typing.RequestStatus.STARTED" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.typing.RequestStatus.IN_PROGRESS">
+<span class="sig-name descname"><span class="pre">IN_PROGRESS</span></span><a class="headerlink" href="#model_runner.common.typing.RequestStatus.IN_PROGRESS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.typing.RequestStatus.PARTIAL">
+<span class="sig-name descname"><span class="pre">PARTIAL</span></span><a class="headerlink" href="#model_runner.common.typing.RequestStatus.PARTIAL" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.typing.RequestStatus.SUCCESS">
+<span class="sig-name descname"><span class="pre">SUCCESS</span></span><a class="headerlink" href="#model_runner.common.typing.RequestStatus.SUCCESS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.typing.RequestStatus.FAILED">
+<span class="sig-name descname"><span class="pre">FAILED</span></span><a class="headerlink" href="#model_runner.common.typing.RequestStatus.FAILED" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.common.typing.GeojsonDetectionField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.common.typing.</span></span><span class="sig-name descname"><span class="pre">GeojsonDetectionField</span></span><a class="headerlink" href="#model_runner.common.typing.GeojsonDetectionField" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Enumeration defining the model geojson field to index depending on the shape</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.typing.GeojsonDetectionField.BOUNDS">
+<span class="sig-name descname"><span class="pre">BOUNDS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'bounds_imcoords'</span></em><a class="headerlink" href="#model_runner.common.typing.GeojsonDetectionField.BOUNDS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.typing.GeojsonDetectionField.GEOM">
+<span class="sig-name descname"><span class="pre">GEOM</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'geom_imcoords'</span></em><a class="headerlink" href="#model_runner.common.typing.GeojsonDetectionField.GEOM" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="model_runner.common.typing.TileState">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">model_runner.common.typing.</span></span><span class="sig-name descname"><span class="pre">TileState</span></span><a class="headerlink" href="#model_runner.common.typing.TileState" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>str(object=’’) -&gt; str
+str(bytes_or_buffer[, encoding[, errors]]) -&gt; str</p>
+<p>Create a new string object from the given object. If encoding or
+errors is specified, then the object must expose a data buffer
+that will be decoded using the given encoding and error handler.
+Otherwise, returns the result of object.__str__() (if defined)
+or repr(object).
+encoding defaults to sys.getdefaultencoding().
+errors defaults to ‘strict’.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.typing.TileState.SUCCEEDED">
+<span class="sig-name descname"><span class="pre">SUCCEEDED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'succeeded'</span></em><a class="headerlink" href="#model_runner.common.typing.TileState.SUCCEEDED" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="model_runner.common.typing.TileState.FAILED">
+<span class="sig-name descname"><span class="pre">FAILED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'failed'</span></em><a class="headerlink" href="#model_runner.common.typing.TileState.FAILED" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="model_runner.common.typing.VALID_IMAGE_COMPRESSION">
+<span class="sig-prename descclassname"><span class="pre">model_runner.common.typing.</span></span><span class="sig-name descname"><span class="pre">VALID_IMAGE_COMPRESSION</span></span><a class="headerlink" href="#model_runner.common.typing.VALID_IMAGE_COMPRESSION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="model_runner.common.typing.VALID_IMAGE_FORMATS">
+<span class="sig-prename descclassname"><span class="pre">model_runner.common.typing.</span></span><span class="sig-name descname"><span class="pre">VALID_IMAGE_FORMATS</span></span><a class="headerlink" href="#model_runner.common.typing.VALID_IMAGE_FORMATS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../timer/index.html" class="btn btn-neutral float-left" title="model_runner.common.timer" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../database/index.html" class="btn btn-neutral float-right" title="model_runner.database" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>

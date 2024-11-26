@@ -1,0 +1,338 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aws.osml.model_runner.common.mr_post_processing module &mdash; OversightML Model Runner  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            OversightML Model Runner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OversightML Model Runner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">aws.osml.model_runner.common.mr_post_processing module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_apidoc/aws.osml.model_runner.common.mr_post_processing.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-aws.osml.model_runner.common.mr_post_processing">
+<span id="aws-osml-model-runner-common-mr-post-processing-module"></span><h1>aws.osml.model_runner.common.mr_post_processing module<a class="headerlink" href="#module-aws.osml.model_runner.common.mr_post_processing" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.ABCEnumMeta">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">ABCEnumMeta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/aws/osml/model_runner/common/mr_post_processing.html#ABCEnumMeta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.ABCEnumMeta" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABCMeta" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABCMeta</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">EnumMeta</span></code></p>
+<p>A metaclass combining ABCMeta and EnumMeta, used as a base for creating
+enums for MRPostProcessing algorithm types. It ensures that the derived enums
+are both Enums and ABCs, enabling type checks and abstract method enforcement.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithmType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">MRPostProcessingAlgorithmType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/aws/osml/model_runner/common/mr_post_processing.html#MRPostProcessingAlgorithmType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithmType" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="aws.osml.model_runner.common.auto_string_enum.html#aws.osml.model_runner.common.auto_string_enum.AutoStringEnum" title="aws.osml.model_runner.common.auto_string_enum.AutoStringEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">AutoStringEnum</span></code></a></p>
+<p>An enumeration.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">FeatureDistillationAlgorithmType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/aws/osml/model_runner/common/mr_post_processing.html#FeatureDistillationAlgorithmType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithmType" title="aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithmType"><code class="xref py py-class docutils literal notranslate"><span class="pre">MRPostProcessingAlgorithmType</span></code></a></p>
+<p>Enum for defining different feature distillation algorithms used in post-processing.
+Each member represents a specific algorithm for entity selection or fusion.
+NMS: Non-maximum Suppression
+SOFT_NMS: Variant of NMS (<a class="reference external" href="https://arxiv.org/abs/1704.04503">https://arxiv.org/abs/1704.04503</a>). This implementation is gaussian Soft-NMS,</p>
+<blockquote>
+<div><p>as opposed to linear.</p>
+</div></blockquote>
+<p>NMW: Non-maximum weighted
+WBF: Weighted boxes fusion</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType.NMS">
+<span class="sig-name descname"><span class="pre">NMS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'NMS'</span></em><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType.NMS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType.SOFT_NMS">
+<span class="sig-name descname"><span class="pre">SOFT_NMS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SOFT_NMS'</span></em><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType.SOFT_NMS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.MRPostprocessingStep">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">MRPostprocessingStep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/aws/osml/model_runner/common/mr_post_processing.html#MRPostprocessingStep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.MRPostprocessingStep" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference internal" href="aws.osml.model_runner.common.auto_string_enum.html#aws.osml.model_runner.common.auto_string_enum.AutoStringEnum" title="aws.osml.model_runner.common.auto_string_enum.AutoStringEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">AutoStringEnum</span></code></a></p>
+<p>Enum defining available steps for MR post-processing.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.MRPostprocessingStep.FEATURE_DISTILLATION">
+<span class="sig-name descname"><span class="pre">FEATURE_DISTILLATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'FEATURE_DISTILLATION'</span></em><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.MRPostprocessingStep.FEATURE_DISTILLATION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">MRPostProcessingAlgorithm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">algorithm_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithmType" title="aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithmType"><span class="pre">MRPostProcessingAlgorithmType</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/aws/osml/model_runner/common/mr_post_processing.html#MRPostProcessingAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithm" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
+<p>Abstract base class representing a generic MR post-processing algorithm.
+:param algorithm_type: The type of the algorithm, represented by a specific enum.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithm.algorithm_type">
+<span class="sig-name descname"><span class="pre">algorithm_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithmType" title="aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithmType"><span class="pre">MRPostProcessingAlgorithmType</span></a></em><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithm.algorithm_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">FeatureDistillationAlgorithm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">algorithm_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType" title="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType"><span class="pre">FeatureDistillationAlgorithmType</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">iou_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/aws/osml/model_runner/common/mr_post_processing.html#FeatureDistillationAlgorithm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithm" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithm" title="aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithm"><code class="xref py py-class docutils literal notranslate"><span class="pre">MRPostProcessingAlgorithm</span></code></a></p>
+<p>Generic FeatureDistillationAlgorithm class that is designed to be extended for each specific algorithm.
+:property algorithm_type: FeatureSelectionAlgorithmType = algorithm to use to combine object detections
+:property iou_threshold: float = intersection over union threshold</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>if greater than this value boxes are considered the same</p></li>
+</ul>
+</div></blockquote>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithm.algorithm_type">
+<span class="sig-name descname"><span class="pre">algorithm_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType" title="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType"><span class="pre">FeatureDistillationAlgorithmType</span></a></em><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithm.algorithm_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithm.iou_threshold">
+<span class="sig-name descname"><span class="pre">iou_threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithm.iou_threshold" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationNMS">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">FeatureDistillationNMS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">algorithm_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType" title="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType"><span class="pre">FeatureDistillationAlgorithmType</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">FeatureDistillationAlgorithmType.NMS</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iou_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.75</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/aws/osml/model_runner/common/mr_post_processing.html#FeatureDistillationNMS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationNMS" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithm" title="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithm"><code class="xref py py-class docutils literal notranslate"><span class="pre">FeatureDistillationAlgorithm</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Property algorithm_type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>FeatureSelectionAlgorithmType = algorithm to use to combine object detections</p>
+</dd>
+<dt class="field-even">Property iou_threshold<span class="colon">:</span></dt>
+<dd class="field-even"><p>float = intersection over union threshold
+- if greater than this value boxes are considered the same</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationNMS.algorithm_type">
+<span class="sig-name descname"><span class="pre">algorithm_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType" title="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType"><span class="pre">FeatureDistillationAlgorithmType</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'NMS'</span></em><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationNMS.algorithm_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationNMS.iou_threshold">
+<span class="sig-name descname"><span class="pre">iou_threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.75</span></em><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationNMS.iou_threshold" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationSoftNMS">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">FeatureDistillationSoftNMS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">algorithm_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType" title="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType"><span class="pre">FeatureDistillationAlgorithmType</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">FeatureDistillationAlgorithmType.SOFT_NMS</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iou_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.75</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_box_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/aws/osml/model_runner/common/mr_post_processing.html#FeatureDistillationSoftNMS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationSoftNMS" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithm" title="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithm"><code class="xref py py-class docutils literal notranslate"><span class="pre">FeatureDistillationAlgorithm</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Property algorithm_type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>FeatureSelectionAlgorithmType = algorithm to use to combine object detections</p>
+</dd>
+<dt class="field-even">Property iou_threshold<span class="colon">:</span></dt>
+<dd class="field-even"><p>float = intersection over union threshold
+- if greater than this value boxes are considered the same</p>
+</dd>
+<dt class="field-odd">Property skip_box_threshold<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float = boxes with a confidence below this threshold value are skipped</p>
+</dd>
+<dt class="field-even">Property sigma<span class="colon">:</span></dt>
+<dd class="field-even"><p>float = value - only applies to Soft NMS</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationSoftNMS.algorithm_type">
+<span class="sig-name descname"><span class="pre">algorithm_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType" title="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithmType"><span class="pre">FeatureDistillationAlgorithmType</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SOFT_NMS'</span></em><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationSoftNMS.algorithm_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationSoftNMS.iou_threshold">
+<span class="sig-name descname"><span class="pre">iou_threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.75</span></em><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationSoftNMS.iou_threshold" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationSoftNMS.skip_box_threshold">
+<span class="sig-name descname"><span class="pre">skip_box_threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.0001</span></em><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationSoftNMS.skip_box_threshold" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationSoftNMS.sigma">
+<span class="sig-name descname"><span class="pre">sigma</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.1</span></em><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationSoftNMS.sigma" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.MRPostProcessing">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">MRPostProcessing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.MRPostprocessingStep" title="aws.osml.model_runner.common.mr_post_processing.MRPostprocessingStep"><span class="pre">MRPostprocessingStep</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithm" title="aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithm"><span class="pre">MRPostProcessingAlgorithm</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/aws/osml/model_runner/common/mr_post_processing.html#MRPostProcessing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.MRPostProcessing" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Represents an operation for MR post-processing.
+:param step: The post-processing step (MRPostprocessingStep).
+:param algorithm: The algorithm used in this step (MRPostProcessingAlgorithm).</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.MRPostProcessing.step">
+<span class="sig-name descname"><span class="pre">step</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.MRPostprocessingStep" title="aws.osml.model_runner.common.mr_post_processing.MRPostprocessingStep"><span class="pre">MRPostprocessingStep</span></a></em><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.MRPostProcessing.step" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.MRPostProcessing.algorithm">
+<span class="sig-name descname"><span class="pre">algorithm</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithm" title="aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithm"><span class="pre">MRPostProcessingAlgorithm</span></a></em><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.MRPostProcessing.algorithm" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.PostProcessingDeserializer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">PostProcessingDeserializer</span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/common/mr_post_processing.html#PostProcessingDeserializer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.PostProcessingDeserializer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
+<p>Abstract post-processing deserializer that defines a deserialize method.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.PostProcessingDeserializer.deserialize">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">deserialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">post_processing_algorithm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithm" title="aws.osml.model_runner.common.mr_post_processing.MRPostProcessingAlgorithm"><span class="pre">MRPostProcessingAlgorithm</span></a></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/common/mr_post_processing.html#PostProcessingDeserializer.deserialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.PostProcessingDeserializer.deserialize" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationDeserializer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">FeatureDistillationDeserializer</span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/common/mr_post_processing.html#FeatureDistillationDeserializer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationDeserializer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.PostProcessingDeserializer" title="aws.osml.model_runner.common.mr_post_processing.PostProcessingDeserializer"><code class="xref py py-class docutils literal notranslate"><span class="pre">PostProcessingDeserializer</span></code></a></p>
+<p>Provides static methods for deserializing feature distillation algorithms from a dictionary.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationDeserializer.deserialize">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">deserialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">post_processing_algorithm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithm" title="aws.osml.model_runner.common.mr_post_processing.FeatureDistillationAlgorithm"><span class="pre">FeatureDistillationAlgorithm</span></a></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/common/mr_post_processing.html#FeatureDistillationDeserializer.deserialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.FeatureDistillationDeserializer.deserialize" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.MRPostProcessingDeserializer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">MRPostProcessingDeserializer</span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/common/mr_post_processing.html#MRPostProcessingDeserializer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.MRPostProcessingDeserializer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Provides static method for obtaining the appropriate deserializer based on the post-processing step.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.MRPostProcessingDeserializer.get_deserializer">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_deserializer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.MRPostprocessingStep" title="aws.osml.model_runner.common.mr_post_processing.MRPostprocessingStep"><span class="pre">MRPostprocessingStep</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.PostProcessingDeserializer" title="aws.osml.model_runner.common.mr_post_processing.PostProcessingDeserializer"><span class="pre">PostProcessingDeserializer</span></a></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/common/mr_post_processing.html#MRPostProcessingDeserializer.get_deserializer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.MRPostProcessingDeserializer.get_deserializer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.deserialize_post_processing_list">
+<span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">deserialize_post_processing_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mr_processing_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#aws.osml.model_runner.common.mr_post_processing.MRPostProcessing" title="aws.osml.model_runner.common.mr_post_processing.MRPostProcessing"><span class="pre">MRPostProcessing</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/common/mr_post_processing.html#deserialize_post_processing_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.deserialize_post_processing_list" title="Link to this definition"></a></dt>
+<dd><p>Deserializes a list of MR post-processing steps and algorithms from a list of dictionaries.
+:param mr_processing_list: A list of dictionaries representing MR post-processing objects.
+:return: A list of MRPostProcessing objects.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="aws.osml.model_runner.common.mr_post_processing.mr_post_processing_options_factory">
+<span class="sig-prename descclassname"><span class="pre">aws.osml.model_runner.common.mr_post_processing.</span></span><span class="sig-name descname"><span class="pre">mr_post_processing_options_factory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.13)"><span class="pre">Dict</span></a></span></span><a class="reference internal" href="../_modules/aws/osml/model_runner/common/mr_post_processing.html#mr_post_processing_options_factory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aws.osml.model_runner.common.mr_post_processing.mr_post_processing_options_factory" title="Link to this definition"></a></dt>
+<dd><p>Factory function for converting dataclass instances to dictionaries.
+Specifically used with MR post-processing related dataclasses.
+:param properties_list: A list of properties (key-value pairs) of a dataclass.
+:return: A dictionary representation of the dataclass.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Amazon.com.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+<style>
+    .wy-nav-content { max-width: none; }
+</style>
+
+
+
+</body>
+</html>
