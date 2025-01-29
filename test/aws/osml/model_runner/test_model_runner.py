@@ -1,4 +1,4 @@
-#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2025 Amazon.com, Inc. or its affiliates.
 
 import unittest
 from unittest.mock import MagicMock, patch
@@ -56,54 +56,43 @@ class TestModelRunner(unittest.TestCase):
         self.runner.image_request_handler.complete_image_request.assert_called_once()
         mock_finish_request.assert_called_once_with("receipt_handle")
 
-    @patch("aws.osml.model_runner.model_runner.ImageRequest")
-    @patch("aws.osml.model_runner.model_runner.RequestQueue.finish_request")
-    def test_process_image_requests_invalid(self, mock_finish_request, mock_image_request):
-        """Test that invalid image requests raise an InvalidImageRequestException."""
-        # Mock invalid image request
-        mock_image_request_message = MagicMock()
-        mock_image_request_instance = MagicMock(is_valid=MagicMock(return_value=False))
-        mock_image_request.from_external_message.return_value = mock_image_request_instance
-        self.runner.image_requests_iter = iter([("receipt_handle", mock_image_request_message)])
+    def test_process_image_request_noimage(self):
+        """Test path where the scheduler does not return an ImageRequest to process"""
+        with patch.object(self.runner, "image_job_scheduler", new_callable=MagicMock) as mock_scheduler:
+            mock_scheduler.get_next_scheduled_request.return_value = None
+            result = self.runner._process_image_requests()
+            self.assertFalse(result)
 
-        self.runner._process_image_requests()
-
-        # Ensure request was marked as completed
-        mock_finish_request.assert_called_once_with("receipt_handle")
-
-    @patch("aws.osml.model_runner.model_runner.ImageRequest")
-    @patch("aws.osml.model_runner.model_runner.RequestQueue.reset_request")
-    def test_process_image_requests_retryable(self, mock_reset_request, mock_image_request):
+    def test_process_image_requests_retryable(self):
         """Test that a RetryableJobException resets the request."""
-        # Mock retryable job exception
-        mock_image_request_message = MagicMock()
-        mock_image_request_instance = MagicMock(is_valid=MagicMock(return_value=True))
-        mock_image_request.from_external_message.return_value = mock_image_request_instance
-        self.runner.image_requests_iter = iter([("receipt_handle", mock_image_request_message)])
-        self.runner.image_request_handler.process_image_request.side_effect = RetryableJobException()
 
-        # Call method
-        self.runner._process_image_requests()
+        with patch.object(self.runner, "image_job_scheduler", new_callable=MagicMock) as mock_scheduler, patch.object(
+            self.runner, "image_request_handler", new_callable=MagicMock
+        ) as mock_handler:
+            mock_image_request = MagicMock()
+            mock_scheduler.get_next_scheduled_request.return_value = mock_image_request
+            mock_handler.process_image_request.side_effect = RetryableJobException()
 
-        # Ensure request was reset
-        mock_reset_request.assert_called_once_with("receipt_handle", visibility_timeout=0)
+            result = self.runner._process_image_requests()
+            self.assertTrue(result)
+
+            mock_scheduler.finish_request.assert_called_once_with(mock_image_request, should_retry=True)
 
     @patch("aws.osml.model_runner.model_runner.ImageRequest")
     def test_process_image_requests_general_error(self, mock_image_request):
         """Test that general exceptions mark the image request as failed."""
-        # Mock exception
-        mock_image_request_message = MagicMock()
-        mock_image_request_instance = MagicMock()
-        self.runner._fail_image_request = MagicMock()
-        mock_image_request.from_external_message.return_value = mock_image_request_instance
-        self.runner.image_requests_iter = iter([("receipt_handle", mock_image_request_message)])
-        self.runner.image_request_handler.process_image_request.side_effect = Exception("Some error")
 
-        # Call method
-        self.runner._process_image_requests()
+        with patch.object(self.runner, "image_job_scheduler", new_callable=MagicMock) as mock_scheduler, patch.object(
+            self.runner, "image_request_handler", new_callable=MagicMock
+        ) as mock_handler:
+            mock_image_request = MagicMock()
+            mock_scheduler.get_next_scheduled_request.return_value = mock_image_request
+            mock_handler.process_image_request.side_effect = Exception("Some error")
 
-        # Ensure image request was failed
-        self.runner._fail_image_request.assert_called()
+            result = self.runner._process_image_requests()
+            self.assertTrue(result)
+
+            mock_scheduler.finish_request.assert_called_once_with(mock_image_request)
 
     @patch("aws.osml.model_runner.model_runner.RegionRequestHandler.process_region_request")
     @patch("aws.osml.model_runner.model_runner.RequestQueue.finish_request")

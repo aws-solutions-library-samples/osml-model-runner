@@ -1,4 +1,4 @@
-#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2025 Amazon.com, Inc. or its affiliates.
 
 import logging
 
@@ -7,7 +7,7 @@ from osgeo import gdal
 from aws.osml.gdal import load_gdal_dataset, set_gdal_default_configuration
 from aws.osml.model_runner.api import get_image_path
 
-from .api import ImageRequest, InvalidImageRequestException, RegionRequest
+from .api import ImageRequest, RegionRequest
 from .app_config import ServiceConfig
 from .common import EndpointUtils, ThreadingLocalContextFilter
 from .database import EndpointStatisticsTable, JobItem, JobTable, RegionRequestItem, RegionRequestTable
@@ -15,6 +15,7 @@ from .exceptions import RetryableJobException, SelfThrottledRegionException
 from .image_request_handler import ImageRequestHandler
 from .queue import RequestQueue
 from .region_request_handler import RegionRequestHandler
+from .scheduler.fifo_image_scheduler import FIFOImageScheduler
 from .status import ImageStatusMonitor, RegionStatusMonitor
 from .tile_worker import TilingStrategy, VariableOverlapTilingStrategy
 
@@ -41,9 +42,10 @@ class ModelRunner:
         self.config = ServiceConfig()
         self.tiling_strategy = tiling_strategy
 
-        # Set up queues and monitors
-        self.image_request_queue = RequestQueue(self.config.image_queue, wait_seconds=0)
-        self.image_requests_iter = iter(self.image_request_queue)
+        # Set up the job scheduler
+        self.image_job_scheduler = FIFOImageScheduler(RequestQueue(self.config.image_queue, wait_seconds=0))
+
+        # Set up internal queues and monitors
         self.region_request_queue = RequestQueue(self.config.region_queue, wait_seconds=10)
         self.region_requests_iter = iter(self.region_request_queue)
 
@@ -163,41 +165,24 @@ class ModelRunner:
 
     def _process_image_requests(self) -> bool:
         """
-        Processes messages from the image request queue.
+        Processes messages from the image job scheduler.
 
-        This method retrieves and processes image requests from the SQS queue. It validates
-        the image request, and if valid, passes it to the `ImageRequestHandler` for further
-        processing. In case of a retryable exception, the request is reset in the queue with
-        a visibility timeout. If the image request fails due to an error, it is marked as
-        failed and the appropriate actions are taken.
-
-        :raises InvalidImageRequestException: If the image request is found to be invalid.
-        :raises Exception: If an unexpected error occurs during processing.
-
-        :return: True if a image request was processed, False if not.
+        :return: True if an image request was processed, False if not.
         """
-        logger.debug("Checking work queue for images to process...")
-        receipt_handle, image_request_message = next(self.image_requests_iter)
-        image_request = None
-        if image_request_message:
+        image_request = self.image_job_scheduler.get_next_scheduled_request()
+        if image_request:
             try:
-                image_request = ImageRequest.from_external_message(image_request_message)
                 ThreadingLocalContextFilter.set_context(image_request.__dict__)
-
-                if not image_request.is_valid():
-                    raise InvalidImageRequestException(f"Invalid image request: {image_request_message}")
-
+                logger.info(f"Starting processing for image request: {image_request.job_id}")
                 self.image_request_handler.process_image_request(image_request)
-                self.image_request_queue.finish_request(receipt_handle)
+                self.image_job_scheduler.finish_request(image_request)
             except RetryableJobException:
-                self.image_request_queue.reset_request(receipt_handle, visibility_timeout=0)
+                self.image_job_scheduler.finish_request(image_request, should_retry=True)
             except Exception as err:
                 logger.error(f"Error processing image request: {err}")
-                if image_request:
-                    self._fail_image_request(image_request, err)
-                    self.image_request_queue.finish_request(receipt_handle)
-            finally:
-                return True
+                self._fail_image_request(image_request, err)
+                self.image_job_scheduler.finish_request(image_request)
+            return True
         else:
             return False
 
