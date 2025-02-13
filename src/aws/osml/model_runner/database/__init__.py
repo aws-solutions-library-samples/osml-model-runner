@@ -1,4 +1,4 @@
-#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2025 Amazon.com, Inc. or its affiliates.
 
 # Telling flake8 to not flag errors in this file. It is normal that these classes are imported but not used in an
 # __init__.py file.
@@ -21,3 +21,4 @@ from .exceptions import (
 from .feature_table import FeatureTable
 from .job_table import JobItem, JobTable
 from .region_request_table import RegionRequestItem, RegionRequestTable
+from .requested_jobs_table import ImageRequestStatusRecord, RequestedJobsTable
