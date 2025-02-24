@@ -4,5 +4,6 @@
 # __init__.py file.
 # flake8: noqa
 
+from .endpoint_load_image_scheduler import EndpointLoadImageScheduler
 from .fifo_image_scheduler import FIFOImageScheduler
 from .image_scheduler import ImageScheduler
