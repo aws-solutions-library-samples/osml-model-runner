@@ -1,5 +1,6 @@
 #  Copyright 2025 Amazon.com, Inc. or its affiliates.
 
+import dataclasses
 import json
 import logging
 import time
@@ -173,7 +174,7 @@ class BufferedImageRequestQueue:
                 if request.num_attempts >= self.max_retry_attempts:
                     # Move to DLQ if max retries exceeded
                     self.sqs_client.send_message(
-                        QueueUrl=self.image_dlq_url, MessageBody=json.dumps(request.request_payload)
+                        QueueUrl=self.image_dlq_url, MessageBody=json.dumps(dataclasses.asdict(request.request_payload))
                     )
                     self.requested_jobs_table.complete_request(request.request_payload)
                 elif request.region_count == len(request.regions_complete):
