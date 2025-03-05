@@ -1,4 +1,4 @@
-#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2025 Amazon.com, Inc. or its affiliates.
 
 import ast
 import json
@@ -134,7 +134,7 @@ class ImageRequestHandler:
             extension, ds, sensor_model, regions = self.load_image_request(job_item, image_request.roi)
 
             if sensor_model is None:
-                logging.warning(f"Dataset {job_item.image_id} has no geo transform. Results are not geo-referenced.")
+                logger.warning(f"Dataset {job_item.image_id} has no geo transform. Results are not geo-referenced.")
 
             # If we got valid outputs
             if ds and regions and extension:
@@ -216,7 +216,7 @@ class ImageRequestHandler:
             # Create a new entry to the region request being started
             region_request_item = RegionRequestItem.from_region_request(region_request)
             self.region_request_table.start_region_request(region_request_item)
-            logging.debug(
+            logger.debug(
                 (
                     f"Adding region request: image id: {region_request_item.image_id} - "
                     f"region id: {region_request_item.region_id}"
@@ -239,7 +239,7 @@ class ImageRequestHandler:
         # Add item to RegionRequestTable
         first_region_request_item = RegionRequestItem.from_region_request(first_region_request)
         self.region_request_table.start_region_request(first_region_request_item)
-        logging.debug(f"Adding region_id: {first_region_request_item.region_id}")
+        logger.debug(f"Adding region_id: {first_region_request_item.region_id}")
 
         # Processes our region request and return the updated item
         job_item = self.region_request_handler.process_region_request(

@@ -1,4 +1,4 @@
-#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2025 Amazon.com, Inc. or its affiliates.
 
 import functools
 import json
@@ -208,10 +208,10 @@ def get_source_property(image_location: str, image_extension: str, dataset: gdal
 
             return source_property
         except Exception as err:
-            logging.warning(f"Source metadata not available for {image_extension} image extension! {err}")
+            logger.warning(f"Source metadata not available for {image_extension} image extension! {err}")
             return None
     else:
-        logging.warning(f"Source metadata not available for {image_extension} image extension!")
+        logger.warning(f"Source metadata not available for {image_extension} image extension!")
         return None
 
 
@@ -282,7 +282,7 @@ def add_properties_to_features(job_id: str, feature_properties: str, features: L
                 del feature["properties"]["adjusted_feature_types"]
 
     except Exception as err:
-        logging.exception(err)
+        logger.exception(err)
         raise InvalidFeaturePropertiesException("Could not apply custom properties to features!")
     return features
 
