@@ -1,4 +1,4 @@
-#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2025 Amazon.com, Inc. or its affiliates.
 
 import logging
 import os
@@ -9,19 +9,22 @@ from typing import List
 
 from osgeo.gdal import Dataset, Open, Translate, TranslateOptions
 
+# Set up logging configuration
+logger = logging.getLogger(__name__)
+
 
 def convert_format(ds: Dataset, output_image_path: str, output_format: str) -> int:
     options = TranslateOptions(format=output_format)
     try:
         ds = Translate(output_image_path, ds, options=options)
         if ds:
-            logging.info("Successfully converted image to {}.".format(output_image_path))
+            logger.info("Successfully converted image to {}.".format(output_image_path))
             return 1
         else:
-            logging.error("Failed to convert to {}.".format(output_image_path))
+            logger.error("Failed to convert to {}.".format(output_image_path))
             return 0
     except Exception as err:
-        logging.error("Failed to convert to {}. {}: {}".format(output_image_path, type(err).__name__, err))
+        logger.error("Failed to convert to {}. {}: {}".format(output_image_path, type(err).__name__, err))
         return 0
 
 
@@ -44,10 +47,10 @@ def main(input_directory: str, output_formats: List[str], output_directory: str 
             success = convert_format(ds, output_path, image_format)
             success_count += success
     if success_count / len(output_formats) == len(input_files):
-        logging.info("Successfully converted all images.")
+        logger.info("Successfully converted all images.")
         return 0
     else:
-        logging.error(
+        logger.error(
             "Failed to convert some images. (Converted {}/{}).".format(
                 int(success_count / len(output_formats)), len(input_files)
             )
@@ -67,7 +70,7 @@ if __name__ == "__main__":
     parser.add_argument("-if", "--input_format", help="<Optional> Input file extension filter")
     args = parser.parse_args()
 
-    logging.info("Running image conversion with options: {}.".format(vars(args)))
+    logger.info("Running image conversion with options: {}.".format(vars(args)))
 
     exit(
         main(

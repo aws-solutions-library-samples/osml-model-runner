@@ -1,4 +1,4 @@
-#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2025 Amazon.com, Inc. or its affiliates.
 
 import asyncio
 import logging
@@ -48,8 +48,8 @@ class TileWorker(Thread):
             ThreadingLocalContextFilter.set_context(image_info)
 
             if image_info is None:
-                logging.debug("All images processed. Stopping tile worker.")
-                logging.debug(
+                logger.debug("All images processed. Stopping tile worker.")
+                logger.debug(
                     (
                         f"Feature Detector Stats: {self.feature_detector.request_count} requests "
                         f"with {self.failed_tile_count} failed tiles."
@@ -66,8 +66,8 @@ class TileWorker(Thread):
             thread_event_loop.stop()
             thread_event_loop.close()
         except Exception as e:
-            logging.warning("Failed to stop and close the thread event loop")
-            logging.exception(e)
+            logger.warning("Failed to stop and close the thread event loop")
+            logger.exception(e)
 
     @metric_scope
     def process_tile(self, image_info: Dict, metrics: MetricsLogger = None) -> None:
@@ -108,7 +108,7 @@ class TileWorker(Thread):
                 )
         except Exception as e:
             self.failed_tile_count += 1
-            logging.error(f"Failed to process region tile with error: {e}", exc_info=True)
+            logger.error(f"Failed to process region tile with error: {e}", exc_info=True)
             self.region_request_table.add_tile(
                 image_info.get("image_id"), image_info.get("region_id"), image_info.get("region"), TileState.FAILED
             )
@@ -148,7 +148,7 @@ class TileWorker(Thread):
             ulx = image_info["region"][0][1]
             uly = image_info["region"][0][0]
             if isinstance(feature_collection, dict) and "features" in feature_collection:
-                logging.debug(f"SM Model returned {len(feature_collection['features'])} features")
+                logger.debug(f"SM Model returned {len(feature_collection['features'])} features")
                 for feature in feature_collection["features"]:
                     # Check to see if there is a bbox defined in image coordinates. If so, update it to
                     # use full image coordinates and store the updated value in the feature properties.
@@ -163,10 +163,10 @@ class TileWorker(Thread):
                     # Note that this property search will be deprecated and removed in a future release.
                     tiled_image_geometry = self.property_accessor.get_image_geometry(feature)
                     if tiled_image_bbox is None and tiled_image_geometry is None:
-                        logging.debug("Feature may be using deprecated attributes.")
+                        logger.debug("Feature may be using deprecated attributes.")
                         tiled_image_geometry = self.property_accessor.find_image_geometry(feature)
                         if tiled_image_geometry is None:
-                            logging.warning(f"There isn't a valid detection shape for feature: {feature}")
+                            logger.warning(f"There isn't a valid detection shape for feature: {feature}")
 
                     # If we found an image geometry update it to use full image coordinates and store the
                     # value in the feature properties.
@@ -185,13 +185,13 @@ class TileWorker(Thread):
                     TileWorker.convert_deprecated_feature_properties(feature)
 
                     features.append(feature)
-            logging.debug(f"# Features Created: {len(features)}")
+            logger.debug(f"# Features Created: {len(features)}")
             if len(features) > 0:
                 if self.geolocator is not None:
                     # Create a geometry for each feature in the result. The geographic coordinates of these
                     # features are computed using the sensor model provided in the image metadata
                     self.geolocator.geolocate_features(features)
-                    logging.debug(f"Created Geographic Coordinates for {len(features)} features")
+                    logger.debug(f"Created Geographic Coordinates for {len(features)} features")
 
         return features
 

@@ -1,4 +1,4 @@
-#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2025 Amazon.com, Inc. or its affiliates.
 
 import logging
 import sys
@@ -119,7 +119,7 @@ class KinesisSink(Sink):
                 # reason to include UPDATING is that Kinesis Stream functions during these operations
                 return True
             else:
-                logging.error(f"{self.stream} current status is: {stream_status}. It is not in ACTIVE or UPDATING state.")
+                logger.error(f"{self.stream} current status is: {stream_status}. It is not in ACTIVE or UPDATING state.")
                 return False
         except Exception as err:
             logger.error(f"Failed to fetch Kinesis stream - {self.stream}. {err}")

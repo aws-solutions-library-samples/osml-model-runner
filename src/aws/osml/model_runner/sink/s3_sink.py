@@ -1,4 +1,4 @@
-#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2025 Amazon.com, Inc. or its affiliates.
 
 import logging
 import os
@@ -124,10 +124,10 @@ class S3Sink(Sink):
             return True
         except ClientError as err:
             if err.response["Error"]["Code"] == "404":  # Does not exist
-                logging.error(f"This S3 Bucket({self.bucket}) does not exist")
+                logger.error(f"This S3 Bucket({self.bucket}) does not exist")
             elif err.response["Error"]["Code"] == "403":  # Forbidden access
-                logging.error(f"Do not have permission to read/write this S3 Bucket({self.bucket})")
-            logging.error(f"Cannot read/write S3 Bucket ({self.bucket})")
+                logger.error(f"Do not have permission to read/write this S3 Bucket({self.bucket})")
+            logger.error(f"Cannot read/write S3 Bucket ({self.bucket})")
             return False
 
     @staticmethod

@@ -1,4 +1,4 @@
-#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2025 Amazon.com, Inc. or its affiliates.
 
 import logging
 from typing import Optional
@@ -120,7 +120,7 @@ class RegionRequestHandler:
                 metrics_logger=metrics,
             ):
                 self.region_request_table.start_region_request(region_request_item)
-                logging.debug(f"Starting region request: region id: {region_request_item.region_id}")
+                logger.debug(f"Starting region request: region id: {region_request_item.region_id}")
 
                 # Set up our threaded tile worker pool
                 tile_queue, tile_workers = setup_tile_workers(region_request, sensor_model, self.config.elevation_model)

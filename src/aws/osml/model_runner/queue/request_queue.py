@@ -1,4 +1,4 @@
-#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2025 Amazon.com, Inc. or its affiliates.
 
 import json
 import logging
@@ -8,6 +8,9 @@ import boto3
 from botocore.exceptions import ClientError
 
 from aws.osml.model_runner.app_config import BotoConfig
+
+# Set up logging configuration
+logger = logging.getLogger(__name__)
 
 
 class RequestQueue:
@@ -33,12 +36,12 @@ class RequestQueue:
                     WaitTimeSeconds=self.wait_seconds,
                 )
 
-                logging.debug(f"Dequeued processing request {queue_response}")
+                logger.debug(f"Dequeued processing request {queue_response}")
 
                 if "Messages" in queue_response:
                     for message in queue_response["Messages"]:
                         message_body = message["Body"]
-                        logging.debug(f"Message Body {message_body}")
+                        logger.debug(f"Message Body {message_body}")
 
                         try:
                             work_request = json.loads(message_body)
@@ -46,13 +49,13 @@ class RequestQueue:
                             yield message["ReceiptHandle"], work_request
 
                         except json.JSONDecodeError:
-                            logging.warning(f"Skipping message that is not valid JSON: {message_body}")
+                            logger.warning(f"Skipping message that is not valid JSON: {message_body}")
                             yield None, None
                 else:
                     yield None, None
 
             except ClientError as err:
-                logging.error(f"Unable to retrieve message from queue: {err}")
+                logger.error(f"Unable to retrieve message from queue: {err}")
                 yield None, None
 
     def finish_request(self, receipt_handle: str) -> None:
@@ -67,7 +70,7 @@ class RequestQueue:
             # Remove the message from the queue since it has been successfully processed
             self.sqs_client.delete_message(QueueUrl=self.queue_url, ReceiptHandle=receipt_handle)
         except ClientError as err:
-            logging.error(f"Unable to remove message from queue: {err}")
+            logger.error(f"Unable to remove message from queue: {err}")
 
     def reset_request(self, receipt_handle: str, visibility_timeout: int = 0) -> None:
         """
@@ -86,7 +89,7 @@ class RequestQueue:
                 VisibilityTimeout=visibility_timeout,
             )
         except ClientError as err:
-            logging.error(f"Unable to reset message visibility: {err}")
+            logger.error(f"Unable to reset message visibility: {err}")
 
     def send_request(self, request: Dict) -> None:
         """
@@ -99,4 +102,4 @@ class RequestQueue:
         try:
             self.sqs_client.send_message(QueueUrl=self.queue_url, MessageBody=json.dumps(request))
         except ClientError as err:
-            logging.error(f"Unable to send message visibility: {err}")
+            logger.error(f"Unable to send message visibility: {err}")
