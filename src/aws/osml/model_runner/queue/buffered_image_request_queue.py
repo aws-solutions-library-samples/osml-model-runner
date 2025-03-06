@@ -7,6 +7,9 @@ import time
 from typing import List
 
 import boto3
+from aws_embedded_metrics import metric_scope
+from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
+from aws_embedded_metrics.unit import Unit
 from botocore.exceptions import ClientError
 
 from aws.osml.model_runner.api import ImageRequest
@@ -20,6 +23,10 @@ class BufferedImageRequestQueue:
     """
     A queue that buffers image requests from SQS and manages them in DynamoDB.
     """
+
+    # Metrics emitted to track the number of requests in the buffer
+    APPROX_NUMBER_OF_REQUESTS_BUFFERED = "ApproximateNumberOfRequestsBuffered"
+    APPROX_NUMBER_OF_REQUESTS_VISIBLE = "ApproximateNumberOfRequestsVisible"
 
     def __init__(
         self,
@@ -48,8 +55,6 @@ class BufferedImageRequestQueue:
         self.sqs_client = boto3.client("sqs", config=BotoConfig.default)
         self.image_queue_url = image_queue_url
         self.image_dlq_url = image_dlq_url
-
-        self.cw_client = boto3.client("cloudwatch", config=BotoConfig.default)
 
     def get_outstanding_requests(self) -> List[ImageRequestStatusRecord]:
         """
@@ -82,9 +87,9 @@ class BufferedImageRequestQueue:
                 num_buffered_requests=len(outstanding_requests), num_visible_requests=len(visible_requests)
             )
 
-            return visible_requests
+            return outstanding_requests
         except Exception as e:
-            logger.error(f"Error getting outstanding requests: {e}")
+            logger.error(f"Error getting outstanding requests: {e}", exc_info=True)
             return []
 
     def _fetch_new_requests(self, max_messages_to_fetch: int) -> List[ImageRequestStatusRecord]:
@@ -169,16 +174,19 @@ class BufferedImageRequestQueue:
         """
         current_outstanding_requests = []
 
+        current_time = time.time()
         for request in outstanding_requests:
             try:
-                if request.num_attempts >= self.max_retry_attempts:
+                if request.region_count == len(request.regions_complete):
+                    # Complete the request if all regions are processed
+                    self.requested_jobs_table.complete_request(request.request_payload)
+                elif (
+                    request.num_attempts >= self.max_retry_attempts and request.last_attempt + self.retry_time < current_time
+                ):
                     # Move to DLQ if max retries exceeded
                     self.sqs_client.send_message(
                         QueueUrl=self.image_dlq_url, MessageBody=json.dumps(dataclasses.asdict(request.request_payload))
                     )
-                    self.requested_jobs_table.complete_request(request.request_payload)
-                elif request.region_count == len(request.regions_complete):
-                    # Complete the request if all regions are processed
                     self.requested_jobs_table.complete_request(request.request_payload)
                 else:
                     current_outstanding_requests.append(request)
@@ -187,27 +195,16 @@ class BufferedImageRequestQueue:
 
         return current_outstanding_requests
 
-    def _emit_buffered_queue_metrics(self, num_buffered_requests: int, num_visible_requests: int) -> None:
+    @metric_scope
+    def _emit_buffered_queue_metrics(
+        self, num_buffered_requests: int, num_visible_requests: int, metrics: MetricsLogger = None
+    ) -> None:
         """
         Emit metrics about the number of buffered requests to CloudWatch.
 
         :param num_buffered_requests: The current number of requests in the buffer
         :param num_visible_requests: The current number of requests that are waiting to be processed
         """
-        try:
-            self.cw_client.put_metric_data(
-                MetricData=[
-                    {"MetricName": "ApproximateNumberOfRequestsBuffered", "Unit": "Count", "Value": num_buffered_requests},
-                    {"MetricName": "ApproximateNumberOfRequestsVisible", "Unit": "Count", "Value": num_visible_requests},
-                ],
-                Namespace="OSML/ModelRunner/ImageRequestsQueue",
-            )
-        except ClientError as ce:
-            error_code = ce.response["Error"]["Code"]
-            error_message = ce.response["Error"]["Message"]
-            logger.error(
-                "Failed to emit CloudWatch metrics for buffered requests. "
-                f"Error code: {error_code}, Message: {error_message}"
-            )
-        except Exception as e:
-            logger.error(f"Unexpected error while emitting CloudWatch metrics for buffered requests: {e}", exc_info=True)
+        if isinstance(metrics, MetricsLogger):
+            metrics.put_metric(self.APPROX_NUMBER_OF_REQUESTS_BUFFERED, num_buffered_requests, str(Unit.COUNT.value))
+            metrics.put_metric(self.APPROX_NUMBER_OF_REQUESTS_VISIBLE, num_visible_requests, str(Unit.COUNT.value))

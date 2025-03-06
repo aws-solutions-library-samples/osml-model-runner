@@ -1,6 +1,7 @@
 #  Copyright 2025 Amazon.com, Inc. or its affiliates.
 
 import logging
+import time
 from dataclasses import dataclass
 from itertools import groupby
 from operator import attrgetter
@@ -79,22 +80,6 @@ class EndpointLoadImageScheduler(ImageScheduler):
             # Group requests by endpoint and calculate loads
             grouped_requests = self._group_requests_by_endpoint(outstanding_requests)
             endpoint_utilization = self._calculate_endpoint_utilization(grouped_requests)
-
-            if logger.isEnabledFor(logging.DEBUG):
-                utilization_rows = []
-                for endpoint_summary in endpoint_utilization:
-                    utilization_rows.append(
-                        f"\t{endpoint_summary.endpoint_id}"
-                        f"\t{endpoint_summary.instance_count}"
-                        f"\t{len(endpoint_summary.requests)}"
-                        f"\t{endpoint_summary.current_load}"
-                    )
-                utilization_str = "\n".join(utilization_rows)
-                logger.debug(
-                    "Current Endpoint Utilization:\n"
-                    "  \tEndpoint\tInstance Count\tRequest Count\tCurrent Load\n"
-                    f"  {utilization_str}"
-                )
 
             # Find next eligible request
             next_request = self._select_next_eligible_request(endpoint_utilization)
@@ -186,6 +171,7 @@ class EndpointLoadImageScheduler(ImageScheduler):
                 else:
                     current_load += r.region_count - len(r.regions_complete)
 
+            logger.debug(f"ENDPOINT UTILIZATION:  {endpoint_id} {instance_count} {len(requests)} {current_load}")
             endpoint_loads.append(
                 EndpointUtilizationSummary(
                     endpoint_id=endpoint_id, instance_count=instance_count, current_load=current_load, requests=requests
@@ -208,9 +194,16 @@ class EndpointLoadImageScheduler(ImageScheduler):
             if last_load is not None and endpoint_load.load_factor > last_load:
                 break
             if endpoint_load.requests:
-                current_oldest_request = min(endpoint_load.requests, key=attrgetter("request_time"))
-                if oldest_request is None or oldest_request.request_time > current_oldest_request.request_time:
-                    oldest_request = current_oldest_request
-                    last_load = endpoint_load.load_factor
+                current_time = time.time()
+                visible_requests = [
+                    request
+                    for request in endpoint_load.requests
+                    if request.last_attempt + self.image_request_queue.retry_time < current_time
+                ]
+                if visible_requests:
+                    current_oldest_request = min(visible_requests, key=attrgetter("request_time"))
+                    if oldest_request is None or oldest_request.request_time > current_oldest_request.request_time:
+                        oldest_request = current_oldest_request
+                        last_load = endpoint_load.load_factor
 
         return oldest_request
