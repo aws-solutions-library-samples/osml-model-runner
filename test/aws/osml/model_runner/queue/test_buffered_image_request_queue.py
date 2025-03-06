@@ -141,10 +141,17 @@ class TestBufferedImageRequestQueue(unittest.TestCase):
         image_request = ImageRequest.from_external_message(request_data)
         status_record = self.jobs_table.add_new_request(image_request)
 
-        # Use up all of the retries
-        for i in range(self.queue.max_retry_attempts + 1):
-            self.jobs_table.start_next_attempt(status_record)
-            status_record.num_attempts += 1
+        # Force update of the item to look like it has already used up its retries
+        # in the past (longer than the retry timeout)
+        self.jobs_table.table.update_item(
+            Key={"endpoint_id": status_record.endpoint_id, "job_id": status_record.job_id},
+            UpdateExpression="SET last_attempt = :time, num_attempts = num_attempts + :inc",
+            ExpressionAttributeValues={
+                ":time": int(time.time()) - (self.queue.retry_time + 5),
+                ":inc": self.queue.max_retry_attempts,
+            },
+            ReturnValues="UPDATED_NEW",
+        )
 
         # Get outstanding requests and make sure the attempt is not among them
         requests = self.queue.get_outstanding_requests()
