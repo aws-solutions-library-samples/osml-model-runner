@@ -52,6 +52,7 @@ class TestEndpointLoadImageScheduler(unittest.TestCase):
 
         # Create mock BufferedImageRequestQueue
         self.mock_queue = Mock()
+        self.mock_queue.retry_time = 600
 
         # Create scheduler
         self.scheduler = EndpointLoadImageScheduler(image_request_queue=self.mock_queue)
