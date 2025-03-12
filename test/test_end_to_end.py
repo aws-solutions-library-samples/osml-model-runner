@@ -1,4 +1,4 @@
-#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2025 Amazon.com, Inc. or its affiliates.
 
 import os
 from importlib import reload
@@ -11,6 +11,8 @@ import geojson
 from botocore.stub import ANY, Stubber
 from moto import mock_aws
 from osgeo import gdal
+
+from aws.osml.model_runner.database import RequestedJobsTable
 
 
 @mock_aws
@@ -109,6 +111,15 @@ class TestModelRunnerEndToEnd(TestCase):
         )
         self.job_table = JobTable(os.environ["JOB_TABLE"])
 
+        self.outstanding_jobs_table_ddb = self.ddb.create_table(
+            TableName=os.environ["OUTSTANDING_JOBS_TABLE"],
+            KeySchema=TEST_CONFIG["OUTSTANDING_JOBS_TABLE_KEY_SCHEMA"],
+            AttributeDefinitions=TEST_CONFIG["OUTSTANDING_JOBS_TABLE_ATTRIBUTE_DEFINITIONS"],
+            BillingMode="PAY_PER_REQUEST",
+        )
+        self.outstanding_jobs_table = RequestedJobsTable(os.environ["OUTSTANDING_JOBS_TABLE"])
+        self.outstanding_jobs_table.add_new_request(self.image_request)
+
         self.image_request_ddb = self.ddb.create_table(
             TableName=os.environ["REGION_REQUEST_TABLE"],
             KeySchema=TEST_CONFIG["REGION_REQUEST_TABLE_KEY_SCHEMA"],
@@ -200,6 +211,8 @@ class TestModelRunnerEndToEnd(TestCase):
         # Plug in the required virtual resources to our ModelRunner instance
         self.model_runner = ModelRunner()
         self.model_runner.job_table = self.job_table
+        self.model_runner.requested_jobs_table = self.outstanding_jobs_table
+        self.model_runner.image_job_scheduler.image_request_queue.requested_jobs_table = self.outstanding_jobs_table
         self.model_runner.region_request_table = self.region_request_table
         self.model_runner.endpoint_statistics_table = self.endpoint_statistics_table
         self.model_runner.image_status_monitor = self.image_status_monitor

@@ -1,4 +1,4 @@
-#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2025 Amazon.com, Inc. or its affiliates.
 
 import logging
 from dataclasses import dataclass, field
@@ -242,9 +242,4 @@ class ImageRequest:
 
         :return: List of FeatureDistillationAlgorithm instances.
         """
-        return [
-            op.algorithm
-            for op in self.post_processing
-            if op.step == MRPostprocessingStep.FEATURE_DISTILLATION
-            and isinstance(op.algorithm, FeatureDistillationAlgorithm)
-        ]
+        return [op.algorithm for op in self.post_processing if op.step == MRPostprocessingStep.FEATURE_DISTILLATION]

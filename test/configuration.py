@@ -1,4 +1,4 @@
-#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2025 Amazon.com, Inc. or its affiliates.
 import io
 import json
 from unittest.mock import Mock
@@ -61,6 +61,14 @@ TEST_CONFIG = {
     ),
     "MODEL_ENDPOINT": "TestEndpoint",
     "MODEL_NAME": "TestModel",
+    "OUTSTANDING_JOBS_TABLE_ATTRIBUTE_DEFINITIONS": [
+        {"AttributeName": "endpoint_id", "AttributeType": "S"},
+        {"AttributeName": "job_id", "AttributeType": "S"},
+    ],
+    "OUTSTANDING_JOBS_TABLE_KEY_SCHEMA": [
+        {"AttributeName": "endpoint_id", "KeyType": "HASH"},
+        {"AttributeName": "job_id", "KeyType": "RANGE"},
+    ],
     "REGION_ID": "test-region-id",
     "REGION_REQUEST_TABLE_ATTRIBUTE_DEFINITIONS": [
         {"AttributeName": "region_id", "AttributeType": "S"},

@@ -10,12 +10,12 @@ from aws.osml.model_runner.api import get_image_path
 from .api import ImageRequest, RegionRequest
 from .app_config import ServiceConfig
 from .common import EndpointUtils, ThreadingLocalContextFilter
-from .database import EndpointStatisticsTable, JobItem, JobTable, RegionRequestItem, RegionRequestTable
+from .database import EndpointStatisticsTable, JobItem, JobTable, RegionRequestItem, RegionRequestTable, RequestedJobsTable
 from .exceptions import RetryableJobException, SelfThrottledRegionException
 from .image_request_handler import ImageRequestHandler
-from .queue import RequestQueue
+from .queue import BufferedImageRequestQueue, RequestQueue
 from .region_request_handler import RegionRequestHandler
-from .scheduler.fifo_image_scheduler import FIFOImageScheduler
+from .scheduler import EndpointLoadImageScheduler
 from .status import ImageStatusMonitor, RegionStatusMonitor
 from .tile_worker import TilingStrategy, VariableOverlapTilingStrategy
 
@@ -41,9 +41,6 @@ class ModelRunner:
         """
         self.config = ServiceConfig()
         self.tiling_strategy = tiling_strategy
-
-        # Set up the job scheduler
-        self.image_job_scheduler = FIFOImageScheduler(RequestQueue(self.config.image_queue, wait_seconds=0))
 
         # Set up internal queues and monitors
         self.region_request_queue = RequestQueue(self.config.region_queue, wait_seconds=10)
@@ -77,6 +74,20 @@ class ModelRunner:
             endpoint_utils=self.endpoint_utils,
             config=self.config,
             region_request_handler=self.region_request_handler,
+        )
+
+        # Set up the job scheduler
+        self.requested_jobs_table = RequestedJobsTable(self.config.outstanding_jobs_table)
+        self.image_job_scheduler = EndpointLoadImageScheduler(
+            BufferedImageRequestQueue(self.config.image_queue, self.config.image_dlq, self.requested_jobs_table)
+        )
+        self.region_request_handler.on_region_complete.subscribe(
+            lambda image_request, region_request, region_status: self.requested_jobs_table.complete_region(
+                image_request, region_request.region_id
+            )
+        )
+        self.image_request_handler.on_image_update.subscribe(
+            lambda image_request: self.requested_jobs_table.update_request_details(image_request, image_request.region_count)
         )
 
         self.running = False
@@ -159,7 +170,8 @@ class ModelRunner:
                 logger.exception(f"Error processing region request: {err}")
                 self.region_request_queue.finish_request(receipt_handle)
             finally:
-                return True
+                ThreadingLocalContextFilter.set_context(None)
+            return True
         else:
             return False
 
@@ -182,6 +194,8 @@ class ModelRunner:
                 logger.error(f"Error processing image request: {err}")
                 self._fail_image_request(image_request, err)
                 self.image_job_scheduler.finish_request(image_request)
+            finally:
+                ThreadingLocalContextFilter.set_context(None)
             return True
         else:
             return False
