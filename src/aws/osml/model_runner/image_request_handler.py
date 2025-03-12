@@ -24,6 +24,7 @@ from .common import (
     EndpointUtils,
     ImageDimensions,
     ImageRegion,
+    ObservableEvent,
     RequestStatus,
     Timer,
     get_credentials_for_assumed_role,
@@ -93,6 +94,7 @@ class ImageRequestHandler:
         self.endpoint_utils = endpoint_utils
         self.config = config
         self.region_request_handler = region_request_handler
+        self.on_image_update = ObservableEvent()
 
     def process_image_request(self, image_request: ImageRequest) -> None:
         """
@@ -160,6 +162,7 @@ class ImageRequestHandler:
 
                 # Update the image request job to have new derived image data
                 self.job_table.update_image_request(job_item)
+                self.on_image_update(job_item)
 
                 self.image_status_monitor.process_event(job_item, RequestStatus.IN_PROGRESS, "Processing regions")
 

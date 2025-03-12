@@ -1,4 +1,4 @@
-#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2025 Amazon.com, Inc. or its affiliates.
 
 # Telling flake8 to not flag errors in this file. It is normal that these classes are imported but not used in an
 # __init__.py file.
@@ -25,6 +25,7 @@ from .mr_post_processing import (
     deserialize_post_processing_list,
     mr_post_processing_options_factory,
 )
+from .observable_event import ObservableEvent
 from .timer import Timer
 from .typing import (
     VALID_IMAGE_COMPRESSION,

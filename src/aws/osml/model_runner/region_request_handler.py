@@ -12,7 +12,7 @@ from aws.osml.photogrammetry import SensorModel
 
 from .api import RegionRequest
 from .app_config import MetricLabels, ServiceConfig
-from .common import EndpointUtils, RequestStatus, Timer
+from .common import EndpointUtils, ObservableEvent, RequestStatus, Timer
 from .database import EndpointStatisticsTable, JobItem, JobTable, RegionRequestItem, RegionRequestTable
 from .exceptions import ProcessRegionException, SelfThrottledRegionException
 from .status import RegionStatusMonitor
@@ -55,6 +55,7 @@ class RegionRequestHandler:
         self.tiling_strategy = tiling_strategy
         self.endpoint_utils = endpoint_utils
         self.config = config
+        self.on_region_complete = ObservableEvent()
 
     @metric_scope
     def process_region_request(
@@ -149,6 +150,7 @@ class RegionRequestHandler:
             region_request_item = self.region_request_table.complete_region_request(region_request_item, region_status)
 
             self.region_status_monitor.process_event(region_request_item, region_status, "Completed region processing")
+            self.on_region_complete(image_request_item, region_request_item, region_status)
 
             # Write CloudWatch Metrics to the Logs
             if isinstance(metrics, MetricsLogger):
@@ -162,7 +164,9 @@ class RegionRequestHandler:
             logger.error(failed_msg)
             # Update the table to record the failure
             region_request_item.message = failed_msg
-            return self.fail_region_request(region_request_item)
+            job_item = self.fail_region_request(region_request_item)
+            self.on_region_complete(job_item, region_request_item, RequestStatus.FAILED)
+            return job_item
 
         finally:
             # Decrement the endpoint region counter

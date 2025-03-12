@@ -1,4 +1,4 @@
-#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2025 Amazon.com, Inc. or its affiliates.
 
 import os
 from dataclasses import dataclass, field
@@ -24,10 +24,12 @@ class ServiceConfig:
     # Required env configuration
     aws_region: str = os.environ["AWS_DEFAULT_REGION"]
     job_table: str = os.environ["JOB_TABLE"]
+    outstanding_jobs_table: str = os.environ["OUTSTANDING_JOBS_TABLE"]
     region_request_table: str = os.environ["REGION_REQUEST_TABLE"]
     endpoint_statistics_table = os.environ["ENDPOINT_TABLE"]
     feature_table: str = os.environ["FEATURE_TABLE"]
     image_queue: str = os.environ["IMAGE_QUEUE"]
+    image_dlq: str = os.environ["IMAGE_DLQ"]
     region_queue: str = os.environ["REGION_QUEUE"]
     workers_per_cpu: str = os.environ["WORKERS_PER_CPU"]
     workers: str = os.environ["WORKERS"]
