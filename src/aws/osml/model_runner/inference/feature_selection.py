@@ -1,6 +1,5 @@
-#  Copyright 2023-2024 Amazon.com, Inc. or its affiliates.
+#  Copyright 2023-2025 Amazon.com, Inc. or its affiliates.
 
-from collections import OrderedDict
 from typing import List, Tuple
 
 import numpy as np
@@ -43,30 +42,30 @@ class FeatureSelector:
             return []
         if not self.options:
             return feature_list
-        boxes_list, scores_list, labels_list = self._get_lists_from_features(feature_list)
+        boxes_array, scores_array, labels_array = self._get_lists_from_features(feature_list)
         if self.options.algorithm_type == FeatureDistillationAlgorithmType.SOFT_NMS:
-            boxes, scores, labels = soft_nms(
-                boxes=[np.array(boxes_list)],
-                scores=[np.array(scores_list)],
-                labels=[np.array(labels_list)],
+            boxes, scores, labels, indices = soft_nms(
+                boxes=[np.array(boxes_array)],
+                scores=[np.array(scores_array)],
+                labels=[np.array(labels_array)],
                 weights=None,
                 iou_thr=self.options.iou_threshold,
                 sigma=self.options.sigma,
                 thresh=self.options.skip_box_threshold,
             )
         elif self.options.algorithm_type == FeatureDistillationAlgorithmType.NMS:
-            boxes, scores, labels = nms(
-                boxes=[np.array(boxes_list)],
-                scores=[np.array(scores_list)],
-                labels=[np.array(labels_list)],
+            boxes, scores, labels, indices = nms(
+                boxes=[np.array(boxes_array)],
+                scores=[np.array(scores_array)],
+                labels=[np.array(labels_array)],
                 weights=None,
                 iou_thr=self.options.iou_threshold,
             )
         else:
             raise FeatureDistillationException(f"Invalid feature distillation algorithm: {self.options.algorithm_type}")
-        return self._get_features_from_lists(boxes, scores, labels)
+        return self._get_features_from_lists(feature_list, scores, labels, indices)
 
-    def _get_lists_from_features(self, feature_list: List[Feature]) -> Tuple[List, List, List]:
+    def _get_lists_from_features(self, feature_list: List[Feature]) -> Tuple[np.array, np.array, np.array]:
         """
         This function converts the GeoJSON features into lists of normalized bounding boxes, scores, and label IDs
         needed by the selection algorithm implementations. As a side effect of this function various class attributes
@@ -77,14 +76,14 @@ class FeatureSelector:
         :return: tuple of lists - bounding boxes, confidence scores, category labels
         """
 
-        boxes = []
-        scores = []
+        n_features = len(feature_list)
+        boxes = np.zeros((n_features, 4))
+        scores = np.zeros(n_features)
         categories = []
         self.extents = [None, None, None, None]  # [min_x, min_y, max_x, max_y]
-        self.feature_id_map = OrderedDict()
         self.labels_map = dict()
 
-        for feature in feature_list:
+        for i, feature in enumerate(feature_list):
             # [min_x, min_y, max_x, max_y]
             bounds_imcoords = get_feature_image_bounds(feature)
 
@@ -96,7 +95,7 @@ class FeatureSelector:
             # add 0.1 of a pixel to the width or height of any bbox if it is currently zero. This does not change
             # the actual reported geometry of the feature in any way it just ensures the assumption of a non-zero
             # area is true.
-            bounds_imcoords = (
+            boxes[i] = (
                 bounds_imcoords[0],
                 bounds_imcoords[1],
                 bounds_imcoords[2] + 0.1 if bounds_imcoords[0] == bounds_imcoords[2] else bounds_imcoords[2],
@@ -104,51 +103,48 @@ class FeatureSelector:
             )
 
             category, score = self._get_category_and_score_from_feature(feature)
-            boxes.append(bounds_imcoords)
             categories.append(category)
-            scores.append(score)
-            if self.extents[0] is None or self.extents[0] > bounds_imcoords[0]:
-                self.extents[0] = bounds_imcoords[0]
-            if self.extents[1] is None or self.extents[1] > bounds_imcoords[1]:
-                self.extents[1] = bounds_imcoords[1]
-            if self.extents[2] is None or self.extents[2] < bounds_imcoords[2]:
-                self.extents[2] = bounds_imcoords[2]
-            if self.extents[3] is None or self.extents[3] < bounds_imcoords[3]:
-                self.extents[3] = bounds_imcoords[3]
-            bounds_imcoords_rounded = [int(round(coord)) for coord in bounds_imcoords]
-            feature_hash_id = hash(str(bounds_imcoords_rounded) + category)
-            self.feature_id_map[feature_hash_id] = feature
+            scores[i] = score
+
+        # calculate data extents
+        if n_features > 0:
+            self.extents = [
+                float(np.min(boxes[:, 0])),  # min_x
+                float(np.min(boxes[:, 1])),  # min_y
+                float(np.max(boxes[:, 2])),  # max_x
+                float(np.max(boxes[:, 3])),  # max_y
+            ]
+        # Determine categories
         unique_categories = list(set(categories))
         for idx, unique_category in enumerate(unique_categories):
             self.labels_map[str(idx)] = unique_category
             self.labels_map[unique_category] = str(idx)
         labels_indexes = [int(self.labels_map.get(category, None)) for category in categories]
+
+        # Normalize the boxes
         normalized_boxes = self._normalize_boxes(boxes)
 
-        return normalized_boxes, scores, labels_indexes
+        return normalized_boxes, scores, np.array(labels_indexes)
 
-    def _normalize_boxes(self, boxes: List[Tuple[float, float, float, float]]) -> List[List[float]]:
+    def _normalize_boxes(self, boxes: np.ndarray) -> np.ndarray:
         """
         This function normalizes the bounding boxes by subtracting the minimum x and y coordinates from each
         coordinate and dividing by the range of x and y coordinates. That means that all bounding boxes coordinates
-        will be in the range of [0.0, 1.0] where 0.0 is the minimum of the extent and 1.0 is the maximum. See
-        _denormalize_boxes() to convert back to bboxes in pixel coordinates.
+        will be in the range of [0.0, 1.0] where 0.0 is the minimum of the extent and 1.0 is the maximum.
 
-        :param boxes: the list of bounding boxes to normalize
-        :return: the normalized list of bounding boxes
+        :param boxes: bounding boxes to normalize
+        :return: the normalized array of bounding boxes
         """
-        # boxes: [x1, y1, x2, y2]
-        min_x = self.extents[0]
-        min_y = self.extents[1]
+        # boxes: [[x1, y1, x2, y2], ...]
+        if boxes.size == 0:
+            return np.array([])
         x_range = self.extents[2] - self.extents[0]
         y_range = self.extents[3] - self.extents[1]
-        normalized_boxes = []
-        for box in boxes:
-            x1_norm = (box[0] - min_x) / x_range
-            y1_norm = (box[1] - min_y) / y_range
-            x2_norm = (box[2] - min_x) / x_range
-            y2_norm = (box[3] - min_y) / y_range
-            normalized_boxes.append([x1_norm, y1_norm, x2_norm, y2_norm])
+        normalized_boxes = np.zeros_like(boxes)
+        normalized_boxes[:, 0] = (boxes[:, 0] - self.extents[0]) / x_range  # x1
+        normalized_boxes[:, 1] = (boxes[:, 1] - self.extents[1]) / y_range  # y1
+        normalized_boxes[:, 2] = (boxes[:, 2] - self.extents[0]) / x_range  # x2
+        normalized_boxes[:, 3] = (boxes[:, 3] - self.extents[1]) / y_range  # y2
         return normalized_boxes
 
     @staticmethod
@@ -166,52 +162,34 @@ class FeatureSelector:
                 max_class = feature_class.get("iri")
         return max_class, max_score
 
-    def _get_features_from_lists(self, boxes: np.array, scores: np.array, labels: np.array) -> List[Feature]:
+    def _get_features_from_lists(
+        self, feature_list: List[Feature], scores: np.array, labels: np.array, indices: np.array
+    ) -> List[Feature]:
         """
-        This function consolidates the lists of bounding boxes, scores, and labels into the GeoJSON features.
-        This happens by finding the feature with a matching bounding box and category in the original feature list
-        and updating the score if necessary. Any features that were in the original feature list that were not
-        in the input lists end up filtered out of the result.
+        This function selects features from the feature_list based on the indices provided by the NMS algorithm.
+        In the case when SOFT_NMS is selected, it also updates the scores as required.
 
-        :param boxes: the normalized bounding boxes for the features
-        :param scores: the updated scores for each bounding box
-        :param labels: the labels for each bounding box
+        :param feature_list: the original list of GeoJSON features
+        :param scores: the updated scores for each feature
+        :param labels: the labels for each feature
+        :param indices: the indices of the features to keep
         :return: the refined list of GeoJSON features
         """
-        features = []
-        im_boxes = self._denormalize_boxes(boxes)
-        for box, score, label in zip(im_boxes, scores, labels):
-            category = self.labels_map.get(str(label))
-            feature_hash_id = hash(str(box) + category)
-            feature = self.feature_id_map.get(feature_hash_id)
-            if feature:
-                if self.options.algorithm_type == FeatureDistillationAlgorithmType.SOFT_NMS:
-                    for feature_class in feature.get("properties", {}).get("featureClasses", []):
-                        if feature_class.get("iri") == category:
-                            feature_class["rawScore"] = feature_class.get("score")
-                            feature_class["score"] = score
-                features.append(feature)
-        return features
+        selected_features = [feature_list[i] for i in indices]
 
-    def _denormalize_boxes(self, boxes: List[List[float]]) -> List[List[int]]:
-        """
-        This function denormalizes the bounding boxes by multiplying each coordinate by the width or height
-        of the extent and then adding in the extent minimums. That puts all bounding boxes back into the
-        image coordinate space. This is the inverse of _normalize_boxes().
+        # Verify selected_features, scores, and labels have the same length
+        try:
+            assert len(selected_features) == len(scores) == len(labels)
+        except AssertionError:
+            raise FeatureDistillationException(
+                f"Mismatched lengths: features={len(selected_features)}, scores={len(scores)}, labels={len(labels)}"
+            )
 
-        :param boxes: the list of bounding boxes to denormalize
-        :return: the denormalized list of bounding boxes
-        """
-        # boxes: [x1, y1, x2, y2]
-        min_x = self.extents[0]
-        min_y = self.extents[1]
-        x_range = self.extents[2] - self.extents[0]
-        y_range = self.extents[3] - self.extents[1]
-        denormalized_boxes = []
-        for box in boxes:
-            x1 = int(round(box[0] * x_range + min_x))
-            y1 = int(round(box[1] * y_range + min_y))
-            x2 = int(round(box[2] * x_range + min_x))
-            y2 = int(round(box[3] * y_range + min_y))
-            denormalized_boxes.append([x1, y1, x2, y2])
-        return denormalized_boxes
+        if self.options.algorithm_type == FeatureDistillationAlgorithmType.SOFT_NMS:
+            for feature, score, label in zip(selected_features, scores, labels):
+                category = self.labels_map.get(str(label))
+                for feature_class in feature.get("properties", {}).get("featureClasses", []):
+                    if feature_class.get("iri") == category:
+                        feature_class["rawScore"] = feature_class.get("score")
+                        feature_class["score"] = score
+        return selected_features
