@@ -1,4 +1,4 @@
-# Copyright 2024 Amazon.com, Inc. or its affiliates.
+# Copyright 2024-2025 Amazon.com, Inc. or its affiliates.
 
 import unittest
 
@@ -55,7 +55,7 @@ class TestNMSMethods(unittest.TestCase):
         """
         from aws.osml.model_runner.common.ensemble_boxes_nms import nms
 
-        final_boxes, final_scores, final_labels = nms(self.boxes, self.scores, self.labels, 0.5)
+        final_boxes, final_scores, final_labels, indices = nms(self.boxes, self.scores, self.labels, 0.5)
 
         # Assertions
         assert final_boxes.shape[0] == 4
@@ -66,7 +66,7 @@ class TestNMSMethods(unittest.TestCase):
         """
         from aws.osml.model_runner.common.ensemble_boxes_nms import soft_nms
 
-        final_boxes, final_scores, final_labels = soft_nms(self.boxes, self.scores, self.labels, 1, 0.5)
+        final_boxes, final_scores, final_labels, indices = soft_nms(self.boxes, self.scores, self.labels, 1, 0.5)
 
         # Assertions
         assert final_boxes.shape[0] == 5
@@ -92,7 +92,7 @@ class TestNMSMethods(unittest.TestCase):
         from aws.osml.model_runner.common.ensemble_boxes_nms import nms
 
         weights = [0.5, 0.5]  # Apply equal weights to both models
-        final_boxes, final_scores, final_labels = nms(self.boxes, self.scores, self.labels, 0.5, weights=weights)
+        final_boxes, final_scores, final_labels, indices = nms(self.boxes, self.scores, self.labels, 0.5, weights=weights)
 
         # Assertions
         assert final_boxes.shape[0] == 4
