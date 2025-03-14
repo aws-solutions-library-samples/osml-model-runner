@@ -1,4 +1,4 @@
-# Copyright 2024 Amazon.com, Inc. or its affiliates.
+# Copyright 2024-2025 Amazon.com, Inc. or its affiliates.
 
 """
 Non-Maximum Suppression (NMS) and Soft-NMS implementation for bounding boxes.
@@ -193,7 +193,7 @@ def nms_method(
     sigma: float = 0.5,
     thresh: float = 0.001,
     weights: Optional[List[float]] = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Perform NMS on a list of boxes, scores, and labels from multiple models.
 
@@ -207,7 +207,7 @@ def nms_method(
     :param thresh: threshold for boxes to keep (important for SoftNMS).
     :param weights: list of weights for each model. Default: None, which means weight == 1 for each model.
 
-    :return: tuple of (boxes, scores, labels) after NMS.
+    :return: tuple of (boxes, scores, labels, indexes) after NMS.
     """
 
     # Validate input lengths
@@ -255,12 +255,15 @@ def nms_method(
     final_boxes = []
     final_scores = []
     final_labels = []
+    indices_to_keep = []
     for label in unique_labels:
         condition = labels == label
         boxes_by_label = boxes[condition]
         scores_by_label = scores[condition]
         labels_by_label = np.array([label] * len(boxes_by_label))
+        original_indices = np.where(condition)[0]
 
+        keep = []
         if method != 3:
             keep = cpu_soft_nms_float(
                 boxes_by_label.copy(), scores_by_label.copy(), nt=iou_thr, sigma=sigma, thresh=thresh, method=method
@@ -269,6 +272,7 @@ def nms_method(
             # Use faster function
             keep = nms_fast(boxes_by_label, scores_by_label, thresh=iou_thr)
 
+        indices_to_keep.extend(original_indices[keep])
         final_boxes.append(boxes_by_label[keep])
         final_scores.append(scores_by_label[keep])
         final_labels.append(labels_by_label[keep])
@@ -276,7 +280,7 @@ def nms_method(
     final_scores = np.concatenate(final_scores)
     final_labels = np.concatenate(final_labels)
 
-    return final_boxes, final_scores, final_labels
+    return final_boxes, final_scores, final_labels, indices_to_keep
 
 
 def nms(
@@ -285,7 +289,7 @@ def nms(
     labels: List[np.ndarray],
     iou_thr: float = 0.5,
     weights: Optional[List[float]] = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Short call for standard NMS
 
@@ -296,7 +300,7 @@ def nms(
     :param iou_thr: IoU threshold value for boxes.
     :param weights: list of weights for each model. Default: None, which means weight == 1 for each model.
 
-    :return: Tuple containing the final boxes, scores, and labels after NMS.
+    :return: Tuple containing the final boxes, scores, labels, and indexes after NMS.
     """
     return nms_method(boxes, scores, labels, method=3, iou_thr=iou_thr, weights=weights)
 
@@ -310,7 +314,7 @@ def soft_nms(
     sigma: float = 0.5,
     thresh: float = 0.001,
     weights: Optional[List[float]] = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Perform soft-NMS on the given set of boxes for each label.
 
@@ -324,6 +328,6 @@ def soft_nms(
     :param thresh: threshold for boxes to keep (important for SoftNMS).
     :param weights: list of weights for each model. Default: None, which means weight == 1 for each model.
 
-    :return: Tuple containing the final boxes, scores, and labels after soft-NMS.
+    :return: Tuple containing the final boxes, scores, labels, and indexes after soft-NMS.
     """
     return nms_method(boxes, scores, labels, method, iou_thr, sigma, thresh, weights)
