@@ -9,6 +9,7 @@ across instances to process images as quickly as possible.
 ### Table of Contents
 * [Getting Started](#getting-started)
   * [Key Design Concepts](#key-design-concepts)
+    * [Load Balancing](#load-balancing)
     * [Image Tiling](#image-tiling)
     * [Geolocation](#geolocation)
     * [Merging Results from Overlap Regions](#merging-results-from-overlap-regions)
@@ -31,6 +32,16 @@ across instances to process images as quickly as possible.
 The [Guidance for Model Developers](./GUIDE_FOR_MODEL_DEVELOPERS.md) document contains details of how the
 OversightML ModelRunner applications interacts with containerized computer vision (CV) models and examples of the
 GeoJSON formatted inputs it expects and generates. At a high level this application provides the following functions:
+
+#### Load Balancing
+
+The OversightML ModelRunner receives processing requests from an input queue and internally balances them across the
+tasked model endpoints to improve throughput and utilization. Requests to endpoints with unused capacity are pulled
+ahead of requests that would otherwise have been delayed waiting for previously tasked images to complete. Requests
+are still handled in a first-in, first-out (FIFO) sequencing for each model endpoint. We estimate the load on each
+endpoint as the ratio of the number of in-progress regions to the compute instances backing the endpoint. This helps
+the load balancing algorithm adjust for images of varying size and endpoints with dynamic capacity that scales up
+and down.
 
 #### Image Tiling
 

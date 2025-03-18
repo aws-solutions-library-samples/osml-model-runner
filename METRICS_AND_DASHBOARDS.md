@@ -32,6 +32,16 @@ running on a distributed system.
 
 ![Diagram of Operations](./images/metric-operations-diagram.png)
 
+The ModelRunner application also outputs two custom metrics that provide visibility into how many image processing
+requests are currently being buffered by the job scheduler. These metrics can be combined with similar metrics from
+the input SQS queue to track how many jobs are currently waiting to be processed. These values are often used to
+auto-scale the ModelRunner cluster or computer vision endpoints.
+
+| Namespace        |   Metric                              | Notes                                                 |
+|:-----------------|:-------------------------------------:|:------------------------------------------------------|
+| OSML/ModelRunner | ApproximateNumberOfRequestsBuffered   | Total number of requests pulled from SQS not complete |
+|                  | ApproximateNumberOfRequestsVisible    | Total number of requests waiting to be processed      |
+
 ## Dashboards
 
 These metrics can be combined with metrics from other AWS services to build dashboards to monitor imagery processed
